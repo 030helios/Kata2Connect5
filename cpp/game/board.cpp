@@ -945,22 +945,20 @@ Hash128 Board::getPosHashAfterMove(Loc loc, Player pla) const
   return hash;
 }
 
+bool Board::check5(Loc loc, Player pla, Loc stepping)
+{
+  for (int i = 0; i < 4; i++)
+  {
+    loc += stepping;
+    if (colors[loc] != pla)
+      return false;
+  }
+  return true;
+}
 //Plays the specified move, assuming it is legal.
 void Board::playMoveAssumeLegal(Loc loc, Player pla)
 {
   //modified
-  //check if connect5
-  bool check5(Loc stepping)
-  {
-    Loc l2 = loc;
-    for (int i = 0; i < 4; i++)
-    {
-      l2 += stepping;
-      if (colors[l2] != pla)
-        return false;
-    }
-    return true;
-  }
   //Add the new stone as an independent group
   colors[loc] = pla;
   //this I might not need

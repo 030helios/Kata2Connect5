@@ -204,6 +204,8 @@ struct Board
   //Plays the specified move, assuming it is legal.
   void playMoveAssumeLegal(Loc loc, Player pla);
 
+  //check if connect5
+  bool Board::check5(Loc loc, Player pla, Loc stepping);
   //Plays the specified move, assuming it is legal, and returns a MoveRecord for the move
   MoveRecord playMoveRecorded(Loc loc, Player pla);
 
