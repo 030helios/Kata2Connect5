@@ -963,6 +963,10 @@ void Board::playMoveAssumeLegal(Loc loc, Player pla)
   colors[loc] = pla;
   //this I might not need
   pos_hash ^= ZOBRIST_BOARD_HASH[loc][pla];
+  for(int i=0;i<8;i++){
+    if(check5(loc,pla,adj_offsets[i]))
+      
+  }
 }
 
 int Board::getNumImmediateLiberties(Loc loc) const
