@@ -574,8 +574,7 @@ void NNEvaluator::evaluate(
   bool hadResultWithoutOwnerMap = false;
   shared_ptr<NNOutput> resultWithoutOwnerMap;
   if(nnCacheTable != NULL && !skipCache && nnCacheTable->get(nnHash,buf.result)) {
-    if(!(includeOwnerMap && buf.result->whiteOwnerMap == NULL))
-    {
+    if(!(includeOwnerMap && buf.result->whiteOwnerMap == NULL)){
       buf.hasResult = true;
       return;
     }
