@@ -850,7 +850,6 @@ void BoardHistory::makeBoardMoveAssumeLegal(Board& board, Loc moveLoc, Player mo
   bool isSpightlikeEndingPass = false;
   if(moveLoc != Board::PASS_LOC)
     consecutiveEndingPasses = 0;
-    /*
   else if(hasButton) {
     assert(encorePhase == 0 && rules.hasButton);
     hasButton = false;
@@ -889,7 +888,6 @@ void BoardHistory::makeBoardMoveAssumeLegal(Board& board, Loc moveLoc, Player mo
     else
       ASSERT_UNREACHABLE;
   }
-  */
 
   //Handle pass-for-ko moves in the encore. Pass for ko lifts a ko recapture block and does nothing else.
   bool wasPassForKo = false;
