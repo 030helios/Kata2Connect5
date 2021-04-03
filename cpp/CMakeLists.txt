@@ -5,6 +5,12 @@ set(CMAKE_CXX_STANDARD 14)
 
 include_directories(external)
 include_directories(external/tclap-1.2.2/include)
+include_directories(SYSTEM external/filesystem-1.3.6/include) #SYSTEM suppresses a few warnings
+
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.18.0")
+  # Suppress a warning message for setting cuda flags that still works fine for now
+  cmake_policy(SET CMP0104 OLD)
+endif()
 
 #--------------------------- PLATFORM SPECIFIC -------------------------------------------------------------------------
 
@@ -24,15 +30,15 @@ endif()
 
 #--------------------------- CMAKE VARIABLES (partly for Cmake GUI) ----------------------------------------------------
 
+set(BUILD_DISTRIBUTED 0 CACHE BOOL "Build with http support for contributing to distributed training")
 set(USE_BACKEND CACHE STRING "Neural net backend")
 string(TOUPPER "${USE_BACKEND}" USE_BACKEND)
 set_property(CACHE USE_BACKEND PROPERTY STRINGS "" CUDA OPENCL EIGEN)
 
 set(USE_TCMALLOC 0 CACHE BOOL "Use TCMalloc")
 set(NO_GIT_REVISION 0 CACHE BOOL "Disable embedding the git revision into the compiled exe")
-set(Boost_USE_STATIC_LIBS_ON 0 CACHE BOOL "Compile against boost statically instead of dynamically")
 set(USE_AVX2 0 CACHE BOOL "Compile with AVX2")
-set(USE_BIGGER_BOARDS_EXPENSIVE 0 CACHE BOOL "Allow boards up to size 29. Compiling with this Will use more memory and slow down KataGo, even when playing on boards of size 19.")
+set(USE_BIGGER_BOARDS_EXPENSIVE 0 CACHE BOOL "Allow boards up to size 29. Compiling with this will use more memory and slow down KataGo, even when playing on boards of size 19.")
 
 #--------------------------- NEURAL NET BACKEND ------------------------------------------------------------------------
 
@@ -75,7 +81,7 @@ if(USE_BACKEND STREQUAL "CUDA")
 
   set(NEURALNET_BACKEND_SOURCES neuralnet/cudabackend.cpp neuralnet/cudahelpers.cu)
 
-  if (CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER 11.0)
+  if (CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 11.0)
     set(CMAKE_CUDA_FLAGS
       " \
       -gencode arch=compute_35,code=sm_35       \
@@ -103,7 +109,7 @@ if(USE_BACKEND STREQUAL "CUDA")
       -Wno-deprecated-gpu-targets \
       "
       )
-  elseif (CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER 10.2)
+  elseif (CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 10.2)
     set(CMAKE_CUDA_FLAGS
       " \
       -gencode arch=compute_30,code=sm_30       \
@@ -172,7 +178,7 @@ endif()
 #--------------------------- TCMALLOC ----------------------------------------------------------------------------------
 
 if(USE_TCMALLOC)
-  message("-DUSE_TCMALLOC=1 is set, using tcmalloc as the allocator")
+  message(STATUS "-DUSE_TCMALLOC=1 is set, using tcmalloc as the allocator")
   find_library(TCMALLOC_LIB NAMES tcmalloc_minimal HINTS /usr)
   if(NOT TCMALLOC_LIB)
     message(FATAL_ERROR "Could not find tcmalloc")
@@ -184,16 +190,26 @@ endif()
 
 #--------------------------- GIT ---------------------------------------------------------------------------------------
 
-if(NO_GIT_REVISION)
+if(NO_GIT_REVISION AND (NOT BUILD_DISTRIBUTED))
   message(STATUS "-DNO_GIT_REVISION=1 is set, avoiding including the Git revision in compiled executable")
   unset(GIT_HEADER_FILE_ALWAYS_UPDATED)
 else()
-  message(STATUS "Including Git revision in the compiled executable, specify -DNO_GIT_REVISION=1 to disable")
+  if(NO_GIT_REVISION AND BUILD_DISTRIBUTED)
+    message(STATUS "${ColorRed}NO_GIT_REVISION is set, but BUILD_DISTRIBUTED is also set and distributed requires git revision, so ignoring NO_GIT_REVISION.${ColorReset}")
+  elseif(BUILD_DISTRIBUTED)
+    message(STATUS "Including Git revision in the compiled executable")
+  else()
+    message(STATUS "Including Git revision in the compiled executable, specify -DNO_GIT_REVISION=1 to disable")
+  endif()
   find_package(Git)
   if(NOT GIT_FOUND)
     set(GIT_EXECUTABLE ${GIT_EXECUTABLE} CACHE FILEPATH "Path to git executable")
     mark_as_advanced(CLEAR GIT_EXECUTABLE)
-    message(SEND_ERROR "${ColorBoldRed}Git executable was not found. Either specify GIT_EXECUTABLE as the path to the git executable, or use NO_GIT_REVISION to disable.${ColorReset}")
+    if(BUILD_DISTRIBUTED)
+      message(SEND_ERROR "${ColorBoldRed}Git executable was not found, specify GIT_EXECUTABLE as the path to the git executable.${ColorReset}")
+    else()
+      message(SEND_ERROR "${ColorBoldRed}Git executable was not found. Either specify GIT_EXECUTABLE as the path to the git executable, or use NO_GIT_REVISION to disable.${ColorReset}")
+    endif()
   endif()
   set(GIT_HEADER_FILE_TEMPLATE_BARE program/gitinfotemplate.h)
   set(GIT_HEADER_FILE_ALWAYS_UPDATED_BARE program/gitinfoupdated.h)
@@ -239,7 +255,6 @@ add_executable(katago
   dataio/numpywrite.cpp
   dataio/trainingwrite.cpp
   dataio/loadmodel.cpp
-  dataio/lzparse.cpp
   dataio/homedata.cpp
   neuralnet/nninputs.cpp
   neuralnet/modelversion.cpp
@@ -253,6 +268,7 @@ add_executable(katago
   search/searchresults.cpp
   search/asyncbot.cpp
   search/distributiontable.cpp
+  search/subtreevaluebiastable.cpp
   search/analysisdata.cpp
   program/gtpconfig.cpp
   program/setup.cpp
@@ -273,13 +289,16 @@ add_executable(katago
   tests/testtime.cpp
   tests/testtrainingwrite.cpp
   tests/testnn.cpp
+  tests/tinymodel.cpp
+  tests/tinymodeldata.cpp
+  distributed/client.cpp
   command/commandline.cpp
   command/analysis.cpp
   command/benchmark.cpp
+  command/contribute.cpp
   command/evalsgf.cpp
   command/gatekeeper.cpp
   command/gtp.cpp
-  command/lzcost.cpp
   command/match.cpp
   command/matchauto.cpp
   command/misc.cpp
@@ -292,10 +311,11 @@ add_executable(katago
 
 if(USE_BACKEND STREQUAL "CUDA")
   target_compile_definitions(katago PRIVATE USE_CUDA_BACKEND)
+  target_compile_definitions(katago PRIVATE CUDA_TARGET_VERSION=${CMAKE_CUDA_COMPILER_VERSION})
   find_package(CUDA REQUIRED)
   find_path(CUDNN_INCLUDE_DIR cudnn.h HINTS ${CUDNN_ROOT_DIR} ${CUDA_TOOLKIT_ROOT_DIR} PATH_SUFFIXES cuda/include include)
   if((NOT CUDNN_INCLUDE_DIR))
-    message(ERROR "${ColorBoldRed} cudnn.h was NOT found, specify CUDNN_INCLUDE_DIR to indicate where it is. ${ColorReset}")
+    message(FATAL_ERROR "${ColorBoldRed} cudnn.h was NOT found, specify CUDNN_INCLUDE_DIR to indicate where it is. ${ColorReset}")
   endif()
   find_library(CUDNN_LIBRARY libcudnn.so PATHS /usr/local/cuda/lib64 /opt/cuda/lib64)
   include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR}) #SYSTEM is for suppressing some compiler warnings in thrust libraries
@@ -311,7 +331,7 @@ elseif(USE_BACKEND STREQUAL "EIGEN")
   if(NOT MSVC)
     find_package(Eigen3 REQUIRED)
     include_directories(SYSTEM ${EIGEN3_INCLUDE_DIRS})
-    message("Found Eigen3 at ${EIGEN3_INCLUDE_DIRS}")
+    message(STATUS "Found Eigen3 at ${EIGEN3_INCLUDE_DIRS}")
   else()
     if(EIGEN3_INCLUDE_DIRS)
       message(STATUS "EIGEN3_INCLUDE_DIRS is set to ${EIGEN3_INCLUDE_DIRS}, assuming that Eigen3 header files are here.")
@@ -323,7 +343,7 @@ elseif(USE_BACKEND STREQUAL "EIGEN")
         message(FATAL_ERROR "*** KataGo: Eigen3 was not found. If you've downloaded Eigen3, you can IGNORE the whole above error from CMake and just set 'EIGEN3_INCLUDE_DIRS' to the root eigen3-3.*.* directory after unzipping it. Among other things it should contain 'Eigen' and 'unsupported' subdirs, which is all KataGo needs. Otherwise, you will need to 'build' Eigen3 even though it is header-only and install it via MSVC in order for cmake to find it via FindEigen3.cmake.")
       else()
         include_directories(SYSTEM ${EIGEN3_INCLUDE_DIRS})
-        message("Found Eigen3 at ${EIGEN3_INCLUDE_DIRS}")
+        message(STATUS "Found Eigen3 at ${EIGEN3_INCLUDE_DIRS}")
       endif()
     endif()
   endif()
@@ -333,7 +353,7 @@ if(USE_BIGGER_BOARDS_EXPENSIVE)
   target_compile_definitions(katago PRIVATE COMPILE_MAX_BOARD_LEN=29)
 endif()
 
-if(NO_GIT_REVISION)
+if(NO_GIT_REVISION AND (NOT BUILD_DISTRIBUTED))
   target_compile_definitions(katago PRIVATE NO_GIT_REVISION)
 endif()
 
@@ -352,11 +372,14 @@ find_library(LIBZIP_LIBRARY NAMES zip)
 find_path(LIBZIP_INCLUDE_DIR_ZIP NAMES zip.h)
 find_path(LIBZIP_INCLUDE_DIR_ZIPCONF NAMES zipconf.h)
 if((NOT LIBZIP_LIBRARY) OR (NOT LIBZIP_INCLUDE_DIR_ZIP) OR (NOT LIBZIP_INCLUDE_DIR_ZIPCONF))
+  if(BUILD_DISTRIBUTED)
+    message(SEND_ERROR "${ColorBoldRed}WARNING: BUILD_DISTRIBUTED was requested but libzip library was NOT found. KataGo needs this for writing training data so libzip is required. On Linux, install through your normal package manager. On Windows, set LIBZIP_INCLUDE_DIR_ZIP to the directory that includes zip.h and other files, and LIBZIP_INCLUDE_DIR_ZIPCONF to the directory that includes zipconf.h and other files, and LIBZIP_LIBRARY to the libzip.lib or zip.lib file. ${ColorReset}")
+  endif()
   target_compile_definitions(katago PRIVATE NO_LIBZIP)
   message(WARNING "${ColorBoldRed}WARNING: libzip library was NOT found. KataGo should still work for GTP/matches/analysis if everything else is good, but selfplay for writing training data will not be possible.${ColorReset}")
   set(LIBZIP_INCLUDE_DIR_ZIP ${LIBZIP_INCLUDE_DIR_ZIP} CACHE PATH "Path to directory with zip.h and other header files")
   set(LIBZIP_INCLUDE_DIR_ZIPCONF ${LIBZIP_INCLUDE_DIR_ZIPCONF} CACHE PATH "Path to directory with zipconf.h and other header files")
-  set(LIBZIP_LIBRARY ${LIBZIP_LIBRARY} CACHE FILEPATH "Path to 'libzip.so' on Linux or 'libzip.lib' on Windows")
+  set(LIBZIP_LIBRARY ${LIBZIP_LIBRARY} CACHE FILEPATH "Path to 'libzip.so' on Linux or 'libzip.lib' or 'zip.lib' on Windows")
   mark_as_advanced(CLEAR LIBZIP_INCLUDE_DIR_ZIP LIBZIP_INCLUDE_DIR_ZIPCONF LIBZIP_LIBRARY)
 else()
   include_directories(${LIBZIP_INCLUDE_DIR_ZIP})
@@ -364,35 +387,24 @@ else()
   target_link_libraries(katago ${LIBZIP_LIBRARY})
 endif()
 
-if(Boost_USE_STATIC_LIBS_ON)
-  set(Boost_USE_STATIC_LIBS ON)
-endif()
-find_package(Boost COMPONENTS system filesystem)
-set(BOOST_ROOT ${BOOST_ROOT} CACHE PATH "Path to root directory containing boost")
-mark_as_advanced(CLEAR BOOST_ROOT)
-if(Boost_FOUND)
-  include_directories(${Boost_INCLUDE_DIRS})
-  target_link_libraries(katago ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
-else()
-  message(SEND_ERROR "${ColorBoldRed}Unable to find Boost. If boost is actually installed but not being found, please set BOOST_ROOT to the root directory containing Boost or BOOST_INCLUDEDIR to the directory containing Boost's headers. On the command line, this is -DBOOST_ROOT=... or -DBOOST_INCLUDEDIR=... ${ColorReset}")
-endif()
-
 if(USE_TCMALLOC)
   target_link_libraries(katago ${TCMALLOC_LIB})
 endif(USE_TCMALLOC)
 
+if(BUILD_DISTRIBUTED)
+  message(STATUS "-DBUILD_DISTRIBUTED=1 is set, compiling code and dependencies to contribute to distributed training")
+  target_compile_definitions(katago PRIVATE BUILD_DISTRIBUTED)
+  find_package(OpenSSL REQUIRED)
+  target_link_libraries(katago ${OPENSSL_SSL_LIBRARIES} ${OPENSSL_CRYPTO_LIBRARIES})
+  include_directories(${OPENSSL_INCLUDE_DIR})
+  include_directories(external/httplib)
+endif()
 
 #------------------------------------------------------------------------------------
 
 # add_compile_definitions(NDEBUG)
 
 if(MSVC)
-  # Getting boost to work on MSVC seems to require forcing it to link
-  # with dlls instead of static, and needs this option
-  if(NOT Boost_USE_STATIC_LIBS_ON)
-    target_compile_definitions(katago PRIVATE BOOST_ALL_DYN_LINK)
-  endif()
-
   # Suppress min and max macros on windows
   # Also define a few other things for windows
   target_compile_definitions(katago PRIVATE NOMINMAX)
@@ -411,7 +423,7 @@ if(MSVC)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
-  if(NOT (${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm"))
+  if(NOT (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(arm|aarch32|aarch64)"))
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -mfpmath=sse")
   endif()
   if(USE_AVX2)

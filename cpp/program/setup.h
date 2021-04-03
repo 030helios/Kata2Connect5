@@ -22,6 +22,7 @@ namespace Setup {
   NNEvaluator* initializeNNEvaluator(
     const std::string& nnModelNames,
     const std::string& nnModelFiles,
+    const std::string& expectedSha256,
     ConfigParser& cfg,
     Logger& logger,
     Rand& seedRand,
@@ -36,6 +37,7 @@ namespace Setup {
   std::vector<NNEvaluator*> initializeNNEvaluators(
     const std::vector<std::string>& nnModelNames,
     const std::vector<std::string>& nnModelFiles,
+    const std::vector<std::string>& expectedSha256s,
     ConfigParser& cfg,
     Logger& logger,
     Rand& seedRand,
@@ -47,13 +49,17 @@ namespace Setup {
     setup_for_t setupFor
   );
 
+  constexpr int MAX_BOT_PARAMS_FROM_CFG = 4096;
+
   //Loads search parameters for bot from config, by bot idx.
   //Fails if no parameters are found.
   std::vector<SearchParams> loadParams(
-    ConfigParser& cfg
+    ConfigParser& cfg,
+    setup_for_t setupFor
   );
   SearchParams loadSingleParams(
-    ConfigParser& cfg
+    ConfigParser& cfg,
+    setup_for_t setupFor
   );
 
   Player parseReportAnalysisWinrates(

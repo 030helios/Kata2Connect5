@@ -10,8 +10,8 @@
 #include "../command/commandline.h"
 #include "../main.h"
 
-#include <boost/filesystem.hpp>
 #include <csignal>
+#include <ghc/filesystem.hpp>
 
 using namespace std;
 
@@ -99,8 +99,9 @@ namespace {
       NetAndStuff* netAndStuff;
       if(iter == loadedNets.end()) {
         int defaultMaxBatchSize = -1;
+        string expectedSha256 = "";
         NNEvaluator* nnEval = Setup::initializeNNEvaluator(
-          nnModelFile,nnModelFile,*cfg,logger,seedRand,maxConcurrentEvals,expectedConcurrentEvals,
+          nnModelFile,nnModelFile,expectedSha256,*cfg,logger,seedRand,maxConcurrentEvals,expectedConcurrentEvals,
           NNPos::MAX_BOARD_LEN,NNPos::MAX_BOARD_LEN,defaultMaxBatchSize,
           Setup::SETUP_FOR_MATCH
         );
@@ -248,11 +249,11 @@ namespace {
         }
       }
 
-      namespace bfs = boost::filesystem;
+      namespace gfs = ghc::filesystem;
 
-      for(bfs::directory_iterator iter(resultsDir); iter != bfs::directory_iterator(); ++iter) {
-        bfs::path dirPath = iter->path();
-        if(bfs::is_directory(dirPath))
+      for(gfs::directory_iterator iter(resultsDir); iter != gfs::directory_iterator(); ++iter) {
+        gfs::path dirPath = iter->path();
+        if(gfs::is_directory(dirPath))
           continue;
         string file = dirPath.string();
         if(Global::isSuffix(file,".results.csv")) {
@@ -438,9 +439,9 @@ int MainCmds::matchauto(int argc, const char* const* argv) {
   logger.write(string("Git revision: ") + Version::getGitRevision());
 
   //Load per-bot search config, first, which also tells us how many bots we're running
-  vector<SearchParams> paramss = Setup::loadParams(cfg);
+  vector<SearchParams> paramss = Setup::loadParams(cfg,Setup::SETUP_FOR_MATCH);
   assert(paramss.size() > 0);
-  int numBots = paramss.size();
+  int numBots = (int)paramss.size();
 
   //Load the names of the bots and which model each bot is using
   vector<string> nnModelFilesByBot;
@@ -532,8 +533,8 @@ int MainCmds::matchauto(int argc, const char* const* argv) {
       if(autoMatchPairer->getMatchup(manager, forBot, botSpecB, botSpecW, logger)) {
         string seed = gameSeedBase + ":" + Global::uint64ToHexString(thisLoopSeedRand.nextUInt64());
         gameData = gameRunner->runGame(
-          seed, botSpecB, botSpecW, NULL, logger,
-          stopConditions, NULL
+          seed, botSpecB, botSpecW, NULL, NULL, logger,
+          stopConditions, nullptr, nullptr, false
         );
       }
 
@@ -543,7 +544,7 @@ int MainCmds::matchauto(int argc, const char* const* argv) {
       bool shouldContinue = gameData != NULL;
       if(gameData != NULL) {
         if(sgfOut != NULL) {
-          WriteSgf::writeSgf(*sgfOut,gameData->bName,gameData->wName,gameData->endHist,gameData,false);
+          WriteSgf::writeSgf(*sgfOut,gameData->bName,gameData->wName,gameData->endHist,gameData,false,true);
           (*sgfOut) << endl;
         }
 

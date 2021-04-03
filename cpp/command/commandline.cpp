@@ -5,8 +5,8 @@
 #include "../program/setup.h"
 #include "../main.h"
 
-#include <boost/filesystem.hpp>
-namespace bfs = boost::filesystem;
+#include <ghc/filesystem.hpp>
+namespace gfs = ghc::filesystem;
 
 using namespace std;
 
@@ -14,10 +14,10 @@ using namespace std;
 
 static bool doesPathExist(const string& path) {
   try {
-    bfs::path bfsPath(path);
-    return bfs::exists(bfsPath);
+    gfs::path gfsPath(path);
+    return gfs::exists(gfsPath);
   }
-  catch(const bfs::filesystem_error&) {
+  catch(const gfs::filesystem_error&) {
     return false;
   }
 }
@@ -106,7 +106,7 @@ class KataHelpOutput : public TCLAP::StdOutput
     // TCLAP adds arguments in reverse order for some reason. So we iterate in reverse for help output.
     // Also we limit based on shortUsageArgLimit.
     int lowerLimit = shortUsageArgLimit < 0 ? 0 : std::max(0, (int)argVec.size() - numBuiltInArgs - 1 - shortUsageArgLimit + 1);
-    for(int i = argVec.size() - numBuiltInArgs - 1; i >= lowerLimit; i--) {
+    for(int i = (int)argVec.size() - numBuiltInArgs - 1; i >= lowerLimit; i--) {
       if(!xorHandler.contains(argVec[i]))
         s += " " + argVec[i]->shortID();
     }
@@ -146,7 +146,7 @@ class KataHelpOutput : public TCLAP::StdOutput
 
     // TCLAP adds arguments in reverse order for some reason. So we iterate in reverse for help output.
     // Also we limit based on shortUsageArgLimit.
-    for(int i = argVec.size() - numBuiltInArgs - 1; i >= 0; i--) {
+    for(int i = (int)argVec.size() - numBuiltInArgs - 1; i >= 0; i--) {
       if(!xorHandler.contains(argVec[i])) {
         spacePrint(os, argVec[i]->longID(), 75, 3, 3);
         spacePrint(os, argVec[i]->getDescription(), 75, 5, 0);
@@ -155,7 +155,7 @@ class KataHelpOutput : public TCLAP::StdOutput
     }
 
     //Now also show the default args.
-    for(int i = argVec.size() - numBuiltInArgs; i < argVec.size(); i++) {
+    for(int i = (int)argVec.size() - numBuiltInArgs; i < argVec.size(); i++) {
       if(!xorHandler.contains(argVec[i])) {
         spacePrint(os, argVec[i]->longID(), 75, 3, 3);
         spacePrint(os, argVec[i]->getDescription(), 75, 5, 0);
@@ -179,7 +179,7 @@ KataGoCommandLine::KataGoCommandLine(const string& message)
   configFileArg(NULL),
   overrideConfigArg(NULL),
   defaultConfigFileName(),
-  numBuiltInArgs(_argList.size()),
+  numBuiltInArgs((int)_argList.size()),
   helpOutput(NULL)
 {
   helpOutput = new KataHelpOutput(numBuiltInArgs, -1);
@@ -199,7 +199,7 @@ string KataGoCommandLine::defaultGtpConfigFileName() {
 }
 
 void KataGoCommandLine::setShortUsageArgLimit() {
-  helpOutput->setShortUsageArgLimit(_argList.size() - numBuiltInArgs);
+  helpOutput->setShortUsageArgLimit((int)_argList.size() - numBuiltInArgs);
 }
 
 void KataGoCommandLine::addModelFileArg() {
@@ -237,8 +237,8 @@ void KataGoCommandLine::addConfigFileArg(const string& defaultCfgFileName, const
 
 void KataGoCommandLine::addOverrideConfigArg() {
   assert(overrideConfigArg == NULL);
-  overrideConfigArg = new TCLAP::ValueArg<string>(
-    "","override-config","Override config parameters. Format: \"key=value, key=value,...\"",false,string(),"KEYVALUEPAIRS"
+  overrideConfigArg = new TCLAP::MultiArg<string>(
+    "","override-config","Override config parameters. Format: \"key=value, key=value,...\"",false,"KEYVALUEPAIRS"
   );
   this->add(*overrideConfigArg);
 }
@@ -296,12 +296,14 @@ string KataGoCommandLine::getConfigFile() const {
 
 void KataGoCommandLine::maybeApplyOverrideConfigArg(ConfigParser& cfg) const {
   if(overrideConfigArg != NULL) {
-    string overrideConfig = overrideConfigArg->getValue();
-    if(overrideConfig != "") {
-      map<string,string> newkvs = ConfigParser::parseCommaSeparated(overrideConfig);
-      //HACK to avoid a common possible conflict - if we specify some of the rules options on one side, the other side should be erased.
-      vector<pair<set<string>,set<string>>> mutexKeySets = Setup::getMutexKeySets();
-      cfg.overrideKeys(newkvs,mutexKeySets);
+    vector<string> overrideConfigs = overrideConfigArg->getValue();
+    for(const string& overrideConfig : overrideConfigs) {
+      if(overrideConfig != "") {
+        map<string,string> newkvs = ConfigParser::parseCommaSeparated(overrideConfig);
+        //HACK to avoid a common possible conflict - if we specify some of the rules options on one side, the other side should be erased.
+        vector<pair<set<string>,set<string>>> mutexKeySets = Setup::getMutexKeySets();
+        cfg.overrideKeys(newkvs,mutexKeySets);
+      }
     }
   }
 }

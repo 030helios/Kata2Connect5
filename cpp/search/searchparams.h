@@ -20,7 +20,8 @@ struct SearchParams {
   double cpuctExplorationBase; //Scale of number of visits at which log behavior starts having an effect
   double fpuReductionMax;   //Max amount to reduce fpu value for unexplore children
   double fpuLossProp; //Scale fpu this proportion of the way towards assuming a move is a loss.
-  bool fpuUseParentAverage; //Use parent average value for fpu rather than parent nn value.
+  double fpuParentWeight; //For fpu, 0 = use parent average, 1 = use parent nn value, interpolates between.
+  double parentValueWeightFactor; //Scale the parent weight by this much relative to children in mcts
   double valueWeightExponent; //Amount to apply a downweighting of children with very bad values relative to good ones
 
   //Root parameters
@@ -32,7 +33,7 @@ struct SearchParams {
   double rootPolicyTemperatureEarly; //At the root node, scale policy probs by this power, early in the game
   double rootFpuReductionMax; //Same as fpuReductionMax, but at root
   double rootFpuLossProp; //Same as fpuLossProp, but at root
-  int rootNumSymmetriesToSample; //For the root node, sample this many random symmetries (WITH replacement) and average the results together.
+  int rootNumSymmetriesToSample; //For the root node, sample this many random symmetries (WITHOUT replacement) and average the results together.
 
   //We use the min of these two together, and also excess visits get pruned if the value turns out bad.
   double rootDesiredPerChildVisitsCoeff; //Funnel sqrt(this * policy prob * total visits) down any given child that receives any visits at all at the root
@@ -47,6 +48,7 @@ struct SearchParams {
   bool useLcbForSelection; //Using LCB for move selection?
   double lcbStdevs; //How many stdevs a move needs to be better than another for LCB selection
   double minVisitPropForLCB; //Only use LCB override when a move has this proportion of visits as the top move
+  bool useNonBuggyLcb; //LCB was very minorly buggy as of pre-v1.8. Set to true to fix.
 
   //Mild behavior hackery
   double rootEndingBonusPoints; //Extra bonus (or penalty) to encourage good passing behavior at the end of the game.
@@ -61,6 +63,11 @@ struct SearchParams {
 
   float nnPolicyTemperature; //Scale neural net policy probabilities by this temperature, applies everywhere in the tree
   bool antiMirror; //Enable anti-mirroring logic
+
+  double subtreeValueBiasFactor; //Dynamically adjust neural net utilties based on empirical stats about their errors in search
+  int32_t subtreeValueBiasTableNumShards; //Number of shards for subtreeValueBiasFactor for initial hash lookup and mutexing
+  double subtreeValueBiasFreeProp; //When a node is no longer part of the relevant search tree, only decay this proportion of the weight.
+  double subtreeValueBiasWeightExponent; //When computing empiricial bias, weight subtree results by childvisits to this power.
 
   //Threading-related
   uint32_t mutexPoolSize; //Size of mutex pool for synchronizing access to all search nodes
@@ -83,6 +90,19 @@ struct SearchParams {
   //Human-friendliness
   double searchFactorAfterOnePass; //Multiply playouts and visits and time by this much after a pass by the opponent
   double searchFactorAfterTwoPass; //Multiply playouts and visits and time by this after two passes by the opponent
+
+  //Time control
+  double treeReuseCarryOverTimeFactor; //Assume we gain this much "time" on the next move purely from % tree preserved * time spend on that tree.
+  double overallocateTimeFactor; //Prefer to think this factor longer than recommended by base level time control
+  double midgameTimeFactor; //Think this factor longer in the midgame, proportional to midgame weight
+  double midgameTurnPeakTime; //The turn considered to have midgame weight 1.0, rising up from 0.0 in the opening, for 19x19
+  double endgameTurnTimeDecay; //The scale of exponential decay of midgame weight back to 1.0, for 19x19
+  double obviousMovesTimeFactor; //Think up to this factor longer on obvious moves, weighted by obviousness
+  double obviousMovesPolicyEntropyTolerance; //What entropy does the policy need to be at most to be (1/e) obvious?
+  double obviousMovesPolicySurpriseTolerance; //What logits of surprise does the search result need to be at most to be (1/e) obvious?
+
+  double futileVisitsThreshold; //If a move would not be able to match this proportion of the max visits move in the time or visit or playout cap remaining, prune it.
+
 
   SearchParams();
   ~SearchParams();

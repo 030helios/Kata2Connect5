@@ -12,7 +12,6 @@
 
 #include <Eigen/Dense>
 #include <unsupported/Eigen/CXX11/Tensor>
-#include <zstr/src/zstr.hpp>
 
 #include "../neuralnet/desc.h"
 #include "../neuralnet/modelversion.h"
@@ -71,8 +70,8 @@ void printTensorShape(const string& name, const T* t) {
 struct LoadedModel {
   ModelDesc modelDesc;
 
-  LoadedModel(const string& fileName) {
-    ModelDesc::loadFromFileMaybeGZipped(fileName,modelDesc);
+  LoadedModel(const string& fileName, const string& expectedSha256) {
+    ModelDesc::loadFromFileMaybeGZipped(fileName,modelDesc,expectedSha256);
   }
 
   LoadedModel() = delete;
@@ -80,8 +79,8 @@ struct LoadedModel {
   LoadedModel& operator=(const LoadedModel&) = delete;
 };
 
-LoadedModel* NeuralNet::loadModelFile(const string& file) {
-  LoadedModel* loadedModel = new LoadedModel(file);
+LoadedModel* NeuralNet::loadModelFile(const string& file, const string& expectedSha256) {
+  LoadedModel* loadedModel = new LoadedModel(file,expectedSha256);
   return loadedModel;
 }
 
@@ -888,7 +887,7 @@ struct Trunk {
 
   ConvLayer initialConv;
   MatMulLayer initialMatMul;
-  vector<pair<int, ResidualBlockIntf*>> blocks;
+  vector<pair<int, std::unique_ptr<ResidualBlockIntf>>> blocks;
   BatchNormLayer trunkTipBN;
   ActivationLayer trunkTipActivation;
 
@@ -907,17 +906,17 @@ struct Trunk {
   {
     for (int i = 0; i < numBlocks; ++i) {
       if (desc.blocks[i].first == ORDINARY_BLOCK_KIND) {
-        ResidualBlockDesc* blockDesc = (ResidualBlockDesc*)desc.blocks[i].second;
-        ResidualBlockIntf* block = new ResidualBlock(*blockDesc,nnX,nnY);
-        blocks.push_back(make_pair(ORDINARY_BLOCK_KIND, block));
+        ResidualBlockDesc* blockDesc = (ResidualBlockDesc*)desc.blocks[i].second.get();
+        std::unique_ptr<ResidualBlockIntf> block = std::make_unique<ResidualBlock>(*blockDesc,nnX,nnY);
+        blocks.push_back(make_pair(ORDINARY_BLOCK_KIND, std::move(block)));
       }
       else if (desc.blocks[i].first == DILATED_BLOCK_KIND) {
         throw StringError("Eigen backend: Dilated residual blocks are not supported right now");
       }
       else if (desc.blocks[i].first == GLOBAL_POOLING_BLOCK_KIND) {
-        GlobalPoolingResidualBlockDesc* blockDesc = (GlobalPoolingResidualBlockDesc*)desc.blocks[i].second;
-        GlobalPoolingResidualBlock* block = new GlobalPoolingResidualBlock(*blockDesc,nnX,nnY);
-        blocks.push_back(make_pair(GLOBAL_POOLING_BLOCK_KIND, block));
+        GlobalPoolingResidualBlockDesc* blockDesc = (GlobalPoolingResidualBlockDesc*)desc.blocks[i].second.get();
+        std::unique_ptr<GlobalPoolingResidualBlock> block = std::make_unique<GlobalPoolingResidualBlock>(*blockDesc,nnX,nnY);
+        blocks.push_back(make_pair(GLOBAL_POOLING_BLOCK_KIND, std::move(block)));
       }
       else {
         ASSERT_UNREACHABLE;
@@ -925,10 +924,7 @@ struct Trunk {
     }
   }
 
-  virtual ~Trunk() {
-    for (auto p : blocks) {
-      delete p.second;
-    }
+  ~Trunk() {
   }
 
   size_t requiredConvWorkspaceElts(size_t maxBatchSize) const {
@@ -965,7 +961,7 @@ struct Trunk {
 
     // apply blocks
     // Flip trunkBuf and trunkScratchBuf so that the result gets accumulated in trunkScratchBuf
-    for (auto block : blocks) {
+    for(auto& block : blocks) {
       block.second->apply(
         handle,
         trunkScratch,
@@ -1516,7 +1512,6 @@ void NeuralNet::getOutput(
   InputBuffers* inputBuffers,
   int numBatchEltsFilled,
   NNResultBuf** inputBufs,
-  int symmetry,
   vector<NNOutput*>& outputs
 ) {
   assert(numBatchEltsFilled <= inputBuffers->maxBatchSize);
@@ -1539,7 +1534,7 @@ void NeuralNet::getOutput(
     const float* rowGlobal = inputBufs[nIdx]->rowGlobal;
     const float* rowSpatial = inputBufs[nIdx]->rowSpatial;
     std::copy(rowGlobal,rowGlobal+numGlobalFeatures,rowGlobalInput);
-    SymmetryHelpers::copyInputsWithSymmetry(rowSpatial, rowSpatialInput, 1, nnYLen, nnXLen, numSpatialFeatures, computeHandle->inputsUseNHWC, symmetry);
+    SymmetryHelpers::copyInputsWithSymmetry(rowSpatial, rowSpatialInput, 1, nnYLen, nnXLen, numSpatialFeatures, computeHandle->inputsUseNHWC, inputBufs[nIdx]->symmetry);
   }
 
   Buffers& buffers = *(computeHandle->buffers);
@@ -1636,7 +1631,7 @@ void NeuralNet::getOutput(
     //These are not actually correct, the client does the postprocessing to turn them into
     //policy probabilities and white game outcome probabilities
     //Also we don't fill in the nnHash here either
-    SymmetryHelpers::copyOutputsWithSymmetry(policySrcBuf, policyProbs, 1, nnYLen, nnXLen, symmetry);
+    SymmetryHelpers::copyOutputsWithSymmetry(policySrcBuf, policyProbs, 1, nnYLen, nnXLen, inputBufs[row]->symmetry);
     policyProbs[inputBuffers->singlePolicyResultElts] = policyPassData[row];
 
     int numValueChannels = computeHandle->context->model.numValueChannels;
@@ -1650,16 +1645,28 @@ void NeuralNet::getOutput(
     if(output->whiteOwnerMap != NULL) {
       const float* ownershipSrcBuf = ownershipData + row * nnXLen * nnYLen;
       assert(computeHandle->context->model.numOwnershipChannels == 1);
-      SymmetryHelpers::copyOutputsWithSymmetry(ownershipSrcBuf, output->whiteOwnerMap, 1, nnYLen, nnXLen, symmetry);
+      SymmetryHelpers::copyOutputsWithSymmetry(ownershipSrcBuf, output->whiteOwnerMap, 1, nnYLen, nnXLen, inputBufs[row]->symmetry);
     }
 
-    if(version >= 8) {
+    if(version >= 9) {
+      int numScoreValueChannels = computeHandle->context->model.numScoreValueChannels;
+      assert(numScoreValueChannels == 6);
+      output->whiteScoreMean = scoreValueData[row * numScoreValueChannels];
+      output->whiteScoreMeanSq = scoreValueData[row * numScoreValueChannels + 1];
+      output->whiteLead = scoreValueData[row * numScoreValueChannels + 2];
+      output->varTimeLeft = scoreValueData[row * numScoreValueChannels + 3];
+      output->shorttermWinlossError = scoreValueData[row * numScoreValueChannels + 4];
+      output->shorttermScoreError = scoreValueData[row * numScoreValueChannels + 5];
+    }
+    else if(version >= 8) {
       int numScoreValueChannels = computeHandle->context->model.numScoreValueChannels;
       assert(numScoreValueChannels == 4);
       output->whiteScoreMean = scoreValueData[row * numScoreValueChannels];
       output->whiteScoreMeanSq = scoreValueData[row * numScoreValueChannels + 1];
       output->whiteLead = scoreValueData[row * numScoreValueChannels + 2];
       output->varTimeLeft = scoreValueData[row * numScoreValueChannels + 3];
+      output->shorttermWinlossError = 0;
+      output->shorttermScoreError = 0;
     }
     else if(version >= 4) {
       int numScoreValueChannels = computeHandle->context->model.numScoreValueChannels;
@@ -1668,6 +1675,8 @@ void NeuralNet::getOutput(
       output->whiteScoreMeanSq = scoreValueData[row * numScoreValueChannels + 1];
       output->whiteLead = output->whiteScoreMean;
       output->varTimeLeft = 0;
+      output->shorttermWinlossError = 0;
+      output->shorttermScoreError = 0;
     }
     else if(version >= 3) {
       int numScoreValueChannels = computeHandle->context->model.numScoreValueChannels;
@@ -1677,6 +1686,8 @@ void NeuralNet::getOutput(
       output->whiteScoreMeanSq = output->whiteScoreMean * output->whiteScoreMean;
       output->whiteLead = output->whiteScoreMean;
       output->varTimeLeft = 0;
+      output->shorttermWinlossError = 0;
+      output->shorttermScoreError = 0;
     }
     else {
       ASSERT_UNREACHABLE;

@@ -18,7 +18,8 @@ SearchParams::SearchParams()
    cpuctExplorationBase(500),
    fpuReductionMax(0.2),
    fpuLossProp(0.0),
-   fpuUseParentAverage(true),
+   fpuParentWeight(0.0),
+   parentValueWeightFactor(1.0),
    valueWeightExponent(0.5),
    rootNoiseEnabled(false),
    rootDirichletNoiseTotalConcentration(10.83),
@@ -37,6 +38,7 @@ SearchParams::SearchParams()
    useLcbForSelection(false),
    lcbStdevs(4.0),
    minVisitPropForLCB(0.05),
+   useNonBuggyLcb(false),
    rootEndingBonusPoints(0.0),
    rootPruneUselessMoves(false),
    conservativePass(false),
@@ -47,6 +49,10 @@ SearchParams::SearchParams()
    playoutDoublingAdvantagePla(C_EMPTY),
    nnPolicyTemperature(1.0f),
    antiMirror(false),
+   subtreeValueBiasFactor(0.0),
+   subtreeValueBiasTableNumShards(65536),
+   subtreeValueBiasFreeProp(0.8),
+   subtreeValueBiasWeightExponent(0.5),
    mutexPoolSize(8192),
    numVirtualLossesPerThread(3),
    numThreads(1),
@@ -58,7 +64,16 @@ SearchParams::SearchParams()
    maxTimePondering(1.0e20),
    lagBuffer(0.0),
    searchFactorAfterOnePass(1.0),
-   searchFactorAfterTwoPass(1.0)
+   searchFactorAfterTwoPass(1.0),
+   treeReuseCarryOverTimeFactor(0.0),
+   overallocateTimeFactor(1.0),
+   midgameTimeFactor(1.0),
+   midgameTurnPeakTime(130.0),
+   endgameTurnTimeDecay(100.0),
+   obviousMovesTimeFactor(1.0),
+   obviousMovesPolicyEntropyTolerance(0.30),
+   obviousMovesPolicySurpriseTolerance(0.15),
+   futileVisitsThreshold(0.0)
 {}
 
 SearchParams::~SearchParams()
@@ -81,6 +96,7 @@ SearchParams SearchParams::forTestsV1() {
   params.rootEndingBonusPoints = 0.5;
   params.rootPruneUselessMoves = true;
   params.conservativePass = true;
+  params.useNonBuggyLcb = true;
   return params;
 }
 

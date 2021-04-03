@@ -42,7 +42,7 @@ void NeuralNet::freeComputeContext(ComputeContext* computeContext) {
   throw StringError("Dummy neural net backend: NeuralNet::freeComputeContext unimplemented");
 }
 
-LoadedModel* NeuralNet::loadModelFile(const string& file) {
+LoadedModel* NeuralNet::loadModelFile(const string& file, const string& expectedSha256) {
   (void)file;
   throw StringError("Dummy neural net backend: NeuralNet::loadModelFile unimplemented");
 }
@@ -116,14 +116,12 @@ void NeuralNet::getOutput(
   InputBuffers* inputBuffers,
   int numBatchEltsFilled,
   NNResultBuf** inputBufs,
-  int symmetry,
   vector<NNOutput*>& outputs
 ) {
   (void)gpuHandle;
   (void)inputBuffers;
   (void)numBatchEltsFilled;
   (void)inputBufs;
-  (void)symmetry;
   (void)outputs;
   throw StringError("Dummy neural net backend: NeuralNet::getOutput unimplemented");
 }

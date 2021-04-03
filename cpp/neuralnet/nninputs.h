@@ -25,12 +25,22 @@ namespace NNPos {
   int getPolicySize(int nnXLen, int nnYLen);
 }
 
+namespace NNInputs {
+  constexpr int SYMMETRY_NOTSPECIFIED = -1;
+  constexpr int SYMMETRY_ALL = -2;
+
+  constexpr int NUM_SYMMETRY_BOOLS = 3;
+  constexpr int NUM_SYMMETRY_COMBINATIONS = 8;
+}
+
 struct MiscNNInputParams {
   double drawEquivalentWinsForWhite = 0.5;
   bool conservativePass = false;
   double playoutDoublingAdvantage = 0.0;
   float nnPolicyTemperature = 1.0f;
   bool avoidMYTDaggerHack = false;
+  // If no symmetry is specified, it will use default or random based on config, unless node is already cached.
+  int symmetry = NNInputs::SYMMETRY_NOTSPECIFIED;
 
   static const Hash128 ZOBRIST_CONSERVATIVE_PASS;
   static const Hash128 ZOBRIST_PLAYOUT_DOUBLINGS;
@@ -39,9 +49,6 @@ struct MiscNNInputParams {
 };
 
 namespace NNInputs {
-  const int NUM_SYMMETRY_BOOLS = 3;
-  const int NUM_SYMMETRY_COMBINATIONS = 8;
-
   const int NUM_FEATURES_SPATIAL_V3 = 22;
   const int NUM_FEATURES_GLOBAL_V3 = 14;
 
@@ -108,8 +115,12 @@ struct NNOutput {
   float whiteScoreMeanSq;
   //Points to make game fair
   float whiteLead;
-  //Expected arrival time of remaining game variance, in turns, weighted by variance
+  //Expected arrival time of remaining game variance, in turns, weighted by variance, only when modelVersion >= 9
   float varTimeLeft;
+  //A metric indicating the "typical" error in the winloss value or the score that the net expects, relative to the
+  //short-term future MCTS value.
+  float shorttermWinlossError;
+  float shorttermScoreError;
 
   //Indexed by pos rather than loc
   //Values in here will be set to negative for illegal moves, including superko

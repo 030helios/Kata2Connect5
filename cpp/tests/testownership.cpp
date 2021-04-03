@@ -18,15 +18,16 @@ void Tests::runOwnershipTests(const string& configFile, const string& modelFile)
 
   int nnXLen = 19;
   int nnYLen = 19;
-  SearchParams params = Setup::loadSingleParams(cfg);
+  SearchParams params = Setup::loadSingleParams(cfg,Setup::SETUP_FOR_GTP);
   NNEvaluator* nnEval;
   {
     Setup::initializeSession(cfg);
     int maxConcurrentEvals = params.numThreads * 2 + 16; // * 2 + 16 just to give plenty of headroom
     int expectedConcurrentEvals = params.numThreads;
     int defaultMaxBatchSize = std::max(8,((params.numThreads+3)/4)*4);
+    string expectedSha256 = "";
     nnEval = Setup::initializeNNEvaluator(
-      modelFile,modelFile,cfg,logger,seedRand,maxConcurrentEvals,expectedConcurrentEvals,
+      modelFile,modelFile,expectedSha256,cfg,logger,seedRand,maxConcurrentEvals,expectedConcurrentEvals,
       nnXLen,nnYLen,defaultMaxBatchSize,
       Setup::SETUP_FOR_GTP
     );

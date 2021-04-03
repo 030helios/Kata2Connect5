@@ -11,7 +11,7 @@
 #include "../core/hash.h"
 
 #ifndef COMPILE_MAX_BOARD_LEN
-#define COMPILE_MAX_BOARD_LEN 6
+#define COMPILE_MAX_BOARD_LEN 19
 #endif
 
 //TYPES AND CONSTANTS-----------------------------------------------------------------
@@ -20,15 +20,16 @@ struct Board;
 
 //Player
 typedef int8_t Player;
-static const Player P_BLACK = 1;
-static const Player P_WHITE = 2;
+static constexpr Player P_BLACK = 1;
+static constexpr Player P_WHITE = 2;
 
 //Color of a point on the board
 typedef int8_t Color;
-static const Color C_EMPTY = 0;
-static const Color C_BLACK = 1;
-static const Color C_WHITE = 2;
-static const Color C_WALL = 3;
+static constexpr Color C_EMPTY = 0;
+static constexpr Color C_BLACK = 1;
+static constexpr Color C_WHITE = 2;
+static constexpr Color C_WALL = 3;
+static constexpr int NUM_BOARD_COLORS = 4;
 
 static inline Color getOpp(Color c)
 {return c ^ 3;}
@@ -81,10 +82,6 @@ STRUCT_NAMED_PAIR(Loc,loc,Player,pla,Move);
 
 struct Board
 {
-  //surakarta modify
-  //Check if moving here is illegal in surakarta rules.
-  bool kartalegal(Loc loc, Player pla) const;
-
   //Initialization------------------------------
   //Initialize the zobrist hash.
   //MUST BE CALLED AT PROGRAM START!
@@ -156,6 +153,8 @@ struct Board
 
   //Functions------------------------------------
 
+  //Gets the number of stones of the chain at loc. Precondition: location must be black or white.
+  int getChainSize(Loc loc) const;
   //Gets the number of liberties of the chain at loc. Precondition: location must be black or white.
   int getNumLiberties(Loc loc) const;
   //Returns the number of liberties a new stone placed here would have, or max if it would be >= max.
@@ -179,6 +178,8 @@ struct Board
   bool isOnBoard(Loc loc) const;
   //Check if this location contains a simple eye for the specified player.
   bool isSimpleEye(Loc loc, Player pla) const;
+  //Check if a move at this location would be a capture of an opponent group.
+  bool wouldBeCapture(Loc loc, Player pla) const;
   //Check if a move at this location would be a capture in a simple ko mouth.
   bool wouldBeKoCapture(Loc loc, Player pla) const;
   Loc getKoCaptureLoc(Loc loc, Player pla) const;
@@ -191,6 +192,8 @@ struct Board
   bool isNonPassAliveSelfConnection(Loc loc, Player pla, Color* passAliveArea) const;
   //Is this board empty?
   bool isEmpty() const;
+  //Count the number of stones on the board
+  int numStonesOnBoard() const;
 
   //Lift any simple ko ban recorded on thie board due to an immediate prior ko capture.
   void clearSimpleKoLoc();
@@ -204,8 +207,6 @@ struct Board
   //Plays the specified move, assuming it is legal.
   void playMoveAssumeLegal(Loc loc, Player pla);
 
-  //check if connect5
-  bool Board::check5(Loc loc, Player pla, Loc stepping);
   //Plays the specified move, assuming it is legal, and returns a MoveRecord for the move
   MoveRecord playMoveRecorded(Loc loc, Player pla);
 
@@ -283,7 +284,7 @@ struct Board
   int numBlackCaptures; //Number of b stones captured, informational and used by board history when clearing pos
   int numWhiteCaptures; //Number of w stones captured, informational and used by board history when clearing pos
 
-  short adj_offsets[8]; //Indices 0-3: Offsets to add for adjacent points. Indices 4-7: Offsets for diagonal points.
+  short adj_offsets[8]; //Indices 0-3: Offsets to add for adjacent points. Indices 4-7: Offsets for diagonal points. 2 and 3 are +x and +y.
 
   private:
   void init(int xS, int yS);

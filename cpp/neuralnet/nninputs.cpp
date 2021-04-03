@@ -309,6 +309,8 @@ NNOutput::NNOutput(const NNOutput& other) {
   whiteScoreMeanSq = other.whiteScoreMeanSq;
   whiteLead = other.whiteLead;
   varTimeLeft = other.varTimeLeft;
+  shorttermWinlossError = other.shorttermWinlossError;
+  shorttermScoreError = other.shorttermScoreError;
 
   nnXLen = other.nnXLen;
   nnYLen = other.nnYLen;
@@ -330,7 +332,8 @@ NNOutput::NNOutput(const NNOutput& other) {
 }
 
 NNOutput::NNOutput(const vector<shared_ptr<NNOutput>>& others) {
-  int len = others.size();
+  assert(others.size() < 1000000);
+  int len = (int)others.size();
   float floatLen = (float)len;
   assert(len > 0);
   for(int i = 1; i<len; i++) {
@@ -345,6 +348,8 @@ NNOutput::NNOutput(const vector<shared_ptr<NNOutput>>& others) {
   whiteScoreMeanSq = 0.0f;
   whiteLead = 0.0f;
   varTimeLeft = 0.0f;
+  shorttermWinlossError = 0.0f;
+  shorttermScoreError = 0.0f;
   for(int i = 0; i<len; i++) {
     const NNOutput& other = *(others[i]);
     whiteWinProb += other.whiteWinProb;
@@ -354,6 +359,8 @@ NNOutput::NNOutput(const vector<shared_ptr<NNOutput>>& others) {
     whiteScoreMeanSq += other.whiteScoreMeanSq;
     whiteLead += other.whiteLead;
     varTimeLeft += other.varTimeLeft;
+    shorttermWinlossError += other.shorttermWinlossError;
+    shorttermScoreError += other.shorttermScoreError;
   }
   whiteWinProb /= floatLen;
   whiteLossProb /= floatLen;
@@ -362,6 +369,8 @@ NNOutput::NNOutput(const vector<shared_ptr<NNOutput>>& others) {
   whiteScoreMeanSq /= floatLen;
   whiteLead /= floatLen;
   varTimeLeft /= floatLen;
+  shorttermWinlossError /= floatLen;
+  shorttermScoreError /= floatLen;
 
   nnXLen = others[0]->nnXLen;
   nnYLen = others[0]->nnYLen;
@@ -428,6 +437,8 @@ NNOutput& NNOutput::operator=(const NNOutput& other) {
   whiteScoreMeanSq = other.whiteScoreMeanSq;
   whiteLead = other.whiteLead;
   varTimeLeft = other.varTimeLeft;
+  shorttermWinlossError = other.shorttermWinlossError;
+  shorttermScoreError = other.shorttermScoreError;
 
   nnXLen = other.nnXLen;
   nnYLen = other.nnYLen;
@@ -474,6 +485,8 @@ void NNOutput::debugPrint(ostream& out, const Board& board) {
   out << "ScoreMeanSq " << Global::strprintf("%.1f",whiteScoreMeanSq) << endl;
   out << "Lead " << Global::strprintf("%.1f",whiteLead) << endl;
   out << "VarTimeLeft " << Global::strprintf("%.1f",varTimeLeft) << endl;
+  out << "STWinlossError " << Global::strprintf("%.1f",shorttermWinlossError) << endl;
+  out << "STScoreError " << Global::strprintf("%.1f",shorttermScoreError) << endl;
 
   out << "Policy" << endl;
   for(int y = 0; y<board.y_size; y++) {
@@ -967,7 +980,7 @@ void NNInputs::fillRowV3(
 
   //Komi and any score adjustments
   float selfKomi = hist.currentSelfKomi(nextPlayer,nnInputParams.drawEquivalentWinsForWhite);
-  float bArea = xSize * ySize;
+  float bArea = (float)(xSize * ySize);
   //Bound komi just in case
   if(selfKomi > bArea+1.0f)
     selfKomi = bArea+1.0f;
@@ -1297,7 +1310,7 @@ void NNInputs::fillRowV4(
 
   //Komi and any score adjustments
   float selfKomi = hist.currentSelfKomi(nextPlayer,nnInputParams.drawEquivalentWinsForWhite);
-  float bArea = xSize * ySize;
+  float bArea = (float)(xSize * ySize);
   //Bound komi just in case
   if(selfKomi > bArea+1.0f)
     selfKomi = bArea+1.0f;
@@ -1565,7 +1578,7 @@ void NNInputs::fillRowV5(
 
   //Komi and any score adjustments
   float selfKomi = hist.currentSelfKomi(nextPlayer,nnInputParams.drawEquivalentWinsForWhite);
-  float bArea = xSize * ySize;
+  float bArea = (float)(xSize * ySize);
   //Bound komi just in case
   if(selfKomi > bArea+1.0f)
     selfKomi = bArea+1.0f;
@@ -1882,7 +1895,7 @@ void NNInputs::fillRowV6(
 
   //Komi and any score adjustments
   float selfKomi = hist.currentSelfKomi(nextPlayer,nnInputParams.drawEquivalentWinsForWhite);
-  float bArea = xSize * ySize;
+  float bArea = (float)(xSize * ySize);
   //Bound komi just in case
   if(selfKomi > bArea+1.0f)
     selfKomi = bArea+1.0f;
@@ -2277,7 +2290,7 @@ void NNInputs::fillRowV7(
 
   //Komi and any score adjustments
   float selfKomi = hist.currentSelfKomi(nextPlayer,nnInputParams.drawEquivalentWinsForWhite);
-  float bArea = xSize * ySize;
+  float bArea = (float)(xSize * ySize);
   //Bound komi just in case
   if(selfKomi > bArea+1.0f)
     selfKomi = bArea+1.0f;
