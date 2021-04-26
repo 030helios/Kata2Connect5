@@ -5,11 +5,14 @@
 #include "../core/rand.h"
 #include "../core/elo.h"
 #include "../core/fancymath.h"
+#include "../core/config_parser.h"
 #include "../game/board.h"
 #include "../game/rules.h"
 #include "../game/boardhistory.h"
 #include "../neuralnet/nninputs.h"
+#include "../program/gtpconfig.h"
 #include "../tests/tests.h"
+#include "../tests/tinymodel.h"
 #include "../main.h"
 
 using namespace std;
@@ -56,7 +59,9 @@ int MainCmds::runoutputtests(int argc, const char* const* argv) {
   Tests::runTrainingWriteTests();
   Tests::runTimeControlsTests();
   Tests::runScoreTests();
+  Tests::runBasicSymmetryTests();
   Tests::runNNSymmetryTests();
+  Tests::runSgfFileTests();
 
   ScoreValue::freeTables();
 
@@ -138,6 +143,24 @@ int MainCmds::runselfplayinittests(int argc, const char* const* argv) {
     string(argv[1])
   );
   Tests::runMoreSelfplayTestsWithNN(
+    string(argv[1])
+  );
+
+  ScoreValue::freeTables();
+
+  return 0;
+}
+
+int MainCmds::runselfplayinitstattests(int argc, const char* const* argv) {
+  if(argc != 2) {
+    cerr << "Must supply exactly one argument: MODEL_FILE" << endl;
+    return 1;
+  }
+
+  Board::initHash();
+  ScoreValue::initTables();
+
+  Tests::runSelfplayStatTestsWithNN(
     string(argv[1])
   );
 
@@ -246,6 +269,27 @@ int MainCmds::runnnonmanyposestest(int argc, const char* const* argv) {
   return 0;
 }
 
+int MainCmds::runnnbatchingtest(int argc, const char* const* argv) {
+  if(argc != 5) {
+    cerr << "Must supply exactly four arguments: MODEL_FILE INPUTSNHWC CUDANHWC FP16" << endl;
+    return 1;
+  }
+  Board::initHash();
+  ScoreValue::initTables();
+
+  Tests::runNNBatchingTest(
+    string(argv[1]),
+    Global::stringToBool(argv[2]),
+    Global::stringToBool(argv[3]),
+    Global::stringToBool(argv[4])
+  );
+
+  ScoreValue::freeTables();
+
+  return 0;
+}
+
+
 int MainCmds::runownershiptests(int argc, const char* const* argv) {
   if(argc != 3) {
     cerr << "Must supply exactly two arguments: GTP_CONFIG MODEL_FILE" << endl;
@@ -257,6 +301,54 @@ int MainCmds::runownershiptests(int argc, const char* const* argv) {
   Tests::runOwnershipTests(
     string(argv[1]),
     string(argv[2])
+  );
+
+  ScoreValue::freeTables();
+  return 0;
+}
+
+
+int MainCmds::runtinynntests(int argc, const char* const* argv) {
+  if(argc != 2) {
+    cerr << "Must supply exactly one arguments: TMPDIR" << endl;
+    return 1;
+  }
+  Board::initHash();
+  ScoreValue::initTables();
+
+  Logger logger;
+  logger.setLogToStdout(true);
+  logger.setLogTime(false);
+
+  ConfigParser cfg;
+  {
+    //Dummy parameters
+    int maxVisits = 500;
+    int maxPlayouts = 500;
+    double maxTime = 1.0;
+    double maxPonderTime = 1.0;
+    int nnCacheSizePowerOfTwo = 12;
+    int nnMutexPoolSizePowerOfTwo = 10;
+    int numSearchThreads = 3;
+    string cfgStr = GTPConfig::makeConfig(
+      Rules(),
+      maxVisits,
+      maxPlayouts,
+      maxTime,
+      maxPonderTime,
+      std::vector<int>(),
+      nnCacheSizePowerOfTwo,
+      nnMutexPoolSizePowerOfTwo,
+      numSearchThreads
+    );
+    istringstream in(cfgStr);
+    cfg.initialize(in);
+  }
+
+  TinyModelTest::runTinyModelTest(
+    string(argv[1]),
+    logger,
+    cfg
   );
 
   ScoreValue::freeTables();

@@ -1,6 +1,7 @@
 #ifndef PROGRAM_PLAY_UTILS_H_
 #define PROGRAM_PLAY_UTILS_H_
 
+#include "../core/config_parser.h"
 #include "../program/play.h"
 #include "../search/asyncbot.h"
 
@@ -20,6 +21,14 @@ namespace PlayUtils {
 
   //Set board to empty and place fixed handicap stones, raising an exception if invalid
   void placeFixedHandicap(Board& board, int n);
+
+  ExtraBlackAndKomi chooseExtraBlackAndKomi(
+    float base, float stdev, double allowIntegerProb,
+    double handicapProb, int numExtraBlackFixed,
+    double bigStdevProb, float bigStdev, double sqrtBoardArea, Rand& rand
+  );
+  void setKomiWithoutNoise(const ExtraBlackAndKomi& extraBlackAndKomi, BoardHistory& hist); //Also ignores allowInteger
+  void setKomiWithNoise(const ExtraBlackAndKomi& extraBlackAndKomi, BoardHistory& hist, Rand& rand);
 
   ReportedSearchValues getWhiteScoreValues(
     Search* bot,
@@ -43,6 +52,16 @@ namespace PlayUtils {
     double temperature,
     bool allowPass,
     Loc banMove
+  );
+
+  Loc getGameInitializationMove(
+    Search* botB, Search* botW, Board& board, const BoardHistory& hist, Player pla, NNResultBuf& buf,
+    Rand& gameRand, double temperature
+  );
+  void initializeGameUsingPolicy(
+    Search* botB, Search* botW, Board& board, BoardHistory& hist, Player& pla,
+    Rand& gameRand, bool doEndGameIfAllPassAlive,
+    double proportionOfBoardArea, double temperature
   );
 
   float roundAndClipKomi(double unrounded, const Board& board, bool looseClipping);
@@ -107,7 +126,8 @@ namespace PlayUtils {
     const BoardHistory& hist,
     Player pla,
     int64_t numVisits,
-    Logger& logger
+    Logger& logger,
+    std::vector<double>& ownershipsBuf
   );
 
 
@@ -145,6 +165,25 @@ namespace PlayUtils {
   void printGenmoveLog(std::ostream& out, const AsyncBot* bot, const NNEvaluator* nnEval, Loc moveLoc, double timeTaken, Player perspective);
 
   Rules genRandomRules(Rand& rand);
+
+  Loc maybeCleanupBeforePass(
+    enabled_t cleanupBeforePass,
+    enabled_t friendlyPass,
+    const Player pla,
+    Loc moveLoc,
+    const AsyncBot* bot
+  );
+
+  Loc maybeFriendlyPass(
+    enabled_t cleanupBeforePass,
+    enabled_t friendlyPass,
+    const Player pla,
+    Loc moveLoc,
+    Search* bot,
+    int64_t numVisits,
+    Logger& logger
+  );
+
 }
 
 
