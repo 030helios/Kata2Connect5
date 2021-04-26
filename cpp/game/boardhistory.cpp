@@ -714,7 +714,7 @@ void BoardHistory::setKoRecapBlocked(Loc loc, bool b) {
   }
 }
 
-bool BoardHistory::isLegal(const Board& board, Loc moveLoc, Player movePla) const {
+bool BoardHistory::selectBestChildToDescend(const Board& board, Loc moveLoc, Player movePla) const {
   //Ko-moves in the encore that are recapture blocked are interpreted as pass-for-ko, so they are legal
   if(encorePhase > 0) {
     if(moveLoc >= 0 && moveLoc < Board::MAX_ARR_SIZE && moveLoc != Board::PASS_LOC) {
