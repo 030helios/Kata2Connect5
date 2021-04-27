@@ -843,13 +843,13 @@ bool BoardHistory::makeBoardMoveTolerant(Board& board, Loc moveLoc, Player moveP
   return true;
 }
 
-void BoardHistory::makeBoardMoveAssumeLegal(Board& board, Loc moveLoc, Player movePla, const KoHashTable* rootKoHashTable) {
-  makeBoardMoveAssumeLegal(board,moveLoc,movePla,rootKoHashTable,false);
+void BoardHistory::makeBoardMoveAssumeLegal(Board& board, Loc fromLoc, Loc toLoc, Player movePla, const KoHashTable* rootKoHashTable) {
+  makeBoardMoveAssumeLegal(board,fromLoc,toLoc,movePla,rootKoHashTable,false);
 }
 
-void BoardHistory::makeBoardMoveAssumeLegal(Board& board, Loc moveLoc, Player movePla, const KoHashTable* rootKoHashTable, bool preventEncore) {
+void BoardHistory::makeBoardMoveAssumeLegal(Board& board, Loc fromLoc, Loc toLoc, Player movePla, const KoHashTable* rootKoHashTable, bool preventEncore) {
   Hash128 posHashBeforeMove = board.pos_hash;
-
+  Loc moveLoc;
   //If somehow we're making a move after the game was ended, just clear those values and continue
   isGameFinished = false;
   isPastNormalPhaseEnd = false;
