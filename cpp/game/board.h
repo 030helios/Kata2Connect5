@@ -31,56 +31,56 @@ static constexpr Color C_WHITE = 2;
 static constexpr Color C_WALL = 3;
 static constexpr int NUM_BOARD_COLORS = 4;
 //the loops on the board
-constexpr bool kIsOuter[COMPILE_MAX_BOARD_LEN*COMPILE_MAX_BOARD_LEN] = {
-    false, false, true,  true,  false, false,
-    false, false, true, true,  false, false,
-    true,  true,  true,  true,  true,  true,
-    true,  true,  true,  true,  true,  true,
-    false, false, true, true,  false, false,
-    false, false, true,  true,  false, false};
-constexpr bool kIsInter[COMPILE_MAX_BOARD_LEN*COMPILE_MAX_BOARD_LEN] = {
+constexpr bool kIsOuter[COMPILE_MAX_BOARD_LEN * COMPILE_MAX_BOARD_LEN] = {
+    false, false, true, true, false, false,
+    false, false, true, true, false, false,
+    true, true, true, true, true, true,
+    true, true, true, true, true, true,
+    false, false, true, true, false, false,
+    false, false, true, true, false, false};
+constexpr bool kIsInter[COMPILE_MAX_BOARD_LEN * COMPILE_MAX_BOARD_LEN] = {
     false, true, false, false, true, false,
-    true,  true, true, true,  true, true,
+    true, true, true, true, true, true,
     false, true, false, false, true, false,
     false, true, false, false, true, false,
-    true,  true, true, true,  true, true,
+    true, true, true, true, true, true,
     false, true, false, false, true, false};
 constexpr std::array<int, 56> kOuter = {
-    32, 26, 20, 14, 8,  2,  -1,
+    32, 26, 20, 14, 8, 2, -1,
     12, 13, 14, 15, 16, 17, -1,
-    3,  9,  15, 21, 27, 33, -1,
+    3, 9, 15, 21, 27, 33, -1,
     23, 22, 21, 20, 19, 18, -1,
-    32, 26, 20, 14, 8,  2,  -1,
+    32, 26, 20, 14, 8, 2, -1,
     12, 13, 14, 15, 16, 17, -1,
-    3,  9,  15, 21, 27, 33, -1,
+    3, 9, 15, 21, 27, 33, -1,
     23, 22, 21, 20, 19, 18, -1};
 constexpr std::array<int, 56> kOuterReverse = {
     18, 19, 20, 21, 22, 23, -1,
-    33, 27, 21, 15, 9,  3,  -1,
+    33, 27, 21, 15, 9, 3, -1,
     17, 16, 15, 14, 13, 12, -1,
-    2,  8,  14, 20, 26, 32, -1,
+    2, 8, 14, 20, 26, 32, -1,
     18, 19, 20, 21, 22, 23, -1,
-    33, 27, 21, 15, 9,  3,  -1,
+    33, 27, 21, 15, 9, 3, -1,
     17, 16, 15, 14, 13, 12, -1,
-    2,  8,  14, 20, 26, 32, -1};
+    2, 8, 14, 20, 26, 32, -1};
 constexpr std::array<int, 56> kInter = {
-    1,  7,  13, 19, 25, 31, -1,
+    1, 7, 13, 19, 25, 31, -1,
     24, 25, 26, 27, 28, 29, -1,
-    34, 28, 22, 16, 10, 4,  -1,
-    11, 10, 9,  8,  7,  6,  -1,
-    1,  7,  13, 19, 25, 31, -1,
+    34, 28, 22, 16, 10, 4, -1,
+    11, 10, 9, 8, 7, 6, -1,
+    1, 7, 13, 19, 25, 31, -1,
     24, 25, 26, 27, 28, 29, -1,
-    34, 28, 22, 16, 10, 4,  -1,
-    11, 10, 9,  8,  7,  6,  -1};
+    34, 28, 22, 16, 10, 4, -1,
+    11, 10, 9, 8, 7, 6, -1};
 constexpr std::array<int, 56> kInterReverse = {
-    6,  7,  8,  9,  10, 11, -1,
-    4,  10, 16, 22, 28, 34, -1,
+    6, 7, 8, 9, 10, 11, -1,
+    4, 10, 16, 22, 28, 34, -1,
     29, 28, 27, 26, 25, 24, -1,
-    31, 25, 19, 13, 7,  1,  -1,
-    6,  7,  8,  9,  10, 11, -1,
-    4,  10, 16, 22, 28, 34, -1,
+    31, 25, 19, 13, 7, 1, -1,
+    6, 7, 8, 9, 10, 11, -1,
+    4, 10, 16, 22, 28, 34, -1,
     29, 28, 27, 26, 25, 24, -1,
-    31, 25, 19, 13, 7,  1,  -1};
+    31, 25, 19, 13, 7, 1, -1};
 
 static inline Color getOpp(Color c)
 {
@@ -195,27 +195,13 @@ struct Board
   Board &operator=(const Board &) = default;
 
   //Functions------------------------------------
-
-  //Gets the number of stones of the chain at loc. Precondition: location must be black or white.
-  int getChainSize(Loc loc) const;
-  //Gets the number of liberties of the chain at loc. Precondition: location must be black or white.
-  int getNumLiberties(Loc loc) const;
-  //Returns the number of liberties a new stone placed here would have, or max if it would be >= max.
-  int getNumLibertiesAfterPlay(Loc loc, Player pla, int max) const;
-  //Returns a fast lower and upper bound on the number of liberties a new stone placed here would have
-  void getBoundNumLibertiesAfterPlay(Loc loc, Player pla, int &lowerBound, int &upperBound) const;
-
-  //Check if moving here would be a self-capture
-  bool isSuicide(Loc loc, Player pla) const;
-  //Check if moving here would be an illegal self-capture
-  bool isIllegalSuicide(Loc loc, Player pla, bool isMultiStoneSuicideLegal) const;
   //Check if moving here is illegal due to simple ko
   bool isKoBanned(Loc loc) const;
   //Check if moving here is legal, ignoring simple ko
   bool isLegalIgnoringKo(Loc fromLoc, Loc toLoc, Player pla, bool isMultiStoneSuicideLegal) const;
   //Check if this is legal capture
-  bool getIsLegalCapture(Player Pla,Loc fromLoc, Loc toLoc) const;
-  bool get_is_legal_capture(Player Pla,Loc fromLoc, Loc toLoc, const std::array<int, 56> &circle) const;
+  bool getIsLegalCapture(Player Pla, Loc fromLoc, Loc toLoc) const;
+  bool get_is_legal_capture(Player Pla, Loc fromLoc, Loc toLoc, const std::array<int, 56> &circle) const;
   //Check if moving here is legal. Equivalent to isLegalIgnoringKo && !isKoBanned
   bool isLegal(Loc fromLoc, Loc toLoc, Player pla, bool isMultiStoneSuicideLegal) const;
   //Check if this location is on the board
@@ -242,57 +228,14 @@ struct Board
   //when also using a BoardHistory, since the BoardHistory may not know about this change, or the game could be in cleanup phase, etc.
   void setSimpleKoLoc(Loc loc);
 
-  //Sets the specified stone if possible. Returns true usually, returns false location or color were out of range.
-  bool setStone(Loc fromLoc, Loc toLoc, Color color);
-
   //Attempts to play the specified move. Returns true if successful, returns false if the move was illegal.
   bool playMove(Loc fromLoc, Loc toLoc, Player pla, bool isMultiStoneSuicideLegal);
 
   //Plays the specified move, assuming it is legal.
   void playMoveAssumeLegal(Loc fromLoc, Loc toLoc, Player pla);
 
-  //Plays the specified move, assuming it is legal, and returns a MoveRecord for the move
-  MoveRecord playMoveRecorded(Loc fromLoc, Loc toLoc, Player pla);
-
-  //Undo the move given by record. Moves MUST be undone in the order they were made.
-  //Undos will NOT typically restore the precise representation in the board to the way it was. The heads of chains
-  //might change, the order of the circular lists might change, etc.
-  void undo(MoveRecord record);
-
   //Get a random legal move that does not fill a simple eye.
   /* Loc getRandomMCLegal(Player pla); */
-
-  //If a point is a pass-alive stone or pass-alive territory for a color, mark it that color.
-  //If nonPassAliveStones, also marks non-pass-alive stones that are not part of the opposing pass-alive territory.
-  //If safeBigTerritories, also marks for each pla empty regions bordered by pla stones and no opp stones, where all pla stones are pass-alive.
-  //If unsafeBigTerritories, also marks for each pla empty regions bordered by pla stones and no opp stones, regardless.
-  //All other points are marked as C_EMPTY.
-  //[result] must be a buffer of size MAX_ARR_SIZE and will get filled with the result
-  void calculateArea(
-      Color *result,
-      bool nonPassAliveStones,
-      bool safeBigTerritories,
-      bool unsafeBigTerritories,
-      bool isMultiStoneSuicideLegal) const;
-
-  //Calculates the area (including non pass alive stones, safe and unsafe big territories)
-  //However, strips out any "seki" regions.
-  //Seki regions are that are adjacent to any remaining empty regions.
-  //If keepTerritories, then keeps the surrounded territories in seki regions, only strips points for stones.
-  //If keepStones, then keeps the stones, only strips points for surrounded territories.
-  //whiteMinusBlackIndependentLifeRegionCount - multiply this by two for a group tax.
-  void calculateIndependentLifeArea(
-      Color *result,
-      int &whiteMinusBlackIndependentLifeRegionCount,
-      bool keepTerritories,
-      bool keepStones,
-      bool isMultiStoneSuicideLegal) const;
-
-  //Run some basic sanity checks on the board state, throws an exception if not consistent, for testing/debugging
-  void checkConsistency() const;
-  //For the moment, only used in testing since it does extra consistency checks.
-  //If we need a version to be used in "prod", we could make an efficient version maybe as operator==.
-  bool isEqualForTesting(const Board &other, bool checkNumCaptures, bool checkSimpleKo) const;
 
   static Board parseBoard(int xSize, int ySize, const std::string &s);
   static Board parseBoard(int xSize, int ySize, const std::string &s, char lineDelimiter);
@@ -301,10 +244,10 @@ struct Board
 
   //Data--------------------------------------------
 
-  int x_size;                 //Horizontal size of board
-  int y_size;                 //Vertical size of board
-  Color colors[MAX_ARR_SIZE]; //Color of each location on the board.
-  std::map<Color[MAX_ARR_SIZE], int> repeat_;
+  int x_size;                        //Horizontal size of board
+  int y_size;                        //Vertical size of board
+  array<Color, MAX_ARR_SIZE> colors; //Color of each location on the board.
+  std::map<array<Color, MAX_ARR_SIZE>, int> repeat_;
 
   //Every chain of stones has one of its stones arbitrarily designated as the head.
   ChainData chain_data[MAX_ARR_SIZE]; //For each head stone, the chaindata for the chain under that head. Undefined otherwise.
@@ -324,30 +267,7 @@ struct Board
 
 private:
   void init(int xS, int yS);
-  int countHeuristicConnectionLibertiesX2(Loc loc, Player pla) const;
-  bool isLibertyOf(Loc loc, Loc head) const;
-
-  void changeSurroundingLiberties(Loc loc, Color color, int delta);
-
   friend std::ostream &operator<<(std::ostream &out, const Board &board);
-
-  int findLiberties(Loc loc, std::vector<Loc> &buf, int bufStart, int bufIdx) const;
-  int findLibertyGainingCaptures(Loc loc, std::vector<Loc> &buf, int bufStart, int bufIdx) const;
-  bool hasLibertyGainingCaptures(Loc loc) const;
-
-  void calculateAreaForPla(
-      Player pla,
-      bool safeBigTerritories,
-      bool unsafeBigTerritories,
-      bool isMultiStoneSuicideLegal,
-      Color *result) const;
-
-  void calculateIndependentLifeAreaHelper(
-      const Color *basicArea,
-      Color *result,
-      int &whiteMinusBlackIndependentLifeRegionCount) const;
-
-  //static void monteCarloOwner(Player player, Board* board, int mc_counts[]);
 };
 
 #endif // GAME_BOARD_H_
