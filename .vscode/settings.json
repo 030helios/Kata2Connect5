@@ -24,6 +24,14 @@
         "iterator": "cpp",
         "ratio": "cpp",
         "type_traits": "cpp",
-        "*.opencl": "cpp"
+        "*.opencl": "cpp",
+        "atomic": "cpp",
+        "deque": "cpp",
+        "forward_list": "cpp",
+        "list": "cpp",
+        "string": "cpp",
+        "unordered_map": "cpp",
+        "vector": "cpp",
+        "system_error": "cpp"
     }
 }

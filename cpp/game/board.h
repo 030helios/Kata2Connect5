@@ -128,7 +128,7 @@ namespace Location
 }
 
 //Simple structure for storing moves. Not used below, but this is a convenient place to define it.
-STRUCT_NAMED_PAIR(Loc, loc, Player, pla, Move);
+STRUCT_NAMED_TRIPLE(Loc, fromLoc,Loc, toLoc, Player, pla, Move);
 
 //Fast lightweight board designed for playouts and simulations, where speed is essential.
 //Simple ko rule only.
