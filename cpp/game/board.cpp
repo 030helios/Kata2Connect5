@@ -625,22 +625,7 @@ void Board::printBoard(ostream &out, const Board &board, Loc markLoc, const vect
       else
         out << s;
 
-      bool histMarked = false;
-      if (hist != NULL)
-      {
-        size_t start = hist->size() >= 3 ? hist->size() - 3 : 0;
-        for (size_t i = 0; start + i < hist->size(); i++)
-        {
-          if ((*hist)[start + i].loc == loc)
-          {
-            out << (1 + i);
-            histMarked = true;
-            break;
-          }
-        }
-      }
-
-      if (x < board.x_size - 1 && !histMarked)
+      if (x < board.x_size - 1 )
         out << ' ';
     }
     out << "\n";
