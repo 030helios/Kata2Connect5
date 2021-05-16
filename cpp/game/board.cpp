@@ -208,19 +208,19 @@ bool Board::getIsLegalCapture(Player pla, Loc fromLoc, Loc toLoc) const
 //Check if moving here is illegal.
 bool Board::isLegal(Loc fromLoc, Loc toLoc, Player pla, bool isMultiStoneSuicideLegal) const
 {
-  if (colors[toLoc] == C_EMPTY && Location::isAdjacent(toLoc, fromLoc, 6))
-  {
-    return true;
-  }
-  return getIsLegalCapture(pla, fromLoc, toLoc);
+  if (repeat_[colors]>1)
+    return false;
+  return isLegalIgnoringKo(fromLoc, toLoc, pla, isMultiStoneSuicideLegal);
 }
 
 //Check if moving here is illegal, ignoring simple ko
 bool Board::isLegalIgnoringKo(Loc fromLoc, Loc toLoc, Player pla, bool isMultiStoneSuicideLegal) const
 {
-  if (repeat_[colors]>1)
-    return false;
-  return isLegal(fromLoc, toLoc, pla, isMultiStoneSuicideLegal);
+  if (colors[toLoc] == C_EMPTY && Location::isAdjacent(toLoc, fromLoc, 6))
+  {
+    return true;
+  }
+  return getIsLegalCapture(pla, fromLoc, toLoc);
 }
 
 bool Board::isAdjacentToPla(Loc loc, Player pla) const

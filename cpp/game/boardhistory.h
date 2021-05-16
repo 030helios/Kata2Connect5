@@ -49,7 +49,7 @@ struct BoardHistory {
   void clear(const Board& board, Player pla, const Rules& rules, int encorePhase);
 
   //Check if a move on the board is legal, taking into account the full game state and superko
-  bool isLegal(const Board& board, Loc moveLoc, Player movePla) const;
+  bool isLegal(const Board& board, Loc fromLoc, Loc toLoc, Player movePla) const;
 
   void makeBoardMoveAssumeLegal(Board& board, Loc fromLoc, Loc toLoc, Player movePla);
 
