@@ -1469,8 +1469,6 @@ void Search::selectBestChildToDescend(
   bestChildMoveLoc = Board::NULL_LOC;
 
   int numChildren = node.numChildren;
-
-  double policyProbMassVisited = 0.0;
   int64_t maxChildVisits = 0;
   int64_t totalChildVisits = 0;
   float* policyProbs = node.nnOutput->getPolicyProbsMaybeNoised();
@@ -1479,7 +1477,6 @@ void Search::selectBestChildToDescend(
     Loc moveLoc = child->prevMoveLoc;
     int movePos = getPos(moveLoc);
     float nnPolicyProb = policyProbs[movePos];
-    policyProbMassVisited += nnPolicyProb;
 
     while(child->statsLock.test_and_set(std::memory_order_acquire));
     int64_t childVisits = child->stats.visits;
@@ -1489,9 +1486,6 @@ void Search::selectBestChildToDescend(
     if(childVisits > maxChildVisits)
       maxChildVisits = childVisits;
   }
-  //Probability mass should not sum to more than 1, giving a generous allowance
-  //for floating point error.
-  assert(policyProbMassVisited <= 1.0001);
 
   //First play urgency
   double parentUtility;

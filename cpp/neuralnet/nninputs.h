@@ -13,8 +13,8 @@
 namespace NNPos {
   constexpr int MAX_BOARD_LEN = Board::MAX_LEN;
   constexpr int MAX_BOARD_AREA = MAX_BOARD_LEN * MAX_BOARD_LEN;
-  //Policy output adds +1 for the pass move
-  constexpr int MAX_NN_POLICY_SIZE = MAX_BOARD_AREA + 1;
+  //fromLoc and toLoc
+  constexpr int MAX_NN_POLICY_SIZE = MAX_BOARD_AREA*MAX_BOARD_AREA;
   //Extra score distribution radius, used for writing score in data rows and for the neural net score belief output
   constexpr int EXTRA_SCORE_DISTR_RADIUS = 60;
 
