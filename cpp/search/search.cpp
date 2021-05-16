@@ -55,9 +55,9 @@ double Search::getScoreStdev(double scoreMean, double scoreMeanSq) {
 
 //-----------------------------------------------------------------------------------------
 
-SearchNode::SearchNode(Search& search, Player prevPla, Rand& rand, Loc prevLoc, SearchNode* p)
+SearchNode::SearchNode(Search& search, Player prevPla, Rand& rand, Loc prevFromLoc, Loc prevToLoc, SearchNode* p)
   :lockIdx(),
-   nextPla(getOpp(prevPla)),prevMoveLoc(prevLoc),
+   nextPla(getOpp(prevPla)),prevFromLoc(prevFromLoc),prevToLoc(prevToLoc),
    nnOutput(),
    nnOutputAge(0),
    parent(p),
@@ -146,12 +146,8 @@ static const double VALUE_WEIGHT_DEGREES_OF_FREEDOM = 3.0;
 Search::Search(SearchParams params, NNEvaluator* nnEval, const string& rSeed)
   :rootPla(P_BLACK),
    rootBoard(),rootHistory(),rootHintLoc(Board::NULL_LOC),
-   avoidMoveUntilByLocBlack(),avoidMoveUntilByLocWhite(),
    rootSafeArea(NULL),
    recentScoreCenter(0.0),
-   mirroringPla(C_EMPTY),
-   mirrorAdvantage(0.0),
-   mirrorCenterIsSymmetric(false),
    alwaysIncludeOwnerMap(false),
    searchParams(params),numSearchesBegun(0),searchNodeAge(0),
    plaThatSearchIsFor(C_EMPTY),plaThatSearchIsForLastSearch(C_EMPTY),
@@ -168,7 +164,6 @@ Search::Search(SearchParams params, NNEvaluator* nnEval, const string& rSeed)
   assert(nnXLen > 0 && nnXLen <= NNPos::MAX_BOARD_LEN);
   assert(nnYLen > 0 && nnYLen <= NNPos::MAX_BOARD_LEN);
   policySize = NNPos::getPolicySize(nnXLen,nnYLen);
-  rootKoHashTable = new KoHashTable();
 
   rootSafeArea = new Color[Board::MAX_ARR_SIZE];
 
@@ -183,13 +178,11 @@ Search::Search(SearchParams params, NNEvaluator* nnEval, const string& rSeed)
   rootNode = NULL;
   mutexPool = new MutexPool(params.mutexPoolSize);
 
-  rootHistory.clear(rootBoard,rootPla,Rules(),0);
-  rootKoHashTable->recompute(rootHistory);
+  rootHistory.clear(rootBoard,rootPla,Rules());
 }
 
 Search::~Search() {
   delete[] rootSafeArea;
-  delete rootKoHashTable;
   delete valueWeightDistribution;
   delete rootNode;
   delete mutexPool;
@@ -216,7 +209,6 @@ void Search::setPosition(Player pla, const Board& board, const BoardHistory& his
   plaThatSearchIsFor = C_EMPTY;
   rootBoard = board;
   rootHistory = history;
-  rootKoHashTable->recompute(rootHistory);
   avoidMoveUntilByLocBlack.clear();
   avoidMoveUntilByLocWhite.clear();
 }
@@ -227,21 +219,9 @@ void Search::setPlayerAndClearHistory(Player pla) {
   plaThatSearchIsFor = C_EMPTY;
   rootBoard.clearSimpleKoLoc();
   Rules rules = rootHistory.rules;
-  //Preserve this value even when we get multiple moves in a row by some player
-  bool assumeMultipleStartingBlackMovesAreHandicap = rootHistory.assumeMultipleStartingBlackMovesAreHandicap;
-  rootHistory.clear(rootBoard,rootPla,rules,rootHistory.encorePhase);
-  rootHistory.setAssumeMultipleStartingBlackMovesAreHandicap(assumeMultipleStartingBlackMovesAreHandicap);
-
-  rootKoHashTable->recompute(rootHistory);
+  rootHistory.clear(rootBoard,rootPla,rules);
   avoidMoveUntilByLocBlack.clear();
   avoidMoveUntilByLocWhite.clear();
-}
-
-void Search::setKomiIfNew(float newKomi) {
-  if(rootHistory.rules.komi != newKomi) {
-    clearSearch();
-    rootHistory.setKomi(newKomi);
-  }
 }
 
 void Search::setAvoidMoveUntilByLoc(const std::vector<int>& bVec, const std::vector<int>& wVec) {
@@ -291,32 +271,12 @@ void Search::clearSearch() {
   rootNode = NULL;
 }
 
-bool Search::isLegalTolerant(Loc moveLoc, Player movePla) const {
-  //Tolerate sgf files or GTP reporting suicide moves, even if somehow the rules are set to disallow them.
-  bool multiStoneSuicideLegal = true;
-
-  //If we somehow have the same player making multiple moves in a row (possible in GTP or an sgf file),
-  //clear the ko loc - the simple ko loc of a player should not prohibit the opponent playing there!
-  if(movePla != rootPla) {
-    Board copy = rootBoard;
-    copy.clearSimpleKoLoc();
-    return copy.isLegal(moveLoc,movePla,multiStoneSuicideLegal);
-  }
-  else {
-    return rootHistory.isLegalTolerant(rootBoard,moveLoc,movePla);
-  }
+bool Search::isLegalStrict(Loc fromLoc, Loc toLoc, Player movePla) const {
+  return movePla == rootPla && rootHistory.isLegal(rootBoard,fromLoc,toLoc,movePla);
 }
 
-bool Search::isLegalStrict(Loc moveLoc, Player movePla) const {
-  return movePla == rootPla && rootHistory.isLegal(rootBoard,moveLoc,movePla);
-}
-
-bool Search::makeMove(Loc moveLoc, Player movePla) {
-  return makeMove(moveLoc,movePla,false);
-}
-
-bool Search::makeMove(Loc moveLoc, Player movePla, bool preventEncore) {
-  if(!isLegalTolerant(moveLoc,movePla))
+bool Search::makeMove(Loc fromLoc, Loc toLoc, Player movePla) {
+  if(!isLegalStrict(fromLoc,toLoc,movePla))
     return false;
 
   if(movePla != rootPla)
@@ -327,7 +287,7 @@ bool Search::makeMove(Loc moveLoc, Player movePla, bool preventEncore) {
     int foundChildIdx = -1;
     for(int i = 0; i<rootNode->numChildren; i++) {
       SearchNode* child = rootNode->children[i];
-      if(!foundChild && child->prevMoveLoc == moveLoc) {
+      if(!foundChild && child->prevFromLoc == fromLoc && child->prevToLoc == toLoc) {
         foundChild = true;
         foundChildIdx = i;
         break;
@@ -371,27 +331,21 @@ bool Search::makeMove(Loc moveLoc, Player movePla, bool preventEncore) {
     }
   }
 
-  //If the white handicap bonus changes due to the move, we will also need to recompute everything since this is
-  //basically like a change to the komi.
-  float oldWhiteHandicapBonusScore = rootHistory.whiteHandicapBonusScore;
-
-  rootHistory.makeBoardMoveAssumeLegal(rootBoard,moveLoc,rootPla,rootKoHashTable,preventEncore);
+  rootHistory.makeBoardMoveAssumeLegal(rootBoard,fromLoc,toLoc,rootPla);
   rootPla = getOpp(rootPla);
-  rootKoHashTable->recompute(rootHistory);
   avoidMoveUntilByLocBlack.clear();
   avoidMoveUntilByLocWhite.clear();
-
-  if(rootHistory.whiteHandicapBonusScore != oldWhiteHandicapBonusScore)
-    clearSearch();
 
   //In the case that we are conservativePass and a pass would end the game, need to clear the search.
   //This is because deeper in the tree, such a node would have been explored as ending the game, but now that
   //it's a root pass, it needs to be treated as if it no longer ends the game.
   //In the case that we're preventing encore, and the phase would have ended, we also need to clear the search
   //since the search was conducted on the assumption that we're going into encore now.
+  /*
   if((searchParams.conservativePass && rootHistory.passWouldEndGame(rootBoard,rootPla)) ||
      (preventEncore && rootHistory.passWouldEndPhase(rootBoard,rootPla)))
     clearSearch();
+    */
 
   return true;
 }
@@ -668,14 +622,6 @@ void Search::runWholeSearch(
   double_t maxTime = pondering ? searchParams.maxTimePondering : searchParams.maxTime;
 
   {
-    //Possibly reduce computation time, for human friendliness
-    if(rootHistory.moveHistory.size() >= 1 && rootHistory.moveHistory[rootHistory.moveHistory.size()-1].loc == Board::PASS_LOC) {
-      if(rootHistory.moveHistory.size() >= 3 && rootHistory.moveHistory[rootHistory.moveHistory.size()-3].loc == Board::PASS_LOC)
-        searchFactor *= searchParams.searchFactorAfterTwoPass;
-      else
-        searchFactor *= searchParams.searchFactorAfterOnePass;
-    }
-
     if(searchFactor != 1.0) {
       double cap = (double)((int64_t)1L << 62);
       maxVisits = (int64_t)ceil(std::min(cap, maxVisits * searchFactor));
@@ -803,9 +749,6 @@ void Search::beginSearch(bool pondering) {
   if(rootBoard.x_size > nnXLen || rootBoard.y_size > nnYLen)
     throw StringError("Search got from NNEval nnXLen = " + Global::intToString(nnXLen) +
                       " nnYLen = " + Global::intToString(nnYLen) + " but was asked to search board with larger x or y size");
-
-  rootBoard.checkConsistency();
-
   numSearchesBegun++;
   searchNodeAge++;
   if(searchNodeAge == 0) //Just in case, as we roll over
@@ -836,8 +779,9 @@ void Search::beginSearch(bool pondering) {
   SearchThread dummyThread(-1, *this, NULL);
 
   if(rootNode == NULL) {
-    Loc prevMoveLoc = rootHistory.moveHistory.size() <= 0 ? Board::NULL_LOC : rootHistory.moveHistory[rootHistory.moveHistory.size()-1].loc;
-    rootNode = new SearchNode(*this, getOpp(rootPla), dummyThread.rand, prevMoveLoc, NULL);
+    Loc prevFromLoc = rootHistory.moveHistory.size() <= 0 ? Board::NULL_LOC : rootHistory.moveHistory[rootHistory.moveHistory.size()-1].fromLoc;
+    Loc prevToLoc = rootHistory.moveHistory.size() <= 0 ? Board::NULL_LOC : rootHistory.moveHistory[rootHistory.moveHistory.size()-1].toLoc;
+    rootNode = new SearchNode(*this, getOpp(rootPla), dummyThread.rand, prevFromLoc,prevToLoc, NULL);
   }
   else {
     //If the root node has any existing children, then prune things down if there are moves that should not be allowed at the root.
@@ -851,12 +795,8 @@ void Search::beginSearch(bool pondering) {
       for(int i = 0; i<numChildren; i++) {
         SearchNode* child = node.children[i];
         node.children[i] = NULL;
-        if(isAllowedRootMove(child->prevMoveLoc))
-          node.children[numGoodChildren++] = child;
-        else {
-          recursivelyRemoveSubtreeValueBiasBeforeDeleteSynchronous(child);
-          delete child;
-        }
+        recursivelyRemoveSubtreeValueBiasBeforeDeleteSynchronous(child);
+        delete child;
       }
       bool anyFiltered = numChildren != numGoodChildren;
       node.numChildren = numGoodChildren;
@@ -1001,19 +941,6 @@ void Search::computeRootNNEvaluation(NNResultBuf& nnResultBuf, bool includeOwner
 }
 
 void Search::computeRootValues() {
-  //rootSafeArea is strictly pass-alive groups and strictly safe territory.
-  bool nonPassAliveStones = false;
-  bool safeBigTerritories = false;
-  bool unsafeBigTerritories = false;
-  bool isMultiStoneSuicideLegal = rootHistory.rules.multiStoneSuicideLegal;
-  rootBoard.calculateArea(
-    rootSafeArea,
-    nonPassAliveStones,
-    safeBigTerritories,
-    unsafeBigTerritories,
-    isMultiStoneSuicideLegal
-  );
-
   //Figure out how to set recentScoreCenter
   {
     bool foundExpectedScoreFromTree = false;
@@ -1046,74 +973,6 @@ void Search::computeRootValues() {
     if(recentScoreCenter < expectedScore - cap)
       recentScoreCenter = expectedScore - cap;
   }
-
-  Player opponentWasMirroringPla = mirroringPla;
-  mirroringPla = C_EMPTY;
-  mirrorAdvantage = 0.0;
-  mirrorCenterIsSymmetric = false;
-  if(searchParams.antiMirror) {
-    const Board& board = rootBoard;
-    const BoardHistory& hist = rootHistory;
-    int mirrorCount = 0;
-    int totalCount = 0;
-    double mirrorEwms = 0;
-    double totalEwms = 0;
-    bool lastWasMirror = false;
-    for(int i = 1; i<hist.moveHistory.size(); i++) {
-      if(hist.moveHistory[i].pla != rootPla) {
-        lastWasMirror = false;
-        if(hist.moveHistory[i].loc == Location::getMirrorLoc(hist.moveHistory[i-1].loc,board.x_size,board.y_size)) {
-          mirrorCount += 1;
-          mirrorEwms += 1;
-          lastWasMirror = true;
-        }
-        totalCount += 1;
-        totalEwms += 1;
-        mirrorEwms *= 0.75;
-        totalEwms *= 0.75;
-      }
-    }
-    //If at most of the moves in the game are mirror moves, and many of the recent moves were mirrors, and the last move
-    //was a mirror, then the opponent is mirroring.
-    if(mirrorCount >= 7.0 + 0.5 * totalCount && mirrorEwms >= 0.45 * totalEwms && lastWasMirror) {
-      mirroringPla = getOpp(rootPla);
-
-      double blackExtraPoints = 0.0;
-      int numHandicapStones = hist.computeNumHandicapStones();
-      if(hist.rules.scoringRule == Rules::SCORING_AREA) {
-        if(numHandicapStones > 0)
-          blackExtraPoints += numHandicapStones-1;
-        bool blackGetsLastMove = (board.x_size % 2 == 1 && board.y_size % 2 == 1) == (numHandicapStones == 0 || numHandicapStones % 2 == 1);
-        if(blackGetsLastMove)
-          blackExtraPoints += 1;
-      }
-      if(numHandicapStones > 0 && hist.rules.whiteHandicapBonusRule == Rules::WHB_N)
-        blackExtraPoints -= numHandicapStones;
-      if(numHandicapStones > 0 && hist.rules.whiteHandicapBonusRule == Rules::WHB_N_MINUS_ONE)
-        blackExtraPoints -= numHandicapStones-1;
-      mirrorAdvantage = mirroringPla == P_BLACK ? blackExtraPoints - hist.rules.komi : hist.rules.komi - blackExtraPoints;
-    }
-
-    if(board.x_size >= 7 && board.y_size >= 7) {
-      mirrorCenterIsSymmetric = true;
-      int halfX = board.x_size / 2;
-      int halfY = board.y_size / 2;
-      for(int dy = -3; dy <= 3; dy++) {
-        for(int dx = -3; dx <= 3; dx++) {
-          Loc loc = Location::getLoc(halfX+dx,halfY+dy,board.x_size);
-          Loc mirrorLoc = Location::getMirrorLoc(loc,board.x_size,board.y_size);
-          if(loc == mirrorLoc)
-            continue;
-          Color c = board.colors[mirrorLoc] != C_EMPTY ? getOpp(board.colors[mirrorLoc]) : C_EMPTY;
-          if(board.colors[loc] != c)
-            mirrorCenterIsSymmetric = false;
-        }
-      }
-    }
-  }
-  //Clear search if opponent mirror status changed, so that our tree adjusts appropriately
-  if(opponentWasMirroringPla != mirroringPla)
-    clearSearch();
 }
 
 int64_t Search::getRootVisits() const {
@@ -1273,35 +1132,6 @@ void Search::maybeAddPolicyNoiseAndTempAlreadyLocked(SearchThread& thread, Searc
   }
 }
 
-bool Search::isAllowedRootMove(Loc moveLoc) const {
-  assert(moveLoc == Board::PASS_LOC || rootBoard.isOnBoard(moveLoc));
-
-  //A bad situation that can happen that unnecessarily prolongs training games is where one player
-  //repeatedly passes and the other side repeatedly fills the opponent's space and/or suicides over and over.
-  //To mitigate some of this and save computation, we make it so that at the root, if the last four moves by the opponent
-  //were passes, we will never play a move in either player's pass-alive area. In theory this could prune
-  //a good move in situations like https://senseis.xmp.net/?1EyeFlaw, but this should be extraordinarly rare,
-  if(searchParams.rootPruneUselessMoves &&
-     rootHistory.moveHistory.size() > 0 &&
-     moveLoc != Board::PASS_LOC
-  ) {
-    size_t lastIdx = rootHistory.moveHistory.size()-1;
-    Player opp = getOpp(rootPla);
-    if(lastIdx >= 6 &&
-       rootHistory.moveHistory[lastIdx-0].loc == Board::PASS_LOC &&
-       rootHistory.moveHistory[lastIdx-2].loc == Board::PASS_LOC &&
-       rootHistory.moveHistory[lastIdx-4].loc == Board::PASS_LOC &&
-       rootHistory.moveHistory[lastIdx-6].loc == Board::PASS_LOC &&
-       rootHistory.moveHistory[lastIdx-0].pla == opp &&
-       rootHistory.moveHistory[lastIdx-2].pla == opp &&
-       rootHistory.moveHistory[lastIdx-4].pla == opp &&
-       rootHistory.moveHistory[lastIdx-6].pla == opp &&
-       (rootSafeArea[moveLoc] == opp || rootSafeArea[moveLoc] == rootPla))
-      return false;
-  }
-  return true;
-}
-
 void Search::getValueChildWeights(
   int numChildren,
   //Unlike everywhere else where values are from white's perspective, values here are from one's own perspective
@@ -1423,79 +1253,6 @@ double Search::getExploreSelectionValueInverse(
   return childVisits;
 }
 
-
-//Parent must be locked
-double Search::getEndingWhiteScoreBonus(const SearchNode& parent, const SearchNode* child) const {
-  if(&parent != rootNode || child->prevMoveLoc == Board::NULL_LOC)
-    return 0.0;
-  if(parent.nnOutput == nullptr || parent.nnOutput->whiteOwnerMap == NULL)
-    return 0.0;
-
-  bool isAreaIsh = rootHistory.rules.scoringRule == Rules::SCORING_AREA
-    || (rootHistory.rules.scoringRule == Rules::SCORING_TERRITORY && rootHistory.encorePhase >= 2);
-  assert(parent.nnOutput->nnXLen == nnXLen);
-  assert(parent.nnOutput->nnYLen == nnYLen);
-  float* whiteOwnerMap = parent.nnOutput->whiteOwnerMap;
-  Loc moveLoc = child->prevMoveLoc;
-
-  const double extreme = 0.95;
-  const double tail = 0.05;
-
-  //Extra points from the perspective of the root player
-  double extraRootPoints = 0.0;
-  if(isAreaIsh) {
-    //Areaish scoring - in an effort to keep the game short and slightly discourage pointless territory filling at the end
-    //discourage any move that, except in case of ko, is either:
-    // * On a spot that the opponent almost surely owns
-    // * On a spot that the player almost surely owns and it is not adjacent to opponent stones and is not a connection of non-pass-alive groups.
-    //These conditions should still make it so that "cleanup" and dame-filling moves are not discouraged.
-    // * When playing button go, very slightly discourage passing - so that if there are an even number of dame, filling a dame is still favored over passing.
-    if(moveLoc != Board::PASS_LOC && rootBoard.ko_loc == Board::NULL_LOC) {
-      int pos = NNPos::locToPos(moveLoc,rootBoard.x_size,nnXLen,nnYLen);
-      double plaOwnership = rootPla == P_WHITE ? whiteOwnerMap[pos] : -whiteOwnerMap[pos];
-      if(plaOwnership <= -extreme)
-        extraRootPoints -= searchParams.rootEndingBonusPoints * ((-extreme - plaOwnership) / tail);
-      else if(plaOwnership >= extreme) {
-        if(!rootBoard.isAdjacentToPla(moveLoc,getOpp(rootPla)) &&
-           !rootBoard.isNonPassAliveSelfConnection(moveLoc,rootPla,rootSafeArea)) {
-          extraRootPoints -= searchParams.rootEndingBonusPoints * ((plaOwnership - extreme) / tail);
-        }
-      }
-    }
-    if(moveLoc == Board::PASS_LOC && rootHistory.hasButton) {
-      extraRootPoints -= searchParams.rootEndingBonusPoints * 0.5;
-    }
-  }
-  else {
-    //Territorish scoring - slightly encourage dame-filling by discouraging passing, so that the player will try to do everything
-    //non-point-losing first, like filling dame.
-    //Human japanese rules often "want" you to fill the dame so this is a cosmetic adjustment to encourage the neural
-    //net to learn to do so in the main phase rather than waiting until the encore.
-    //But cosmetically, it's also not great if we just encourage useless threat moves in the opponent's territory to prolong the game.
-    //So also discourage those moves except in cases of ko. Also similar to area scoring just to be symmetrical, discourage moves on spots
-    //that the player almost surely owns that are not adjacent to opponent stones and are not a connection of non-pass-alive groups.
-    if(moveLoc == Board::PASS_LOC)
-      extraRootPoints -= searchParams.rootEndingBonusPoints * (2.0/3.0);
-    else if(rootBoard.ko_loc == Board::NULL_LOC) {
-      int pos = NNPos::locToPos(moveLoc,rootBoard.x_size,nnXLen,nnYLen);
-      double plaOwnership = rootPla == P_WHITE ? whiteOwnerMap[pos] : -whiteOwnerMap[pos];
-      if(plaOwnership <= -extreme)
-        extraRootPoints -= searchParams.rootEndingBonusPoints * ((-extreme - plaOwnership) / tail);
-      else if(plaOwnership >= extreme) {
-        if(!rootBoard.isAdjacentToPla(moveLoc,getOpp(rootPla)) &&
-           !rootBoard.isNonPassAliveSelfConnection(moveLoc,rootPla,rootSafeArea)) {
-          extraRootPoints -= searchParams.rootEndingBonusPoints * ((plaOwnership - extreme) / tail);
-        }
-      }
-    }
-  }
-
-  if(rootPla == P_WHITE)
-    return extraRootPoints;
-  else
-    return -extraRootPoints;
-}
-
 int Search::getPos(Loc moveLoc) const {
   return NNPos::locToPos(moveLoc,rootBoard.x_size,nnXLen,nnYLen);
 }
@@ -1521,125 +1278,6 @@ static void maybeApplyWideRootNoise(
 static double square(double x) {
   return x * x;
 }
-
-static void maybeApplyAntiMirrorPolicy(
-  float& nnPolicyProb,
-  Loc moveLoc,
-  const float* policyProbs,
-  Player movePla,
-  const SearchThread* thread,
-  const Search* search
-) {
-  int xSize = thread->board.x_size;
-  int ySize = thread->board.y_size;
-  //Put significant prior probability on the opponent continuing to mirror, at least for the next few turns.
-  if(movePla == getOpp(search->rootPla) && thread->history.moveHistory.size() > 0) {
-    Loc prevLoc = thread->history.moveHistory[thread->history.moveHistory.size()-1].loc;
-    if(prevLoc == Board::PASS_LOC)
-      return;
-    Loc mirrorLoc = Location::getMirrorLoc(prevLoc,xSize,ySize);
-    if(policyProbs[search->getPos(mirrorLoc)] < 0)
-      mirrorLoc = Board::PASS_LOC;
-    if(moveLoc == mirrorLoc) {
-      float weight = (float)(0.5 / (1.0 + sqrt(thread->history.moveHistory.size() - search->rootHistory.moveHistory.size())));
-      nnPolicyProb = nnPolicyProb + (1.0f - nnPolicyProb) * weight;
-    }
-  }
-  //Put a small prior on playing the center or attaching to center, bonusing moves that are relatively more likely.
-  else if(movePla == search->rootPla && moveLoc != Board::PASS_LOC) {
-    if(Location::isCentral(moveLoc,xSize,ySize)) {
-      float weight = (float)(1.0/square(1.0-log10(nnPolicyProb+1e-30)));
-      nnPolicyProb = nnPolicyProb + (1.0f - nnPolicyProb) * weight;
-    }
-    else {
-      Loc centerLoc = Location::getCenterLoc(xSize,ySize);
-      if(centerLoc != Board::NULL_LOC) {
-        if(search->rootBoard.colors[centerLoc] == getOpp(movePla)) {
-          if(thread->board.isAdjacentToChain(moveLoc,centerLoc) || Location::euclideanDistanceSquared(moveLoc,centerLoc,xSize) <= 2) {
-            float weight = (float)(1.0/square(1.0-log10(nnPolicyProb+1e-30)));
-            nnPolicyProb = nnPolicyProb + (1.0f - nnPolicyProb) * weight;
-          }
-        }
-      }
-    }
-  }
-}
-
-//Force the search to dump playouts down a mirror move, so as to encourage moves that cause mirror moves
-//to have bad values, and also tolerate us playing certain countering moves even if their values are a bit worse.
-static void maybeApplyAntiMirrorForcedExplore(
-  double& childUtility,
-  Loc moveLoc,
-  const float* policyProbs,
-  int64_t thisChildVisits,
-  int64_t totalChildVisits,
-  Player movePla,
-  SearchThread* thread,
-  const Search* search,
-  const SearchNode& parent
-) {
-  Player mirroringPla = search->mirroringPla;
-  assert(mirroringPla == getOpp(search->rootPla));
-
-  int xSize = thread->board.x_size;
-  int ySize = thread->board.y_size;
-  Loc centerLoc = Location::getCenterLoc(xSize,ySize);
-  //The difficult case is when the opponent has occupied tengen, and ALSO the komi favors them.
-  //In such a case, we're going to have a hard time.
-  //Technically there are other configurations (like if the opponent makes a diamond around tengen)
-  //but we're not going to worry about breaking that.
-  bool isDifficult = centerLoc != Board::NULL_LOC && thread->board.colors[centerLoc] == search->mirroringPla && search->mirrorAdvantage >= 0.0;
-  bool isSemiDifficult = !isDifficult && search->mirrorAdvantage >= 6.5;
-
-  //Force mirroring pla to dump playouts down mirror moves
-  if(movePla == mirroringPla && thread->history.moveHistory.size() > 0) {
-    Loc prevLoc = thread->history.moveHistory[thread->history.moveHistory.size()-1].loc;
-    if(prevLoc == Board::PASS_LOC)
-      return;
-    Loc mirrorLoc = Location::getMirrorLoc(prevLoc,xSize,ySize);
-    if(policyProbs[search->getPos(mirrorLoc)] < 0)
-      mirrorLoc = Board::PASS_LOC;
-    if(moveLoc == mirrorLoc) {
-      //Check that the player has also been mirroring since the start of search
-      for(size_t i = search->rootHistory.moveHistory.size()+1; i < thread->history.moveHistory.size(); i += 2) {
-        if(thread->history.moveHistory[i].loc != Location::getMirrorLoc(thread->history.moveHistory[i-1].loc,xSize,ySize))
-          return;
-      }
-
-      double bonus = 0.02;
-      if(isDifficult) {
-        if(mirrorLoc != Board::PASS_LOC && search->mirrorCenterIsSymmetric) {
-          double factor = 0.75 + 0.5 * sqrt(Location::euclideanDistanceSquared(centerLoc,mirrorLoc,xSize));
-          if(thisChildVisits * factor < totalChildVisits && mirrorLoc != Board::PASS_LOC) {
-            bonus = 1.0;
-          }
-        }
-        if(thisChildVisits * 5 < totalChildVisits)
-          bonus = 1.0;
-      }
-      else if(isSemiDifficult && search->mirrorAdvantage >= 8.5) {
-        if(thisChildVisits * 5 < totalChildVisits)
-          bonus = 1.0;
-      }
-      else if(isSemiDifficult) {
-        if(thisChildVisits * 8 < totalChildVisits)
-          bonus = 1.0;
-      }
-      else {
-        if(thisChildVisits * 20 < totalChildVisits)
-          bonus = 0.2;
-      }
-      bonus *= (float)(2.0 / (1.0 + sqrt(thread->history.moveHistory.size() - search->rootHistory.moveHistory.size())));
-      childUtility += (parent.nextPla == P_WHITE ? bonus : -bonus);
-    }
-  }
-  //Encourage us to find refuting moves, even if they look a little bad, in the difficult case
-  else if(movePla == search->rootPla && moveLoc != Board::PASS_LOC) {
-    if(isDifficult && thread->board.isAdjacentToChain(moveLoc,centerLoc))
-      childUtility += (parent.nextPla == P_WHITE ? 0.10 : -0.10);
-  }
-}
-
 
 //Parent must be locked
 double Search::getExploreSelectionValue(

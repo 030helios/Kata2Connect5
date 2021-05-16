@@ -9,6 +9,7 @@ BoardHistory::BoardHistory()
   :rules(),
    moveHistory(),
    initialBoard(),
+   initialTurnNumber(0),
    initialPla(P_BLACK),
    presumedNextMovePla(P_BLACK),
    isGameFinished(false),winner(C_EMPTY),finalWhiteMinusBlackScore(0.0f),
@@ -19,22 +20,24 @@ BoardHistory::BoardHistory()
 BoardHistory::~BoardHistory()
 {}
 
-BoardHistory::BoardHistory(const Board& board, Player pla, const Rules& r, int ePhase)
+BoardHistory::BoardHistory(const Board& board, Player pla, const Rules& r)
   :rules(r),
    moveHistory(),
    initialBoard(),
+   initialTurnNumber(0),
    initialPla(),
    presumedNextMovePla(pla),
    isGameFinished(false),winner(C_EMPTY),finalWhiteMinusBlackScore(0.0f),
    isScored(false),isNoResult(false),isResignation(false)
 {
-  clear(board,pla,rules,ePhase);
+  clear(board,pla,rules);
 }
 
 BoardHistory::BoardHistory(const BoardHistory& other)
   :rules(other.rules),
    moveHistory(other.moveHistory),
    initialBoard(other.initialBoard),
+   initialTurnNumber(other.initialTurnNumber),
    initialPla(other.initialPla),
    presumedNextMovePla(other.presumedNextMovePla),
    isGameFinished(other.isGameFinished),winner(other.winner),finalWhiteMinusBlackScore(other.finalWhiteMinusBlackScore),
@@ -50,6 +53,7 @@ BoardHistory& BoardHistory::operator=(const BoardHistory& other)
   rules = other.rules;
   moveHistory = other.moveHistory;
   initialBoard = other.initialBoard;
+  initialTurnNumber = other.initialTurnNumber;
   initialPla = other.initialPla;
   presumedNextMovePla = other.presumedNextMovePla;
   isGameFinished = other.isGameFinished;
@@ -66,6 +70,7 @@ BoardHistory::BoardHistory(BoardHistory&& other) noexcept
  :rules(other.rules),
   moveHistory(std::move(other.moveHistory)),
   initialBoard(other.initialBoard),
+  initialTurnNumber(other.initialTurnNumber),
   initialPla(other.initialPla),
   presumedNextMovePla(other.presumedNextMovePla),
   isGameFinished(other.isGameFinished),winner(other.winner),finalWhiteMinusBlackScore(other.finalWhiteMinusBlackScore),
@@ -78,6 +83,7 @@ BoardHistory& BoardHistory::operator=(BoardHistory&& other) noexcept
   rules = other.rules;
   moveHistory = std::move(other.moveHistory);
   initialBoard = other.initialBoard;
+  initialTurnNumber = other.initialTurnNumber;
   initialPla = other.initialPla;
   presumedNextMovePla = other.presumedNextMovePla;
   isGameFinished = other.isGameFinished;
@@ -90,12 +96,13 @@ BoardHistory& BoardHistory::operator=(BoardHistory&& other) noexcept
   return *this;
 }
 
-void BoardHistory::clear(const Board& board, Player pla, const Rules& r, int ePhase) {
+void BoardHistory::clear(const Board& board, Player pla, const Rules& r) {
   rules = r;
   moveHistory.clear();
 
   initialBoard = board;
   initialPla = pla;
+  initialTurnNumber = 0;
 
   presumedNextMovePla = pla;
 
@@ -107,6 +114,10 @@ void BoardHistory::clear(const Board& board, Player pla, const Rules& r, int ePh
   isResignation = false;
 
 }
+void BoardHistory::setInitialTurnNumber(int n) {
+  initialTurnNumber = n;
+}
+
 
 void BoardHistory::printBasicInfo(ostream& out, const Board& board) const {
   Board::printBoard(out, board, Board::NULL_LOC, &moveHistory);

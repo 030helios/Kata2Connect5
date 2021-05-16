@@ -20,6 +20,9 @@ struct BoardHistory {
   Board initialBoard;
   Player initialPla;
 
+  //The "turn number" as of the initial board. Does not affect any rules, but possibly uses may
+  //care about this number, for cases where we set up a position from midgame.
+  int initialTurnNumber;
   //Is the game supposed to be ended now?
   bool isGameFinished;
   //Winner of the game if the game is supposed to have ended now, C_EMPTY if it is a draw or isNoResult.
@@ -37,7 +40,7 @@ struct BoardHistory {
   BoardHistory();
   ~BoardHistory();
 
-  BoardHistory(const Board& board, Player pla, const Rules& rules, int encorePhase);
+  BoardHistory(const Board& board, Player pla, const Rules& rules);
 
   BoardHistory(const BoardHistory& other);
   BoardHistory& operator=(const BoardHistory& other);
@@ -46,8 +49,9 @@ struct BoardHistory {
   BoardHistory& operator=(BoardHistory&& other) noexcept;
 
   //Clears all history and status and bonus points, sets encore phase and rules
-  void clear(const Board& board, Player pla, const Rules& rules, int encorePhase);
-
+  void clear(const Board& board, Player pla, const Rules& rules);
+  //Set the initial turn number. Affects nothing else.
+  void setInitialTurnNumber(int n);
   //Check if a move on the board is legal, taking into account the full game state and superko
   bool isLegal(const Board& board, Loc fromLoc, Loc toLoc, Player movePla) const;
 
