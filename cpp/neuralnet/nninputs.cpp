@@ -80,11 +80,11 @@ static const double twoOverPi = 0.63661977236758134308;
 static const double piOverTwo = 1.57079632679489661923;
 
 double ScoreValue::whiteScoreDrawAdjust(double finalWhiteMinusBlackScore, double drawEquivalentWinsForWhite, const BoardHistory& hist) {
-  return finalWhiteMinusBlackScore + hist.whiteKomiAdjustmentForDraws(drawEquivalentWinsForWhite);
+  return finalWhiteMinusBlackScore;
 }
 
 double ScoreValue::whiteScoreValueOfScoreSmooth(double finalWhiteMinusBlackScore, double center, double scale, double drawEquivalentWinsForWhite, const Board& b, const BoardHistory& hist) {
-  double adjustedScore = finalWhiteMinusBlackScore + hist.whiteKomiAdjustmentForDraws(drawEquivalentWinsForWhite) - center;
+  double adjustedScore = finalWhiteMinusBlackScore - center;
   if(b.x_size == b.y_size)
     return atan(adjustedScore / (scale*b.x_size)) * twoOverPi;
   else
@@ -619,194 +619,10 @@ Loc SymmetryHelpers::getSymLoc(int x, int y, const Board& board, int symmetry) {
   return Location::getLoc(x,y,transpose ? board.y_size : board.x_size);
 }
 
-Board SymmetryHelpers::getSymBoard(const Board& board, int symmetry) {
-  bool transpose = (symmetry & 0x4) != 0;
-  bool flipX = (symmetry & 0x2) != 0;
-  bool flipY = (symmetry & 0x1) != 0;
-  Board symBoard(
-    transpose ? board.y_size : board.x_size,
-    transpose ? board.x_size : board.y_size
-  );
-  Loc symKoLoc = Board::NULL_LOC;
-  for(int y = 0; y<board.y_size; y++) {
-    for(int x = 0; x<board.x_size; x++) {
-      Loc loc = Location::getLoc(x,y,board.x_size);
-      int symX = flipX ? board.x_size - x - 1 : x;
-      int symY = flipY ? board.y_size - y - 1 : y;
-      if(transpose)
-        std::swap(symX,symY);
-      Loc symLoc = Location::getLoc(symX,symY,symBoard.x_size);
-      symBoard.setStone(symLoc,board.colors[loc]);
-      if(loc == board.ko_loc)
-        symKoLoc = symLoc;
-    }
-  }
-  //Set only at the end because otherwise setStone clears it.
-  if(symKoLoc != Board::NULL_LOC)
-    symBoard.setSimpleKoLoc(symKoLoc);
-  return symBoard;
-}
-
 //-------------------------------------------------------------------------------------------------------------
 
 static void setRowBin(float* rowBin, int pos, int feature, float value, int posStride, int featureStride) {
   rowBin[pos * posStride + feature * featureStride] = value;
-}
-
-//Calls f on each location that is part of an inescapable atari, or a group that can be put into inescapable atari
-static void iterLadders(const Board& board, int nnXLen, std::function<void(Loc,int,const vector<Loc>&)> f) {
-  int xSize = board.x_size;
-  int ySize = board.y_size;
-
-  Loc chainHeadsSolved[Board::MAX_PLAY_SIZE];
-  bool chainHeadsSolvedValue[Board::MAX_PLAY_SIZE];
-  int numChainHeadsSolved = 0;
-  Board copy(board);
-  vector<Loc> buf;
-  vector<Loc> workingMoves;
-
-  for(int y = 0; y<ySize; y++) {
-    for(int x = 0; x<xSize; x++) {
-      int pos = NNPos::xyToPos(x,y,nnXLen);
-      Loc loc = Location::getLoc(x,y,xSize);
-      Color stone = board.colors[loc];
-      if(stone == P_BLACK || stone == P_WHITE) {
-        int libs = board.getNumLiberties(loc);
-        if(libs == 1 || libs == 2) {
-          bool alreadySolved = false;
-          Loc head = board.chain_head[loc];
-          for(int i = 0; i<numChainHeadsSolved; i++) {
-            if(chainHeadsSolved[i] == head) {
-              alreadySolved = true;
-              if(chainHeadsSolvedValue[i]) {
-                workingMoves.clear();
-                f(loc,pos,workingMoves);
-              }
-              break;
-            }
-          }
-          if(!alreadySolved) {
-            //Perform search on copy so as not to mess up tracking of solved heads
-            bool laddered;
-            if(libs == 1)
-              laddered = copy.searchIsLadderCaptured(loc,true,buf);
-            else {
-              workingMoves.clear();
-              laddered = copy.searchIsLadderCapturedAttackerFirst2Libs(loc,buf,workingMoves);
-            }
-
-            chainHeadsSolved[numChainHeadsSolved] = head;
-            chainHeadsSolvedValue[numChainHeadsSolved] = laddered;
-            numChainHeadsSolved++;
-            if(laddered)
-              f(loc,pos,workingMoves);
-          }
-        }
-      }
-    }
-  }
-}
-
-//Currently does NOT depend on history (except for marking ko-illegal spots)
-Hash128 NNInputs::getHash(
-  const Board& board, const BoardHistory& hist, Player nextPlayer,
-  const MiscNNInputParams& nnInputParams
-) {
-  int xSize = board.x_size;
-  int ySize = board.y_size;
-
-  //Note that board.pos_hash also incorporates the size of the board.
-  Hash128 hash = board.pos_hash;
-  hash ^= Board::ZOBRIST_PLAYER_HASH[nextPlayer];
-
-  assert(hist.encorePhase >= 0 && hist.encorePhase <= 2);
-  hash ^= Board::ZOBRIST_ENCORE_HASH[hist.encorePhase];
-
-  if(hist.encorePhase == 0) {
-    if(board.ko_loc != Board::NULL_LOC)
-      hash ^= Board::ZOBRIST_KO_LOC_HASH[board.ko_loc];
-    for(int y = 0; y<ySize; y++) {
-      for(int x = 0; x<xSize; x++) {
-        Loc loc = Location::getLoc(x,y,xSize);
-        if(hist.superKoBanned[loc] && loc != board.ko_loc)
-          hash ^= Board::ZOBRIST_KO_LOC_HASH[loc];
-      }
-    }
-  }
-  else {
-    for(int y = 0; y<ySize; y++) {
-      for(int x = 0; x<xSize; x++) {
-        Loc loc = Location::getLoc(x,y,xSize);
-        if(hist.superKoBanned[loc])
-          hash ^= Board::ZOBRIST_KO_LOC_HASH[loc];
-        if(hist.koRecapBlocked[loc])
-          hash ^= Board::ZOBRIST_KO_MARK_HASH[loc][P_BLACK] ^ Board::ZOBRIST_KO_MARK_HASH[loc][P_WHITE];
-      }
-    }
-    if(hist.encorePhase == 2) {
-      for(int y = 0; y<ySize; y++) {
-        for(int x = 0; x<xSize; x++) {
-          Loc loc = Location::getLoc(x,y,xSize);
-          Color c = hist.secondEncoreStartColors[loc];
-          if(c != C_EMPTY)
-            hash ^= Board::ZOBRIST_SECOND_ENCORE_START_HASH[loc][c];
-        }
-      }
-    }
-  }
-
-  float selfKomi = hist.currentSelfKomi(nextPlayer,nnInputParams.drawEquivalentWinsForWhite);
-
-  //Discretize the komi for the purpose of matching hash, so that extremely close effective komi we just reuse nn cache hits
-  int64_t komiDiscretized = (int64_t)(selfKomi*256.0f);
-  uint64_t komiHash = Hash::murmurMix((uint64_t)komiDiscretized);
-  hash.hash0 ^= komiHash;
-  hash.hash1 ^= Hash::basicLCong(komiHash);
-
-  //Fold in the ko, scoring, and suicide rules
-  hash ^= Rules::ZOBRIST_KO_RULE_HASH[hist.rules.koRule];
-  hash ^= Rules::ZOBRIST_SCORING_RULE_HASH[hist.rules.scoringRule];
-  hash ^= Rules::ZOBRIST_TAX_RULE_HASH[hist.rules.taxRule];
-  if(hist.rules.multiStoneSuicideLegal)
-    hash ^= Rules::ZOBRIST_MULTI_STONE_SUICIDE_HASH;
-  if(hist.hasButton)
-    hash ^= Rules::ZOBRIST_BUTTON_HASH;
-
-  //Fold in whether a pass ends this phase
-  bool passEndsPhase = hist.passWouldEndPhase(board,nextPlayer);
-  if(passEndsPhase) {
-    hash ^= Board::ZOBRIST_PASS_ENDS_PHASE;
-    //And in the case that a pass ends the phase, conservativePass also affects the result
-    if(nnInputParams.conservativePass)
-      hash ^= MiscNNInputParams::ZOBRIST_CONSERVATIVE_PASS;
-  }
-  //Fold in whether the game is over or not, since this affects how we compute input features
-  //but is not a function necessarily of previous hashed values.
-  //If the history is in a weird prolonged state, also treat it similarly.
-  if(hist.isGameFinished || hist.isPastNormalPhaseEnd)
-    hash ^= Board::ZOBRIST_GAME_IS_OVER;
-
-  //Fold in asymmetric playout indicator
-  if(nnInputParams.playoutDoublingAdvantage != 0) {
-    int64_t playoutDoublingsDiscretized = (int64_t)(nnInputParams.playoutDoublingAdvantage*256.0f);
-    hash.hash0 += Hash::splitMix64((uint64_t)playoutDoublingsDiscretized);
-    hash.hash1 += Hash::basicLCong((uint64_t)playoutDoublingsDiscretized);
-    hash ^= MiscNNInputParams::ZOBRIST_PLAYOUT_DOUBLINGS;
-  }
-
-  //Fold in policy temperature
-  if(nnInputParams.nnPolicyTemperature != 1.0f) {
-    int64_t nnPolicyTemperatureDiscretized = (int64_t)(nnInputParams.nnPolicyTemperature*2048.0f);
-    hash.hash0 ^= Hash::basicLCong2((uint64_t)nnPolicyTemperatureDiscretized);
-    hash.hash1 = Hash::splitMix64(hash.hash1 + (uint64_t)nnPolicyTemperatureDiscretized);
-    hash.hash0 += hash.hash1;
-    hash ^= MiscNNInputParams::ZOBRIST_NN_POLICY_TEMP;
-  }
-
-  if(nnInputParams.avoidMYTDaggerHack)
-    hash ^= MiscNNInputParams::ZOBRIST_AVOID_MYTDAGGER_HACK;
-
-  return hash;
 }
 
 //===========================================================================================

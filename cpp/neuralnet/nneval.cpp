@@ -707,8 +707,9 @@ void NNEvaluator::evaluate(
     bool isLegal[NNPos::MAX_NN_POLICY_SIZE];
     int legalCount = 0;
     for(int i = 0; i<policySize; i++) {
-      Loc loc = NNPos::posToLoc(i,xSize,ySize,nnXLen,nnYLen);
-      isLegal[i] = history.isLegal(board,loc,nextPlayer);
+      Loc fromLoc = NNPos::posToFromLoc(i,xSize,ySize,nnXLen,nnYLen);
+      Loc toLoc = NNPos::posToToLoc(i,xSize,ySize,nnXLen,nnYLen);
+      isLegal[i] = history.isLegal(board,fromLoc,toLoc,nextPlayer);
     }
 
     if(nnInputParams.avoidMYTDaggerHack && xSize >= 13 && ySize >= 13) {
