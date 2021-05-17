@@ -145,7 +145,7 @@ static const double VALUE_WEIGHT_DEGREES_OF_FREEDOM = 3.0;
 
 Search::Search(SearchParams params, NNEvaluator* nnEval, const string& rSeed)
   :rootPla(P_BLACK),
-   rootBoard(),rootHistory(),rootHintLoc(Board::NULL_LOC),
+   rootBoard(),rootHistory(),
    rootSafeArea(NULL),
    recentScoreCenter(0.0),
    alwaysIncludeOwnerMap(false),
@@ -230,14 +230,6 @@ void Search::setAvoidMoveUntilByLoc(const std::vector<int>& bVec, const std::vec
   clearSearch();
   avoidMoveUntilByLocBlack = bVec;
   avoidMoveUntilByLocWhite = wVec;
-}
-
-void Search::setRootHintLoc(Loc loc) {
-  //When we positively change the hint loc, we clear the search to make absolutely sure
-  //that the hintloc takes effect, and that all nnevals (including the root noise that adds the hintloc) has a chance to happen
-  if(loc != Board::NULL_LOC && rootHintLoc != loc)
-    clearSearch();
-  rootHintLoc = loc;
 }
 
 void Search::setAlwaysIncludeOwnerMap(bool b) {
@@ -1062,7 +1054,7 @@ void Search::addDirichletNoise(const SearchParams& searchParams, Rand& rand, int
 void Search::maybeAddPolicyNoiseAndTempAlreadyLocked(SearchThread& thread, SearchNode& node, bool isRoot) const {
   if(!isRoot)
     return;
-  if(!searchParams.rootNoiseEnabled && searchParams.rootPolicyTemperature == 1.0 && searchParams.rootPolicyTemperatureEarly == 1.0 && rootHintLoc == Board::NULL_LOC)
+  if(!searchParams.rootNoiseEnabled && searchParams.rootPolicyTemperature == 1.0 && searchParams.rootPolicyTemperatureEarly == 1.0)
     return;
   if(node.nnOutput->noisedPolicyProbs != NULL)
     return;
@@ -1115,21 +1107,6 @@ void Search::maybeAddPolicyNoiseAndTempAlreadyLocked(SearchThread& thread, Searc
     addDirichletNoise(searchParams, thread.rand, policySize, noisedPolicyProbs);
   }
 
-  //Move a small amount of policy to the hint move, around the same level that noising it would achieve
-  if(rootHintLoc != Board::NULL_LOC) {
-    const float propToMove = 0.02f;
-    int pos = getPos(rootHintLoc);
-    if(noisedPolicyProbs[pos] >= 0) {
-      double amountToMove = 0.0;
-      for(int i = 0; i<policySize; i++) {
-        if(noisedPolicyProbs[i] >= 0) {
-          amountToMove += noisedPolicyProbs[i] * propToMove;
-          noisedPolicyProbs[i] *= (1.0f-propToMove);
-        }
-      }
-      noisedPolicyProbs[pos] += (float)amountToMove;
-    }
-  }
 }
 
 void Search::getValueChildWeights(
@@ -1256,8 +1233,8 @@ double Search::getExploreSelectionValueInverse(
 int Search::getPos(Loc moveLoc) const {
   return NNPos::locToPos(moveLoc,rootBoard.x_size,nnXLen,nnYLen);
 }
-int Search::getPolicyIndex(Loc fromLoc,Loc toLoc) const {
-  return NNPos::locToPos(moveLoc,rootBoard.x_size,nnXLen,nnYLen);
+int Search::getDouplePos(Loc fromLoc,Loc toLoc) const {
+  return NNPos::locToDoublePos(fromLoc,toLoc,rootBoard.x_size,nnXLen,nnYLen);
 }
 
 static void maybeApplyWideRootNoise(
@@ -1291,7 +1268,7 @@ double Search::getExploreSelectionValue(
   (void)parentUtility;
   Loc fromLoc = child->prevFromLoc;
   Loc toLoc = child->prevToLoc;
-  int movePos = getPos(moveLoc);
+  int movePos = getDouplePos(fromLoc,toLoc);
   float nnPolicyProb = parentPolicyProbs[movePos];
 
   while(child->statsLock.test_and_set(std::memory_order_acquire));
@@ -1311,11 +1288,6 @@ double Search::getExploreSelectionValue(
   else {
     assert(weightSum > 0.0);
     childUtility = utilitySum / weightSum;
-
-    //Tiny adjustment for passing
-    double endingScoreBonus = getEndingWhiteScoreBonus(parent,child);
-    if(endingScoreBonus != 0)
-      childUtility += getScoreUtilityDiff(scoreMeanSum, scoreMeanSqSum, weightSum, endingScoreBonus);
   }
 
   //When multithreading, totalChildVisits could be out of sync with childVisits, so if they provably are, then fix that up
@@ -1345,25 +1317,10 @@ double Search::getExploreSelectionValue(
         return 1e20;
       }
     }
-    //Hack for hintloc - must search this move almost as often as the most searched move
-    if(rootHintLoc != Board::NULL_LOC && moveLoc == rootHintLoc) {
-      for(int i = 0; i<parent.numChildren; i++) {
-        const SearchNode* c = parent.children[i];
-        while(c->statsLock.test_and_set(std::memory_order_acquire));
-        int64_t cVisits = c->stats.visits;
-        c->statsLock.clear(std::memory_order_release);
-        if(childVisits+1 < cVisits * 0.8)
-          return 1e20;
-      }
-    }
 
     if(searchParams.wideRootNoise > 0.0) {
       maybeApplyWideRootNoise(childUtility, nnPolicyProb, searchParams, thread, parent);
     }
-  }
-  if(isDuringSearch && searchParams.antiMirror && mirroringPla != C_EMPTY) {
-    maybeApplyAntiMirrorPolicy(nnPolicyProb, moveLoc, parentPolicyProbs, parent.nextPla, thread, this);
-    maybeApplyAntiMirrorForcedExplore(childUtility, moveLoc, parentPolicyProbs, childVisits, totalChildVisits, parent.nextPla, thread, this, parent);
   }
 
   return getExploreSelectionValue(nnPolicyProb,totalChildVisits,childVisits,childUtility,parent.nextPla);

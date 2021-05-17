@@ -12,6 +12,11 @@ int NNPos::locToPos(Loc loc, int boardXSize, int nnXLen, int nnYLen) {
     return nnXLen * (nnYLen + 1);
   return Location::getY(loc,boardXSize) * nnXLen + Location::getX(loc,boardXSize);
 }
+int NNPos::locToDoublePos(Loc fromLoc, Loc toLoc, int boardXSize, int nnXLen, int nnYLen) {
+  int from = Location::getY(fromLoc,boardXSize) * nnXLen + Location::getX(fromLoc,boardXSize);
+  int to = Location::getY(toLoc,boardXSize) * nnXLen + Location::getX(toLoc,boardXSize);
+  return from*nnXLen*nnXLen+to;
+}
 Loc NNPos::posToLoc(int pos, int boardXSize, int boardYSize, int nnXLen, int nnYLen) {
   if(pos == nnXLen * nnYLen)
     return Board::PASS_LOC;
