@@ -348,6 +348,7 @@ struct Search {
 
   //Helpers-----------------------------------------------------------------------
   int getPos(Loc moveLoc) const;
+  int getPolicyIndex(Loc fromLoc,Loc toLoc) const;
 
 private:
   static constexpr double POLICY_ILLEGAL_SELECTION_VALUE = -1e50;

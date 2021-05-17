@@ -30,29 +30,63 @@ static constexpr Color C_BLACK = 1;
 static constexpr Color C_WHITE = 2;
 static constexpr Color C_WALL = 3;
 static constexpr int NUM_BOARD_COLORS = 4;
+/*
+0 ,1 ,2 ,3 ,4 ,5
+6 ,7 ,8 ,9 ,10,11
+12,13,14,15,16,17
+18,19,20,21,22,23
+24,25,26,27,28,29
+30,31,32,33,34,35
+
+1 ,2 ,3 ,4 ,5 ,6
+8 ,9 ,10,11,12,13
+15,16,17,18,19,20
+22,23,24,25,26,27
+29,30,31,32,33,34
+36,37,38,39,40,41
+*/
 //the loops on the board
-constexpr bool kIsOuter[COMPILE_MAX_BOARD_LEN * COMPILE_MAX_BOARD_LEN] = {
-    false, false, true, true, false, false,
-    false, false, true, true, false, false,
-    true, true, true, true, true, true,
-    true, true, true, true, true, true,
-    false, false, true, true, false, false,
-    false, false, true, true, false, false};
-constexpr bool kIsInter[COMPILE_MAX_BOARD_LEN * COMPILE_MAX_BOARD_LEN] = {
-    false, true, false, false, true, false,
-    true, true, true, true, true, true,
-    false, true, false, false, true, false,
-    false, true, false, false, true, false,
-    true, true, true, true, true, true,
-    false, true, false, false, true, false};
+constexpr bool kIsOuter[42] = {
+    false,false, false, true, true, false, false,
+    false,false, false, true, true, false, false,
+    false,true, true, true, true, true, true,
+    false,true, true, true, true, true, true,
+    false,false, false, true, true, false, false,
+    false,false, false, true, true, false, false};
+constexpr bool kIsInter[42] = {
+    false,false, true, false, false, true, false,
+    false,true, true, true, true, true, true,
+    false,false, true, false, false, true, false,
+    false,false, true, false, false, true, false,
+    false,true, true, true, true, true, true,
+    false,false, true, false, false, true, false};
 constexpr std::array<int, 56> kOuter = {
-    32, 26, 20, 14, 8, 2, -1,
+    38, 31, 24, 17, 10, 3 , -1,
+    15, 16, 17, 18, 19, 20, -1,
+    4 , 11, 18, 25, 32, 39, -1,
+    27, 26, 25, 24, 23, 22, -1,
+    38, 31, 24, 17, 10, 3 , -1,
+    15, 16, 17, 18, 19, 20, -1,
+    4 , 11, 18, 25, 32, 39, -1,
+    27, 26, 25, 24, 23, 22, -1,};
+constexpr std::array<int, 56> kInter = {
+    2 , 9 , 16, 23, 30, 37, -1,
+    29, 30, 31, 32, 33, 34, -1,
+    40, 33, 26, 19, 12, 5 , -1,
+    13, 12, 11, 10, 9 , 8 , -1,
+    2 , 9 , 16, 23, 30, 37, -1,
+    29, 30, 31, 32, 33, 34, -1,
+    40, 33, 26, 19, 12, 5 , -1,
+    13, 12, 11, 10, 9 , 8 , -1};
+    /*
+constexpr std::array<int, 56> kOuter = {
+    32, 26, 20, 14, 8 , 2 , -1,
     12, 13, 14, 15, 16, 17, -1,
-    3, 9, 15, 21, 27, 33, -1,
+    3 , 9 , 15, 21, 27, 33, -1,
     23, 22, 21, 20, 19, 18, -1,
-    32, 26, 20, 14, 8, 2, -1,
+    32, 26, 20, 14, 8 , 2 , -1,
     12, 13, 14, 15, 16, 17, -1,
-    3, 9, 15, 21, 27, 33, -1,
+    3 , 9 , 15, 21, 27, 33, -1,
     23, 22, 21, 20, 19, 18, -1};
 constexpr std::array<int, 56> kOuterReverse = {
     18, 19, 20, 21, 22, 23, -1,
@@ -81,6 +115,7 @@ constexpr std::array<int, 56> kInterReverse = {
     4, 10, 16, 22, 28, 34, -1,
     29, 28, 27, 26, 25, 24, -1,
     31, 25, 19, 13, 7, 1, -1};
+    */
 
 static inline Color getOpp(Color c)
 {
@@ -201,7 +236,7 @@ struct Board
   bool isLegalIgnoringKo(Loc fromLoc, Loc toLoc, Player pla, bool isMultiStoneSuicideLegal) const;
   //Check if this is legal capture
   bool getIsLegalCapture(Player Pla, Loc fromLoc, Loc toLoc) const;
-  bool get_is_legal_capture(Player Pla, Loc fromLoc, Loc toLoc, const std::array<int, 56> &circle) const;
+  bool get_is_legal_capture(Player Pla, Loc fromLoc, Loc toLoc, const std::array<int, 56> &circle,bool reverse) const;
   //Check if moving here is legal. Equivalent to isLegalIgnoringKo && !isKoBanned
   bool isLegal(Loc fromLoc, Loc toLoc, Player pla, bool isMultiStoneSuicideLegal) const;
   //Check if this location is on the board

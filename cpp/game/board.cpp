@@ -167,14 +167,13 @@ bool Board::isOnBoard(Loc loc) const
   return loc >= 0 && loc < MAX_ARR_SIZE && colors[loc] != C_WALL;
 }
 
-bool Board::get_is_legal_capture(Player pla, Loc fromLoc, Loc toLoc, const std::array<int, 56> &circle) const
+bool Board::get_is_legal_capture(Player pla, Loc fromLoc, Loc toLoc, const std::array<int, 56> &circle, bool reverse) const
 {
   int our_index = -1;
-  bool CanCapture = false;
+  bool CanCapture = false, passed_the_loop = false;
 
-  bool passed_the_loop = false;
-
-  for (int src_index = 0; src_index < 56; src_index++)
+  int src_index = reverse ? 55 : 0;
+  for (; reverse ? src_index >= 0 : src_index < 56; reverse ? src_index-- : src_index++)
   {
     if (circle[src_index] == -1)
       passed_the_loop = true;
@@ -195,20 +194,20 @@ bool Board::get_is_legal_capture(Player pla, Loc fromLoc, Loc toLoc, const std::
 }
 bool Board::getIsLegalCapture(Player pla, Loc fromLoc, Loc toLoc) const
 {
-  if (get_is_legal_capture(pla, fromLoc, toLoc, kOuter))
+  if (get_is_legal_capture(pla, fromLoc, toLoc, kOuter, true))
     return true;
-  if (get_is_legal_capture(pla, fromLoc, toLoc, kOuterReverse))
+  if (get_is_legal_capture(pla, fromLoc, toLoc, kOuter, false))
     return true;
-  if (get_is_legal_capture(pla, fromLoc, toLoc, kInter))
+  if (get_is_legal_capture(pla, fromLoc, toLoc, kInter, true))
     return true;
-  if (get_is_legal_capture(pla, fromLoc, toLoc, kInterReverse))
+  if (get_is_legal_capture(pla, fromLoc, toLoc, kInter, false))
     return true;
   return false;
 }
 //Check if moving here is illegal.
 bool Board::isLegal(Loc fromLoc, Loc toLoc, Player pla, bool isMultiStoneSuicideLegal) const
 {
-  if (repeat_[colors]>1)
+  if (repeat_[colors] > 1)
     return false;
   return isLegalIgnoringKo(fromLoc, toLoc, pla, isMultiStoneSuicideLegal);
 }
@@ -625,7 +624,7 @@ void Board::printBoard(ostream &out, const Board &board, Loc markLoc, const vect
       else
         out << s;
 
-      if (x < board.x_size - 1 )
+      if (x < board.x_size - 1)
         out << ' ';
     }
     out << "\n";

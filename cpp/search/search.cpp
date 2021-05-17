@@ -1256,6 +1256,9 @@ double Search::getExploreSelectionValueInverse(
 int Search::getPos(Loc moveLoc) const {
   return NNPos::locToPos(moveLoc,rootBoard.x_size,nnXLen,nnYLen);
 }
+int Search::getPolicyIndex(Loc fromLoc,Loc toLoc) const {
+  return NNPos::locToPos(moveLoc,rootBoard.x_size,nnXLen,nnYLen);
+}
 
 static void maybeApplyWideRootNoise(
   double& childUtility,
@@ -1286,7 +1289,8 @@ double Search::getExploreSelectionValue(
   bool isDuringSearch, int64_t maxChildVisits, SearchThread* thread
 ) const {
   (void)parentUtility;
-  Loc moveLoc = child->prevMoveLoc;
+  Loc fromLoc = child->prevFromLoc;
+  Loc toLoc = child->prevToLoc;
   int movePos = getPos(moveLoc);
   float nnPolicyProb = parentPolicyProbs[movePos];
 
