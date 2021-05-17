@@ -429,7 +429,7 @@ private:
   double getNormToTApproxForLCB(int64_t numVisits) const;
 
   void selectBestChildToDescend(
-    SearchThread& thread, const SearchNode& node, int& bestChildIdx, Loc& bestChildMoveLoc,
+    SearchThread& thread, const SearchNode& node, int& bestChildIdx,Loc& bestChildFromLoc,Loc& bestChildToLoc,
     bool posesWithChildBuf[NNPos::MAX_NN_POLICY_SIZE],
     bool isRoot
   ) const;

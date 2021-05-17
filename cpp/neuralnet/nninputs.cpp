@@ -26,13 +26,29 @@ Loc NNPos::posToLoc(int pos, int boardXSize, int boardYSize, int nnXLen, int nnY
     return Board::NULL_LOC;
   return Location::getLoc(x,y,boardXSize);
 }
+Loc NNPos::posToFromLoc(int pos, int boardXSize, int boardYSize, int nnXLen, int nnYLen) {
+  pos = pos/(nnXLen*nnYLen);
+  int x = pos % nnXLen;
+  int y = pos / nnXLen;
+  if(x < 0 || x >= boardXSize || y < 0 || y >= boardYSize)
+    return Board::NULL_LOC;
+  return Location::getLoc(x,y,boardXSize);
+}
+Loc NNPos::posToToLoc(int pos, int boardXSize, int boardYSize, int nnXLen, int nnYLen) {
+  pos = pos%(nnXLen*nnYLen);
+  int x = pos % nnXLen;
+  int y = pos / nnXLen;
+  if(x < 0 || x >= boardXSize || y < 0 || y >= boardYSize)
+    return Board::NULL_LOC;
+  return Location::getLoc(x,y,boardXSize);
+}
 
 bool NNPos::isPassPos(int pos, int nnXLen, int nnYLen) {
-  return pos == nnXLen * nnYLen;
+  return false;
 }
 
 int NNPos::getPolicySize(int nnXLen, int nnYLen) {
-  return nnXLen * nnYLen + 1;
+  return nnXLen * nnYLen * nnXLen * nnYLen;
 }
 
 //-----------------------------------------------------------------------------------------------------------

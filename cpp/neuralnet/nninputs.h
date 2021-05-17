@@ -22,6 +22,8 @@ namespace NNPos {
   int locToPos(Loc loc, int boardXSize, int nnXLen, int nnYLen);
   int locToDoublePos(Loc fromLoc,Loc toLoc, int boardXSize, int nnXLen, int nnYLen);
   Loc posToLoc(int pos, int boardXSize, int boardYSize, int nnXLen, int nnYLen);
+  Loc posToFromLoc(int pos, int boardXSize, int boardYSize, int nnXLen, int nnYLen);
+  Loc posToToLoc(int pos, int boardXSize, int boardYSize, int nnXLen, int nnYLen);
   bool isPassPos(int pos, int nnXLen, int nnYLen);
   int getPolicySize(int nnXLen, int nnYLen);
 }
