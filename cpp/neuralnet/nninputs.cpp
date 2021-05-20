@@ -668,63 +668,24 @@ void NNInputs::fillRowV3(
       Color stone = board.colors[loc];
 
       //Features 1,2 - pla,opp stone
-      if(stone == pla)
+      //3,4 is outer loop
+      //5,6 is inner loop
+      if(stone == pla){
         setRowBin(rowBin,pos,1, 1.0f, posStride, featureStride);
-      else if(stone == opp)
-        setRowBin(rowBin,pos,2, 1.0f, posStride, featureStride);
-    }
-  }
-  /*
-  //Hide history from the net if a pass would end things and we're behaving as if a pass won't.
-  //Or if the game is in fact over right now!
-  bool hideHistory =
-    hist.isGameFinished ||
-    (nnInputParams.conservativePass && hist.passWouldEndGame(board,nextPlayer));
-  */
-  bool hideHistory = false;
-  //Features 3,4,5,6,7,8
-  if(!hideHistory) {
-    const vector<Move>& moveHistory = hist.moveHistory;
-    size_t moveHistoryLen = moveHistory.size();
-    if(moveHistoryLen >= 1 && moveHistory[moveHistoryLen-1].pla == opp) {
-      Loc prev1Loc = moveHistory[moveHistoryLen-1].fromLoc;
-      if(prev1Loc != Board::NULL_LOC) {
-        int pos = NNPos::locToPos(prev1Loc,xSize,nnXLen,nnYLen);
-        setRowBin(rowBin,pos,3, 1.0f, posStride, featureStride);
-      }
-      prev1Loc = moveHistory[moveHistoryLen-1].toLoc;
-      if(prev1Loc != Board::NULL_LOC) {
-        int pos = NNPos::locToPos(prev1Loc,xSize,nnXLen,nnYLen);
-        setRowBin(rowBin,pos,4, 1.0f, posStride, featureStride);
-      }
-      if(moveHistoryLen >= 2 && moveHistory[moveHistoryLen-2].pla == pla) {
-        Loc prev2Loc = moveHistory[moveHistoryLen-2].fromLoc;
-        if(prev2Loc != Board::NULL_LOC) {
-          int pos = NNPos::locToPos(prev2Loc,xSize,nnXLen,nnYLen);
+        if(kIsOuter[loc])
+          setRowBin(rowBin,pos,3, 1.0f, posStride, featureStride);
+        if(kIsInter[loc])
           setRowBin(rowBin,pos,5, 1.0f, posStride, featureStride);
-        }
-        prev2Loc = moveHistory[moveHistoryLen-2].toLoc;
-        if(prev2Loc != Board::NULL_LOC) {
-          int pos = NNPos::locToPos(prev2Loc,xSize,nnXLen,nnYLen);
+      }
+      else if(stone == opp){
+        setRowBin(rowBin,pos,2, 1.0f, posStride, featureStride);
+        if(kIsOuter[loc])
+          setRowBin(rowBin,pos,4, 1.0f, posStride, featureStride);
+        if(kIsInter[loc])
           setRowBin(rowBin,pos,6, 1.0f, posStride, featureStride);
-        }
-        if(moveHistoryLen >= 3 && moveHistory[moveHistoryLen-3].pla == opp) {
-          Loc prev3Loc = moveHistory[moveHistoryLen-3].fromLoc;
-          if(prev3Loc != Board::NULL_LOC) {
-            int pos = NNPos::locToPos(prev3Loc,xSize,nnXLen,nnYLen);
-            setRowBin(rowBin,pos,7, 1.0f, posStride, featureStride);
-          }
-          prev3Loc = moveHistory[moveHistoryLen-3].toLoc;
-          if(prev3Loc != Board::NULL_LOC) {
-            int pos = NNPos::locToPos(prev3Loc,xSize,nnXLen,nnYLen);
-            setRowBin(rowBin,pos,8, 1.0f, posStride, featureStride);
-          }
-        }
       }
     }
   }
-
-  //Global features.
 
 }
 
@@ -742,8 +703,8 @@ void NNInputs::fillRowV4(
   assert(nnYLen <= NNPos::MAX_BOARD_LEN);
   assert(board.x_size <= nnXLen);
   assert(board.y_size <= nnYLen);
-  std::fill(rowBin,rowBin+NUM_FEATURES_SPATIAL_V4*nnXLen*nnYLen,false);
-  std::fill(rowGlobal,rowGlobal+NUM_FEATURES_GLOBAL_V4,0.0f);
+  std::fill(rowBin,rowBin+NUM_FEATURES_SPATIAL_V3*nnXLen*nnYLen,false);
+  std::fill(rowGlobal,rowGlobal+NUM_FEATURES_GLOBAL_V3,0.0f);
 
   Player pla = nextPlayer;
   Player opp = getOpp(pla);
@@ -754,7 +715,7 @@ void NNInputs::fillRowV4(
   int posStride;
   if(useNHWC) {
     featureStride = 1;
-    posStride = NNInputs::NUM_FEATURES_SPATIAL_V4;
+    posStride = NNInputs::NUM_FEATURES_SPATIAL_V3;
   }
   else {
     featureStride = nnXLen * nnYLen;
@@ -772,65 +733,24 @@ void NNInputs::fillRowV4(
       Color stone = board.colors[loc];
 
       //Features 1,2 - pla,opp stone
-      //Features 3,4,5 - 1,2,3 libs
-      if(stone == pla)
+      //3,4 is outer loop
+      //5,6 is inner loop
+      if(stone == pla){
         setRowBin(rowBin,pos,1, 1.0f, posStride, featureStride);
-      else if(stone == opp)
-        setRowBin(rowBin,pos,2, 1.0f, posStride, featureStride);
-    }
-  }
-
-  /*
-  //Hide history from the net if a pass would end things and we're behaving as if a pass won't.
-  //Or if the game is in fact over right now!
-  bool hideHistory =
-    hist.isGameFinished ||
-    (nnInputParams.conservativePass && hist.passWouldEndGame(board,nextPlayer));
-  */
-  bool hideHistory = false;
-  //Features 3,4,5,6,7,8
-  if(!hideHistory) {
-    const vector<Move>& moveHistory = hist.moveHistory;
-    size_t moveHistoryLen = moveHistory.size();
-    if(moveHistoryLen >= 1 && moveHistory[moveHistoryLen-1].pla == opp) {
-      Loc prev1Loc = moveHistory[moveHistoryLen-1].fromLoc;
-      if(prev1Loc != Board::NULL_LOC) {
-        int pos = NNPos::locToPos(prev1Loc,xSize,nnXLen,nnYLen);
-        setRowBin(rowBin,pos,3, 1.0f, posStride, featureStride);
-      }
-      prev1Loc = moveHistory[moveHistoryLen-1].toLoc;
-      if(prev1Loc != Board::NULL_LOC) {
-        int pos = NNPos::locToPos(prev1Loc,xSize,nnXLen,nnYLen);
-        setRowBin(rowBin,pos,4, 1.0f, posStride, featureStride);
-      }
-      if(moveHistoryLen >= 2 && moveHistory[moveHistoryLen-2].pla == pla) {
-        Loc prev2Loc = moveHistory[moveHistoryLen-2].fromLoc;
-        if(prev2Loc != Board::NULL_LOC) {
-          int pos = NNPos::locToPos(prev2Loc,xSize,nnXLen,nnYLen);
+        if(kIsOuter[loc])
+          setRowBin(rowBin,pos,3, 1.0f, posStride, featureStride);
+        if(kIsInter[loc])
           setRowBin(rowBin,pos,5, 1.0f, posStride, featureStride);
-        }
-        prev2Loc = moveHistory[moveHistoryLen-2].toLoc;
-        if(prev2Loc != Board::NULL_LOC) {
-          int pos = NNPos::locToPos(prev2Loc,xSize,nnXLen,nnYLen);
+      }
+      else if(stone == opp){
+        setRowBin(rowBin,pos,2, 1.0f, posStride, featureStride);
+        if(kIsOuter[loc])
+          setRowBin(rowBin,pos,4, 1.0f, posStride, featureStride);
+        if(kIsInter[loc])
           setRowBin(rowBin,pos,6, 1.0f, posStride, featureStride);
-        }
-        if(moveHistoryLen >= 3 && moveHistory[moveHistoryLen-3].pla == opp) {
-          Loc prev3Loc = moveHistory[moveHistoryLen-3].fromLoc;
-          if(prev3Loc != Board::NULL_LOC) {
-            int pos = NNPos::locToPos(prev3Loc,xSize,nnXLen,nnYLen);
-            setRowBin(rowBin,pos,7, 1.0f, posStride, featureStride);
-          }
-          prev3Loc = moveHistory[moveHistoryLen-3].toLoc;
-          if(prev3Loc != Board::NULL_LOC) {
-            int pos = NNPos::locToPos(prev3Loc,xSize,nnXLen,nnYLen);
-            setRowBin(rowBin,pos,8, 1.0f, posStride, featureStride);
-          }
-        }
       }
     }
   }
-
-  //Global features.
 }
 
 
@@ -848,8 +768,8 @@ void NNInputs::fillRowV5(
   assert(nnYLen <= NNPos::MAX_BOARD_LEN);
   assert(board.x_size <= nnXLen);
   assert(board.y_size <= nnYLen);
-  std::fill(rowBin,rowBin+NUM_FEATURES_SPATIAL_V5*nnXLen*nnYLen,false);
-  std::fill(rowGlobal,rowGlobal+NUM_FEATURES_GLOBAL_V5,0.0f);
+  std::fill(rowBin,rowBin+NUM_FEATURES_SPATIAL_V3*nnXLen*nnYLen,false);
+  std::fill(rowGlobal,rowGlobal+NUM_FEATURES_GLOBAL_V3,0.0f);
 
   Player pla = nextPlayer;
   Player opp = getOpp(pla);
@@ -860,7 +780,7 @@ void NNInputs::fillRowV5(
   int posStride;
   if(useNHWC) {
     featureStride = 1;
-    posStride = NNInputs::NUM_FEATURES_SPATIAL_V5;
+    posStride = NNInputs::NUM_FEATURES_SPATIAL_V3;
   }
   else {
     featureStride = nnXLen * nnYLen;
@@ -878,63 +798,24 @@ void NNInputs::fillRowV5(
       Color stone = board.colors[loc];
 
       //Features 1,2 - pla,opp stone
-      if(stone == pla)
+      //3,4 is outer loop
+      //5,6 is inner loop
+      if(stone == pla){
         setRowBin(rowBin,pos,1, 1.0f, posStride, featureStride);
-      else if(stone == opp)
-        setRowBin(rowBin,pos,2, 1.0f, posStride, featureStride);
-    }
-  }
-
-  /*
-  //Hide history from the net if a pass would end things and we're behaving as if a pass won't.
-  //Or if the game is in fact over right now!
-  bool hideHistory =
-    hist.isGameFinished ||
-    (nnInputParams.conservativePass && hist.passWouldEndGame(board,nextPlayer));
-  */
-  bool hideHistory = false;
-  //Features 3,4,5,6,7,8
-  if(!hideHistory) {
-    const vector<Move>& moveHistory = hist.moveHistory;
-    size_t moveHistoryLen = moveHistory.size();
-    if(moveHistoryLen >= 1 && moveHistory[moveHistoryLen-1].pla == opp) {
-      Loc prev1Loc = moveHistory[moveHistoryLen-1].fromLoc;
-      if(prev1Loc != Board::NULL_LOC) {
-        int pos = NNPos::locToPos(prev1Loc,xSize,nnXLen,nnYLen);
-        setRowBin(rowBin,pos,3, 1.0f, posStride, featureStride);
-      }
-      prev1Loc = moveHistory[moveHistoryLen-1].toLoc;
-      if(prev1Loc != Board::NULL_LOC) {
-        int pos = NNPos::locToPos(prev1Loc,xSize,nnXLen,nnYLen);
-        setRowBin(rowBin,pos,4, 1.0f, posStride, featureStride);
-      }
-      if(moveHistoryLen >= 2 && moveHistory[moveHistoryLen-2].pla == pla) {
-        Loc prev2Loc = moveHistory[moveHistoryLen-2].fromLoc;
-        if(prev2Loc != Board::NULL_LOC) {
-          int pos = NNPos::locToPos(prev2Loc,xSize,nnXLen,nnYLen);
+        if(kIsOuter[loc])
+          setRowBin(rowBin,pos,3, 1.0f, posStride, featureStride);
+        if(kIsInter[loc])
           setRowBin(rowBin,pos,5, 1.0f, posStride, featureStride);
-        }
-        prev2Loc = moveHistory[moveHistoryLen-2].toLoc;
-        if(prev2Loc != Board::NULL_LOC) {
-          int pos = NNPos::locToPos(prev2Loc,xSize,nnXLen,nnYLen);
+      }
+      else if(stone == opp){
+        setRowBin(rowBin,pos,2, 1.0f, posStride, featureStride);
+        if(kIsOuter[loc])
+          setRowBin(rowBin,pos,4, 1.0f, posStride, featureStride);
+        if(kIsInter[loc])
           setRowBin(rowBin,pos,6, 1.0f, posStride, featureStride);
-        }
-        if(moveHistoryLen >= 3 && moveHistory[moveHistoryLen-3].pla == opp) {
-          Loc prev3Loc = moveHistory[moveHistoryLen-3].fromLoc;
-          if(prev3Loc != Board::NULL_LOC) {
-            int pos = NNPos::locToPos(prev3Loc,xSize,nnXLen,nnYLen);
-            setRowBin(rowBin,pos,7, 1.0f, posStride, featureStride);
-          }
-          prev3Loc = moveHistory[moveHistoryLen-3].toLoc;
-          if(prev3Loc != Board::NULL_LOC) {
-            int pos = NNPos::locToPos(prev3Loc,xSize,nnXLen,nnYLen);
-            setRowBin(rowBin,pos,8, 1.0f, posStride, featureStride);
-          }
-        }
       }
     }
   }
-
 }
 
 //===========================================================================================
@@ -951,8 +832,8 @@ void NNInputs::fillRowV6(
   assert(nnYLen <= NNPos::MAX_BOARD_LEN);
   assert(board.x_size <= nnXLen);
   assert(board.y_size <= nnYLen);
-  std::fill(rowBin,rowBin+NUM_FEATURES_SPATIAL_V6*nnXLen*nnYLen,false);
-  std::fill(rowGlobal,rowGlobal+NUM_FEATURES_GLOBAL_V6,0.0f);
+  std::fill(rowBin,rowBin+NUM_FEATURES_SPATIAL_V3*nnXLen*nnYLen,false);
+  std::fill(rowGlobal,rowGlobal+NUM_FEATURES_GLOBAL_V3,0.0f);
 
   Player pla = nextPlayer;
   Player opp = getOpp(pla);
@@ -963,7 +844,7 @@ void NNInputs::fillRowV6(
   int posStride;
   if(useNHWC) {
     featureStride = 1;
-    posStride = NNInputs::NUM_FEATURES_SPATIAL_V6;
+    posStride = NNInputs::NUM_FEATURES_SPATIAL_V3;
   }
   else {
     featureStride = nnXLen * nnYLen;
@@ -981,60 +862,21 @@ void NNInputs::fillRowV6(
       Color stone = board.colors[loc];
 
       //Features 1,2 - pla,opp stone
-      //Features 3,4,5 - 1,2,3 libs
-      if(stone == pla)
+      //3,4 is outer loop
+      //5,6 is inner loop
+      if(stone == pla){
         setRowBin(rowBin,pos,1, 1.0f, posStride, featureStride);
-      else if(stone == opp)
-        setRowBin(rowBin,pos,2, 1.0f, posStride, featureStride);
-    }
-  }
-
-  /*
-  //Hide history from the net if a pass would end things and we're behaving as if a pass won't.
-  //Or if the game is in fact over right now!
-  bool hideHistory =
-    hist.isGameFinished ||
-    (nnInputParams.conservativePass && hist.passWouldEndGame(board,nextPlayer));
-  */
-  bool hideHistory = false;
-  //Features 3,4,5,6,7,8
-  if(!hideHistory) {
-    const vector<Move>& moveHistory = hist.moveHistory;
-    size_t moveHistoryLen = moveHistory.size();
-    if(moveHistoryLen >= 1 && moveHistory[moveHistoryLen-1].pla == opp) {
-      Loc prev1Loc = moveHistory[moveHistoryLen-1].fromLoc;
-      if(prev1Loc != Board::NULL_LOC) {
-        int pos = NNPos::locToPos(prev1Loc,xSize,nnXLen,nnYLen);
-        setRowBin(rowBin,pos,3, 1.0f, posStride, featureStride);
-      }
-      prev1Loc = moveHistory[moveHistoryLen-1].toLoc;
-      if(prev1Loc != Board::NULL_LOC) {
-        int pos = NNPos::locToPos(prev1Loc,xSize,nnXLen,nnYLen);
-        setRowBin(rowBin,pos,4, 1.0f, posStride, featureStride);
-      }
-      if(moveHistoryLen >= 2 && moveHistory[moveHistoryLen-2].pla == pla) {
-        Loc prev2Loc = moveHistory[moveHistoryLen-2].fromLoc;
-        if(prev2Loc != Board::NULL_LOC) {
-          int pos = NNPos::locToPos(prev2Loc,xSize,nnXLen,nnYLen);
+        if(kIsOuter[loc])
+          setRowBin(rowBin,pos,3, 1.0f, posStride, featureStride);
+        if(kIsInter[loc])
           setRowBin(rowBin,pos,5, 1.0f, posStride, featureStride);
-        }
-        prev2Loc = moveHistory[moveHistoryLen-2].toLoc;
-        if(prev2Loc != Board::NULL_LOC) {
-          int pos = NNPos::locToPos(prev2Loc,xSize,nnXLen,nnYLen);
+      }
+      else if(stone == opp){
+        setRowBin(rowBin,pos,2, 1.0f, posStride, featureStride);
+        if(kIsOuter[loc])
+          setRowBin(rowBin,pos,4, 1.0f, posStride, featureStride);
+        if(kIsInter[loc])
           setRowBin(rowBin,pos,6, 1.0f, posStride, featureStride);
-        }
-        if(moveHistoryLen >= 3 && moveHistory[moveHistoryLen-3].pla == opp) {
-          Loc prev3Loc = moveHistory[moveHistoryLen-3].fromLoc;
-          if(prev3Loc != Board::NULL_LOC) {
-            int pos = NNPos::locToPos(prev3Loc,xSize,nnXLen,nnYLen);
-            setRowBin(rowBin,pos,7, 1.0f, posStride, featureStride);
-          }
-          prev3Loc = moveHistory[moveHistoryLen-3].toLoc;
-          if(prev3Loc != Board::NULL_LOC) {
-            int pos = NNPos::locToPos(prev3Loc,xSize,nnXLen,nnYLen);
-            setRowBin(rowBin,pos,8, 1.0f, posStride, featureStride);
-          }
-        }
       }
     }
   }
@@ -1054,8 +896,8 @@ void NNInputs::fillRowV7(
   assert(nnYLen <= NNPos::MAX_BOARD_LEN);
   assert(board.x_size <= nnXLen);
   assert(board.y_size <= nnYLen);
-  std::fill(rowBin,rowBin+NUM_FEATURES_SPATIAL_V7*nnXLen*nnYLen,false);
-  std::fill(rowGlobal,rowGlobal+NUM_FEATURES_GLOBAL_V7,0.0f);
+  std::fill(rowBin,rowBin+NUM_FEATURES_SPATIAL_V3*nnXLen*nnYLen,false);
+  std::fill(rowGlobal,rowGlobal+NUM_FEATURES_GLOBAL_V3,0.0f);
 
   Player pla = nextPlayer;
   Player opp = getOpp(pla);
@@ -1066,7 +908,7 @@ void NNInputs::fillRowV7(
   int posStride;
   if(useNHWC) {
     featureStride = 1;
-    posStride = NNInputs::NUM_FEATURES_SPATIAL_V7;
+    posStride = NNInputs::NUM_FEATURES_SPATIAL_V3;
   }
   else {
     featureStride = nnXLen * nnYLen;
@@ -1084,60 +926,21 @@ void NNInputs::fillRowV7(
       Color stone = board.colors[loc];
 
       //Features 1,2 - pla,opp stone
-      //Features 3,4,5 - 1,2,3 libs
-      if(stone == pla)
+      //3,4 is outer loop
+      //5,6 is inner loop
+      if(stone == pla){
         setRowBin(rowBin,pos,1, 1.0f, posStride, featureStride);
-      else if(stone == opp)
-        setRowBin(rowBin,pos,2, 1.0f, posStride, featureStride);
-    }
-  }
-
-  /*
-  //Hide history from the net if a pass would end things and we're behaving as if a pass won't.
-  //Or if the game is in fact over right now!
-  bool hideHistory =
-    hist.isGameFinished ||
-    (nnInputParams.conservativePass && hist.passWouldEndGame(board,nextPlayer));
-  */
-  bool hideHistory = false;
-  //Features 3,4,5,6,7,8
-  if(!hideHistory) {
-    const vector<Move>& moveHistory = hist.moveHistory;
-    size_t moveHistoryLen = moveHistory.size();
-    if(moveHistoryLen >= 1 && moveHistory[moveHistoryLen-1].pla == opp) {
-      Loc prev1Loc = moveHistory[moveHistoryLen-1].fromLoc;
-      if(prev1Loc != Board::NULL_LOC) {
-        int pos = NNPos::locToPos(prev1Loc,xSize,nnXLen,nnYLen);
-        setRowBin(rowBin,pos,3, 1.0f, posStride, featureStride);
-      }
-      prev1Loc = moveHistory[moveHistoryLen-1].toLoc;
-      if(prev1Loc != Board::NULL_LOC) {
-        int pos = NNPos::locToPos(prev1Loc,xSize,nnXLen,nnYLen);
-        setRowBin(rowBin,pos,4, 1.0f, posStride, featureStride);
-      }
-      if(moveHistoryLen >= 2 && moveHistory[moveHistoryLen-2].pla == pla) {
-        Loc prev2Loc = moveHistory[moveHistoryLen-2].fromLoc;
-        if(prev2Loc != Board::NULL_LOC) {
-          int pos = NNPos::locToPos(prev2Loc,xSize,nnXLen,nnYLen);
+        if(kIsOuter[loc])
+          setRowBin(rowBin,pos,3, 1.0f, posStride, featureStride);
+        if(kIsInter[loc])
           setRowBin(rowBin,pos,5, 1.0f, posStride, featureStride);
-        }
-        prev2Loc = moveHistory[moveHistoryLen-2].toLoc;
-        if(prev2Loc != Board::NULL_LOC) {
-          int pos = NNPos::locToPos(prev2Loc,xSize,nnXLen,nnYLen);
+      }
+      else if(stone == opp){
+        setRowBin(rowBin,pos,2, 1.0f, posStride, featureStride);
+        if(kIsOuter[loc])
+          setRowBin(rowBin,pos,4, 1.0f, posStride, featureStride);
+        if(kIsInter[loc])
           setRowBin(rowBin,pos,6, 1.0f, posStride, featureStride);
-        }
-        if(moveHistoryLen >= 3 && moveHistory[moveHistoryLen-3].pla == opp) {
-          Loc prev3Loc = moveHistory[moveHistoryLen-3].fromLoc;
-          if(prev3Loc != Board::NULL_LOC) {
-            int pos = NNPos::locToPos(prev3Loc,xSize,nnXLen,nnYLen);
-            setRowBin(rowBin,pos,7, 1.0f, posStride, featureStride);
-          }
-          prev3Loc = moveHistory[moveHistoryLen-3].toLoc;
-          if(prev3Loc != Board::NULL_LOC) {
-            int pos = NNPos::locToPos(prev3Loc,xSize,nnXLen,nnYLen);
-            setRowBin(rowBin,pos,8, 1.0f, posStride, featureStride);
-          }
-        }
       }
     }
   }
