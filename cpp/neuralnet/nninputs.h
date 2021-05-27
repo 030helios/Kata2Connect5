@@ -13,17 +13,14 @@
 namespace NNPos {
   constexpr int MAX_BOARD_LEN = Board::MAX_LEN;
   constexpr int MAX_BOARD_AREA = MAX_BOARD_LEN * MAX_BOARD_LEN;
-  //fromLoc and toLoc
-  constexpr int MAX_NN_POLICY_SIZE = MAX_BOARD_AREA*MAX_BOARD_AREA;
+  //Policy output adds +1 for the pass move
+  constexpr int MAX_NN_POLICY_SIZE = MAX_BOARD_AREA + 1;
   //Extra score distribution radius, used for writing score in data rows and for the neural net score belief output
   constexpr int EXTRA_SCORE_DISTR_RADIUS = 60;
 
   int xyToPos(int x, int y, int nnXLen);
   int locToPos(Loc loc, int boardXSize, int nnXLen, int nnYLen);
-  int locToDoublePos(Loc fromLoc,Loc toLoc, int boardXSize, int nnXLen, int nnYLen);
   Loc posToLoc(int pos, int boardXSize, int boardYSize, int nnXLen, int nnYLen);
-  Loc posToFromLoc(int pos, int boardXSize, int boardYSize, int nnXLen, int nnYLen);
-  Loc posToToLoc(int pos, int boardXSize, int boardYSize, int nnXLen, int nnYLen);
   bool isPassPos(int pos, int nnXLen, int nnYLen);
   int getPolicySize(int nnXLen, int nnYLen);
 }
@@ -66,6 +63,11 @@ namespace NNInputs {
 
   const int NUM_FEATURES_SPATIAL_V7 = 22;
   const int NUM_FEATURES_GLOBAL_V7 = 19;
+
+  Hash128 getHash(
+    const Board& board, const BoardHistory& boardHistory, Player nextPlayer,
+    const MiscNNInputParams& nnInputParams
+  );
 
   void fillRowV3(
     const Board& board, const BoardHistory& boardHistory, Player nextPlayer,
@@ -151,6 +153,7 @@ namespace SymmetryHelpers {
   void copyOutputsWithSymmetry(const float* src, float* dst, int nSize, int hSize, int wSize, int symmetry);
 
   Loc getSymLoc(int x, int y, const Board& board, int symmetry);
+  Board getSymBoard(const Board& board, int symmetry);
 }
 
 //Utility functions for computing the "scoreValue", the unscaled utility of various numbers of points, prior to multiplication by

@@ -72,8 +72,7 @@ struct SearchNode {
 
   //Constant during search--------------------------------------------------------------
   Player nextPla;
-  Loc prevFromLoc;
-  Loc prevToLoc;
+  Loc prevMoveLoc;
 
   //Mutable---------------------------------------------------------------------------
   //All of these values are protected under the mutex indicated by lockIdx
@@ -103,7 +102,7 @@ struct SearchNode {
   std::shared_ptr<SubtreeValueBiasEntry> subtreeValueBiasTableEntry;
 
   //--------------------------------------------------------------------------------
-  SearchNode(Search& search, Player prevPla, Rand& rand, Loc prevFromLoc, Loc prevToLoc, SearchNode* parent);
+  SearchNode(Search& search, Player prevPla, Rand& rand, Loc prevMoveLoc, SearchNode* parent);
   ~SearchNode();
 
   SearchNode(const SearchNode&) = delete;
@@ -153,6 +152,7 @@ struct Search {
   Player rootPla;
   Board rootBoard;
   BoardHistory rootHistory;
+  Loc rootHintLoc;
 
   //External user-specified moves that are illegal or that should be nontrivially searched, and the number of turns for which they should
   //be excluded. Empty if not active, else of length MAX_ARR_SIZE and nonzero anywhere a move should be banned, for the number of ply
@@ -165,6 +165,11 @@ struct Search {
   //Used to center for dynamic scorevalue
   double recentScoreCenter;
 
+  //If the opponent is mirroring, then the color of that opponent, for countering mirroring
+  Player mirroringPla;
+  double mirrorAdvantage; //Number of points the opponent wins by if mirror holds indefinitely.
+  bool mirrorCenterIsSymmetric;
+
   bool alwaysIncludeOwnerMap;
 
   SearchParams searchParams;
@@ -176,6 +181,9 @@ struct Search {
   double effectiveSearchTimeCarriedOver; //Effective search time carried over from previous moves due to ponder/tree reuse
 
   std::string randSeed;
+
+  //Contains all koHashes of positions/situations up to and including the root
+  KoHashTable* rootKoHashTable;
 
   //Precomputed distribution for downweighting child values based on their values
   DistributionTable* valueWeightDistribution;
@@ -218,6 +226,8 @@ struct Search {
   void setPosition(Player pla, const Board& board, const BoardHistory& history);
 
   void setPlayerAndClearHistory(Player pla);
+  void setKomiIfNew(float newKomi); //Does not clear history, does clear search unless komi is equal.
+  void setRootHintLoc(Loc hintLoc);
   void setAvoidMoveUntilByLoc(const std::vector<int>& bVec, const std::vector<int>& wVec);
   void setAlwaysIncludeOwnerMap(bool b);
   void setParams(SearchParams params);
@@ -230,10 +240,12 @@ struct Search {
   //Updates position and preserves the relevant subtree of search
   //If the move is not legal for the specified player, returns false and does nothing, else returns true
   //In the case where the player was not the expected one moving next, also clears history.
-  bool makeMove(Loc fromLoc, Loc toLoc, Player movePla);
+  bool makeMove(Loc moveLoc, Player movePla);
+  bool makeMove(Loc moveLoc, Player movePla, bool preventEncore);
 
   //isLegalTolerant also specially handles players moving multiple times in a row.
-  bool isLegalStrict(Loc fromLoc, Loc toLoc, Player movePla) const;
+  bool isLegalTolerant(Loc moveLoc, Player movePla) const;
+  bool isLegalStrict(Loc moveLoc, Player movePla) const;
 
   //Run an entire search from start to finish
   Loc runWholeSearchAndGetMove(Player movePla, Logger& logger);
@@ -346,7 +358,6 @@ struct Search {
 
   //Helpers-----------------------------------------------------------------------
   int getPos(Loc moveLoc) const;
-  int getDouplePos(Loc fromLoc,Loc toLoc) const;
 
 private:
   static constexpr double POLICY_ILLEGAL_SELECTION_VALUE = -1e50;
@@ -358,6 +369,8 @@ private:
   double interpolateEarly(double halflife, double earlyValue, double value) const;
 
   void maybeAddPolicyNoiseAndTempAlreadyLocked(SearchThread& thread, SearchNode& node, bool isRoot) const;
+
+  bool isAllowedRootMove(Loc moveLoc) const;
 
   void computeRootNNEvaluation(NNResultBuf& nnResultBuf, bool includeOwnerMap);
 
@@ -372,6 +385,9 @@ private:
   double getScoreUtility(double scoreMeanSum, double scoreMeanSqSum, double weightSum) const;
   double getScoreUtilityDiff(double scoreMeanSum, double scoreMeanSqSum, double weightSum, double delta) const;
   double getUtilityFromNN(const NNOutput& nnOutput) const;
+
+  //Parent must be locked
+  double getEndingWhiteScoreBonus(const SearchNode& parent, const SearchNode* child) const;
 
   void getValueChildWeights(
     int numChildren,
@@ -429,7 +445,7 @@ private:
   double getNormToTApproxForLCB(int64_t numVisits) const;
 
   void selectBestChildToDescend(
-    SearchThread& thread, const SearchNode& node, int& bestChildIdx,Loc& bestChildFromLoc,Loc& bestChildToLoc,
+    SearchThread& thread, const SearchNode& node, int& bestChildIdx, Loc& bestChildMoveLoc,
     bool posesWithChildBuf[NNPos::MAX_NN_POLICY_SIZE],
     bool isRoot
   ) const;
