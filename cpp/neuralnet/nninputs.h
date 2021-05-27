@@ -49,6 +49,7 @@ struct MiscNNInputParams {
 };
 
 namespace NNInputs {
+  /*
   const int NUM_FEATURES_SPATIAL_V3 = 22;
   const int NUM_FEATURES_GLOBAL_V3 = 14;
 
@@ -63,6 +64,21 @@ namespace NNInputs {
 
   const int NUM_FEATURES_SPATIAL_V7 = 22;
   const int NUM_FEATURES_GLOBAL_V7 = 19;
+  */
+  const int NUM_FEATURES_SPATIAL_V3 = 9;
+  const int NUM_FEATURES_GLOBAL_V3 = 0;
+
+  const int NUM_FEATURES_SPATIAL_V4 = 9;
+  const int NUM_FEATURES_GLOBAL_V4 = 0;
+
+  const int NUM_FEATURES_SPATIAL_V5 = 9;
+  const int NUM_FEATURES_GLOBAL_V5 = 0;
+
+  const int NUM_FEATURES_SPATIAL_V6 = 9;
+  const int NUM_FEATURES_GLOBAL_V6 = 0;
+
+  const int NUM_FEATURES_SPATIAL_V7 = 9;
+  const int NUM_FEATURES_GLOBAL_V7 = 0;
 
   Hash128 getHash(
     const Board& board, const BoardHistory& boardHistory, Player nextPlayer,
