@@ -93,9 +93,6 @@ struct Sgf {
     static std::string toJsonLine(const PositionSample& sample);
     static PositionSample ofJsonLine(const std::string& s);
 
-    //Return a copy of tihs sample with all player stones and moves flipped to the opposite color
-    Sgf::PositionSample getColorFlipped() const;
-
     //For the moment, only used in testing since it does extra consistency checks.
     //If we need a version to be used in "prod", we could make an efficient version maybe as operator==.
     bool isEqualForTesting(const PositionSample& other, bool checkNumCaptures, bool checkSimpleKo) const;
@@ -111,7 +108,6 @@ struct Sgf {
     std::set<Hash128>& uniqueHashes,
     bool hashComments,
     bool hashParent,
-    bool flipIfPassOrWFirst,
     Rand* rand,
     std::vector<PositionSample>& samples
   ) const;
@@ -120,7 +116,6 @@ struct Sgf {
     std::set<Hash128>& uniqueHashes,
     bool hashComments,
     bool hashParent,
-    bool flipIfPassOrWFirst,
     Rand* rand,
     std::function<void(PositionSample&,const BoardHistory&,const std::string&)> f
   ) const;
@@ -139,7 +134,6 @@ struct Sgf {
     std::set<Hash128>& uniqueHashes,
     bool hashComments,
     bool hashParent,
-    bool flipIfPassOrWFirst,
     Rand* rand,
     std::vector<std::pair<int64_t,int64_t>>& variationTraceNodesBranch,
     std::function<void(PositionSample&,const BoardHistory&,const std::string&)> f
@@ -151,7 +145,6 @@ struct Sgf {
     std::set<Hash128>& uniqueHashes,
     bool hashComments,
     bool hashParent,
-    bool flipIfPassOrWFirst,
     const std::string& comments,
     std::function<void(PositionSample&,const BoardHistory&,const std::string&)> f
   ) const;

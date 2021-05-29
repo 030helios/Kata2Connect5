@@ -583,7 +583,6 @@ int MainCmds::samplesgfs(int argc, const char* const* argv) {
   int64_t maxDepth;
   int64_t maxNodeCount;
   int64_t maxBranchCount;
-  bool flipIfPassOrWFirst;
 
   int minMinRank;
   string requiredPlayerName;
@@ -601,7 +600,6 @@ int MainCmds::samplesgfs(int argc, const char* const* argv) {
     TCLAP::ValueArg<string> maxDepthArg("","max-depth","Max depth allowed for sgf",false,"100000000","INT");
     TCLAP::ValueArg<string> maxNodeCountArg("","max-node-count","Max node count allowed for sgf",false,"100000000","INT");
     TCLAP::ValueArg<string> maxBranchCountArg("","max-branch-count","Max branch count allowed for sgf",false,"100000000","INT");
-    TCLAP::SwitchArg flipIfPassOrWFirstArg("","flip-if-pass","Try to heuristically find cases where an sgf passes to simulate white<->black");
     TCLAP::ValueArg<int> minMinRankArg("","min-min-rank","Require both players in a game to have rank at least this",false,Sgf::RANK_UNKNOWN,"INT");
     TCLAP::ValueArg<string> requiredPlayerNameArg("","required-player-name","Require player making the move to have this name",false,string(),"NAME");
     TCLAP::ValueArg<int> maxHandicapArg("","max-handicap","Require no more than this big handicap in stones",false,100,"INT");
@@ -614,7 +612,6 @@ int MainCmds::samplesgfs(int argc, const char* const* argv) {
     cmd.add(maxDepthArg);
     cmd.add(maxNodeCountArg);
     cmd.add(maxBranchCountArg);
-    cmd.add(flipIfPassOrWFirstArg);
     cmd.add(minMinRankArg);
     cmd.add(requiredPlayerNameArg);
     cmd.add(maxHandicapArg);
@@ -628,7 +625,6 @@ int MainCmds::samplesgfs(int argc, const char* const* argv) {
     maxDepth = Global::stringToInt64(maxDepthArg.getValue());
     maxNodeCount = Global::stringToInt64(maxNodeCountArg.getValue());
     maxBranchCount = Global::stringToInt64(maxBranchCountArg.getValue());
-    flipIfPassOrWFirst = flipIfPassOrWFirstArg.getValue();
     minMinRank = minMinRankArg.getValue();
     requiredPlayerName = requiredPlayerNameArg.getValue();
     maxHandicap = maxHandicapArg.getValue();
@@ -777,7 +773,7 @@ int MainCmds::samplesgfs(int argc, const char* const* argv) {
     bool hashComments = false;
     bool hashParent = false;
     Rand iterRand;
-    sgf->iterAllUniquePositions(uniqueHashes, hashComments, hashParent, flipIfPassOrWFirst, &iterRand, posHandler);
+    sgf->iterAllUniquePositions(uniqueHashes, hashComments, hashParent, &iterRand, posHandler);
   };
 
   for(size_t i = 0; i<sgfFiles.size(); i++) {
@@ -895,7 +891,6 @@ int MainCmds::dataminesgfs(int argc, const char* const* argv) {
   double turnWeightLambda;
   int maxPosesPerOutFile;
   double gameModeFastThreshold;
-  bool flipIfPassOrWFirst;
 
   int minRank;
   int minMinRank;
@@ -925,7 +920,6 @@ int MainCmds::dataminesgfs(int argc, const char* const* argv) {
     TCLAP::ValueArg<double> turnWeightLambdaArg("","turn-weight-lambda","Adjust weight for writing down each position",false,0.0,"LAMBDA");
     TCLAP::ValueArg<int> maxPosesPerOutFileArg("","max-poses-per-out-file","Number of hintposes per output file",false,100000,"INT");
     TCLAP::ValueArg<double> gameModeFastThresholdArg("","game-mode-fast-threshold","Utility threshold for game mode fast pass",false,0.005,"UTILS");
-    TCLAP::SwitchArg flipIfPassOrWFirstArg("","flip-if-pass","Try to heuristically find cases where an sgf passes to simulate white<->black");
     TCLAP::ValueArg<int> minRankArg("","min-rank","Require player making the move to have rank at least this",false,Sgf::RANK_UNKNOWN,"INT");
     TCLAP::ValueArg<int> minMinRankArg("","min-min-rank","Require both players in a game to have rank at least this",false,Sgf::RANK_UNKNOWN,"INT");
     TCLAP::ValueArg<string> requiredPlayerNameArg("","required-player-name","Require player making the move to have this name",false,string(),"NAME");
@@ -947,7 +941,6 @@ int MainCmds::dataminesgfs(int argc, const char* const* argv) {
     cmd.add(turnWeightLambdaArg);
     cmd.add(maxPosesPerOutFileArg);
     cmd.add(gameModeFastThresholdArg);
-    cmd.add(flipIfPassOrWFirstArg);
     cmd.add(minRankArg);
     cmd.add(minMinRankArg);
     cmd.add(requiredPlayerNameArg);
@@ -972,7 +965,6 @@ int MainCmds::dataminesgfs(int argc, const char* const* argv) {
     turnWeightLambda = turnWeightLambdaArg.getValue();
     maxPosesPerOutFile = maxPosesPerOutFileArg.getValue();
     gameModeFastThreshold = gameModeFastThresholdArg.getValue();
-    flipIfPassOrWFirst = flipIfPassOrWFirstArg.getValue();
     minRank = minRankArg.getValue();
     minMinRank = minMinRankArg.getValue();
     requiredPlayerName = requiredPlayerNameArg.getValue();
@@ -1475,7 +1467,7 @@ int MainCmds::dataminesgfs(int argc, const char* const* argv) {
   // ---------------------------------------------------------------------------------------------------
   //TREE MODE
 
-  auto treePosHandler = [&logger,&gameInit,&nnEval,&expensiveEvaluateMove,&autoKomi,&maxPolicy,&flipIfPassOrWFirst](
+  auto treePosHandler = [&logger,&gameInit,&nnEval,&expensiveEvaluateMove,&autoKomi,&maxPolicy](
     Search* search, Rand& rand, const BoardHistory& treeHist, int initialTurnNumber, bool markedAsHintPos
   ) {
     if(shouldStop.load(std::memory_order_acquire))
@@ -1567,11 +1559,6 @@ int MainCmds::dataminesgfs(int argc, const char* const* argv) {
     if(weight <= 0)
       return;
     sample.weight = weight;
-
-    if(flipIfPassOrWFirst) {
-      if(treeHist.hasBlackPassOrWhiteFirst())
-        sample = sample.getColorFlipped();
-    }
 
     expensiveEvaluateMove(
       search, sample.hintLoc, pla, board, hist,
@@ -1705,7 +1692,7 @@ int MainCmds::dataminesgfs(int argc, const char* const* argv) {
       try {
         bool hashParent = true; //Hash parent so that we distinguish hint moves that reach the same position but were different moves from different starting states.
         sgf->iterAllUniquePositions(
-          uniqueHashes, hashComments, hashParent, flipIfPassOrWFirst, &seedRand, [&](Sgf::PositionSample& unusedSample, const BoardHistory& hist, const string& comments) {
+          uniqueHashes, hashComments, hashParent, &seedRand, [&](Sgf::PositionSample& unusedSample, const BoardHistory& hist, const string& comments) {
             if(comments.size() > 0 && comments.find("%NOHINT%") != string::npos)
               return;
             if(hist.moveHistory.size() <= 0)

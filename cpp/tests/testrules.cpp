@@ -3474,8 +3474,6 @@ XXXXXXXXXXXX
     out << endl;
 
     expect(name,out,expected);
-
-    delete sgf;
   }
 
   {
