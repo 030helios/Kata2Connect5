@@ -8,7 +8,8 @@ struct SearchNode;
 
 struct AnalysisData {
   //Utilities and scores should all be from white's perspective
-  Loc move;
+  Loc fromLoc;
+  Loc toLoc;
   int64_t numVisits;
   double playSelectionValue; //Similar units to visits, but might have LCB adjustments
   double lcb; //In units of utility

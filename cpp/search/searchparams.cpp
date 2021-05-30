@@ -39,16 +39,11 @@ SearchParams::SearchParams()
    lcbStdevs(4.0),
    minVisitPropForLCB(0.05),
    useNonBuggyLcb(false),
-   rootEndingBonusPoints(0.0),
    rootPruneUselessMoves(false),
-   conservativePass(false),
-   fillDameBeforePass(false),
-   avoidMYTDaggerHackPla(C_EMPTY),
    wideRootNoise(0.0),
    playoutDoublingAdvantage(0.0),
    playoutDoublingAdvantagePla(C_EMPTY),
    nnPolicyTemperature(1.0f),
-   antiMirror(false),
    subtreeValueBiasFactor(0.0),
    subtreeValueBiasTableNumShards(65536),
    subtreeValueBiasFreeProp(0.8),
@@ -93,9 +88,7 @@ SearchParams SearchParams::forTestsV1() {
   params.useLcbForSelection = true;
   params.lcbStdevs = 5;
   params.minVisitPropForLCB = 0.15;
-  params.rootEndingBonusPoints = 0.5;
   params.rootPruneUselessMoves = true;
-  params.conservativePass = true;
   params.useNonBuggyLcb = true;
   return params;
 }

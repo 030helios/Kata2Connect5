@@ -29,7 +29,6 @@ class AsyncBot {
   //Setup, same as in search.h
   //Calling any of these will stop any ongoing search, waiting for a full stop.
   void setPosition(Player pla, const Board& board, const BoardHistory& history);
-  void setKomiIfNew(float newKomi);
   void setRootHintLoc(Loc loc);
   void setAvoidMoveUntilByLoc(const std::vector<int>& bVec, const std::vector<int>& wVec);
   void setAlwaysIncludeOwnerMap(bool b);
@@ -41,10 +40,7 @@ class AsyncBot {
   //Updates position and preserves the relevant subtree of search
   //Will stop any ongoing search, waiting for a full stop.
   //If the move is not legal for the current player, returns false and does nothing, else returns true
-  bool makeMove(Loc moveLoc, Player movePla);
-  bool makeMove(Loc moveLoc, Player movePla, bool preventEncore);
-  bool isLegalTolerant(Loc moveLoc, Player movePla) const;
-  bool isLegalStrict(Loc moveLoc, Player movePla) const;
+  bool makeMove(Loc fromLoc, Loc toLoc, Player movePla);
 
   //Begin searching and produce a move.
   //Will stop any ongoing search, waiting for a full stop.

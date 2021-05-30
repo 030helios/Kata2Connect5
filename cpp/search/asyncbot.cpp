@@ -71,10 +71,6 @@ void AsyncBot::setPosition(Player pla, const Board& board, const BoardHistory& h
   stopAndWait();
   search->setPosition(pla,board,history);
 }
-void AsyncBot::setKomiIfNew(float newKomi) {
-  stopAndWait();
-  search->setKomiIfNew(newKomi);
-}
 void AsyncBot::setAvoidMoveUntilByLoc(const std::vector<int>& bVec, const std::vector<int>& wVec) {
   stopAndWait();
   search->setAvoidMoveUntilByLoc(bVec,wVec);
@@ -105,20 +101,9 @@ void AsyncBot::clearSearch() {
   search->clearSearch();
 }
 
-bool AsyncBot::makeMove(Loc moveLoc, Player movePla) {
+bool AsyncBot::makeMove(Loc fromLoc, Loc toLoc, Player movePla) {
   stopAndWait();
-  return search->makeMove(moveLoc,movePla);
-}
-bool AsyncBot::makeMove(Loc moveLoc, Player movePla, bool preventEncore) {
-  stopAndWait();
-  return search->makeMove(moveLoc,movePla,preventEncore);
-}
-
-bool AsyncBot::isLegalTolerant(Loc moveLoc, Player movePla) const {
-  return search->isLegalTolerant(moveLoc,movePla);
-}
-bool AsyncBot::isLegalStrict(Loc moveLoc, Player movePla) const {
-  return search->isLegalStrict(moveLoc,movePla);
+  return search->makeMove(fromLoc,toLoc,movePla);
 }
 
 void AsyncBot::genMoveAsync(Player movePla, int searchId, const TimeControls& tc, const std::function<void(Loc,int)>& onMove) {

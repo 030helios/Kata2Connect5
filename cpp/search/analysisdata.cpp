@@ -1,7 +1,8 @@
 #include "../search/analysisdata.h"
 
 AnalysisData::AnalysisData()
-  :move(Board::NULL_LOC),
+  :fromLoc(Board::NULL_LOC),
+  toLoc(Board::NULL_LOC),
    numVisits(0),
    playSelectionValue(0.0),
    lcb(0.0),
@@ -23,7 +24,8 @@ AnalysisData::AnalysisData()
 {}
 
 AnalysisData::AnalysisData(const AnalysisData& other)
-  :move(other.move),
+  :fromLoc(other.fromLoc),
+   toLoc(other.toLoc),
    numVisits(other.numVisits),
    playSelectionValue(other.playSelectionValue),
    lcb(other.lcb),
@@ -45,7 +47,8 @@ AnalysisData::AnalysisData(const AnalysisData& other)
 {}
 
 AnalysisData::AnalysisData(AnalysisData&& other) noexcept
-  :move(other.move),
+  :fromLoc(other.fromLoc),
+   toLoc(other.toLoc),
    numVisits(other.numVisits),
    playSelectionValue(other.playSelectionValue),
    lcb(other.lcb),
@@ -72,7 +75,8 @@ AnalysisData::~AnalysisData()
 AnalysisData& AnalysisData::operator=(const AnalysisData& other) {
   if(this == &other)
     return *this;
-  move = other.move;
+  fromLoc = other.fromLoc;
+  toLoc = other.toLoc;
   numVisits = other.numVisits;
   playSelectionValue = other.playSelectionValue;
   lcb = other.lcb;
@@ -97,7 +101,8 @@ AnalysisData& AnalysisData::operator=(const AnalysisData& other) {
 AnalysisData& AnalysisData::operator=(AnalysisData&& other) noexcept {
   if(this == &other)
     return *this;
-  move = other.move;
+  fromLoc = other.fromLoc;
+  toLoc = other.toLoc;
   numVisits = other.numVisits;
   playSelectionValue = other.playSelectionValue;
   lcb = other.lcb;
@@ -164,11 +169,9 @@ int AnalysisData::getPVLenUpToPhaseEnd(const Board& initialBoard, const BoardHis
   BoardHistory hist(initialHist);
   Player nextPla = initialPla;
   int j;
-  for(j = 0; j<pv.size(); j++) {
-    hist.makeBoardMoveAssumeLegal(board,pv[j],nextPla,NULL);
+  for(j = 0; j<pv.size(); j+=2) {
+    hist.makeBoardMoveAssumeLegal(board,pv[j],pv[j+1],nextPla,NULL);
     nextPla = getOpp(nextPla);
-    if(hist.encorePhase != initialHist.encorePhase)
-      break;
   }
   return j;
 }
@@ -177,15 +180,15 @@ void AnalysisData::writePVUpToPhaseEnd(std::ostream& out, const Board& initialBo
   Board board(initialBoard);
   BoardHistory hist(initialHist);
   Player nextPla = initialPla;
-  for(int j = 0; j<pv.size(); j++) {
+  for(int j = 0; j<pv.size(); j+=2) {
     if(j > 0)
       out << " ";
     out << Location::toString(pv[j],board);
+    out << " ";
+    out << Location::toString(pv[j+1],board);
 
-    hist.makeBoardMoveAssumeLegal(board,pv[j],nextPla,NULL);
+    hist.makeBoardMoveAssumeLegal(board,pv[j],pv[j+1],nextPla,NULL);
     nextPla = getOpp(nextPla);
-    if(hist.encorePhase != initialHist.encorePhase)
-      break;
   }
 }
 
@@ -194,14 +197,14 @@ void AnalysisData::writePVVisitsUpToPhaseEnd(std::ostream& out, const Board& ini
   BoardHistory hist(initialHist);
   Player nextPla = initialPla;
   assert(pv.size() == pvVisits.size());
-  for(int j = 0; j<pv.size(); j++) {
+  for(int j = 0; j<pv.size(); j+=2) {
     if(j > 0)
       out << " ";
     out << pvVisits[j];
+    out << " ";
+    out << pvVisits[j+1];
 
-    hist.makeBoardMoveAssumeLegal(board,pv[j],nextPla,NULL);
+    hist.makeBoardMoveAssumeLegal(board,pv[j],pv[j+1],nextPla,NULL);
     nextPla = getOpp(nextPla);
-    if(hist.encorePhase != initialHist.encorePhase)
-      break;
   }
 }

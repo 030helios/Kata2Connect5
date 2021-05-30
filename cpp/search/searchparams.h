@@ -49,20 +49,12 @@ struct SearchParams {
   double lcbStdevs; //How many stdevs a move needs to be better than another for LCB selection
   double minVisitPropForLCB; //Only use LCB override when a move has this proportion of visits as the top move
   bool useNonBuggyLcb; //LCB was very minorly buggy as of pre-v1.8. Set to true to fix.
-
-  //Mild behavior hackery
-  double rootEndingBonusPoints; //Extra bonus (or penalty) to encourage good passing behavior at the end of the game.
-  bool rootPruneUselessMoves; //Prune moves that are entirely useless moves that prolong the game.
-  bool conservativePass; //Never assume one's own pass will end the game.
-  bool fillDameBeforePass; //When territory scoring, heuristically discourage passing before filling the dame.
-  Player avoidMYTDaggerHackPla; //Hacky hack to avoid a particular pattern that gives some KG nets some trouble. Should become unnecessary in the future.
   double wideRootNoise; //Explore at the root more widely
 
   double playoutDoublingAdvantage; //Play as if we have this many doublings of playouts vs the opponent
   Player playoutDoublingAdvantagePla; //Negate playoutDoublingAdvantage when making a move for the opponent of this player. If empty, opponent of the root player.
 
   float nnPolicyTemperature; //Scale neural net policy probabilities by this temperature, applies everywhere in the tree
-  bool antiMirror; //Enable anti-mirroring logic
 
   double subtreeValueBiasFactor; //Dynamically adjust neural net utilties based on empirical stats about their errors in search
   int32_t subtreeValueBiasTableNumShards; //Number of shards for subtreeValueBiasFactor for initial hash lookup and mutexing
