@@ -70,7 +70,8 @@ bool Search::getPlaySelectionValues(
 
 bool Search::getPlaySelectionValuesAlreadyLocked(
   const SearchNode& node,
-  vector<Loc>& locs,
+  vector<Loc>& fromLocs,
+  vector<Loc>& toLocs,
   vector<double>& playSelectionValues,
   vector<double>* retVisitCounts,
   double scaleMaxToAtLeast,

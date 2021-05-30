@@ -840,7 +840,7 @@ static void logSearch(Search *bot, Logger &logger, Loc loc, OtherGameProperties 
   logger.write(sout.str());
 }
 
-static Loc chooseRandomForkingMove(const NNOutput *nnOutput, const Board &board, const BoardHistory &hist, Player pla, Rand &gameRand, Loc banMove)
+static Move chooseRandomForkingMove(const NNOutput *nnOutput, const Board &board, const BoardHistory &hist, Player pla, Rand &gameRand, Loc banMove)
 {
   double r = gameRand.nextDouble();
   bool allowPass = true;
@@ -887,11 +887,11 @@ static void extractPolicyTarget(
   if (maxValue > 30000.0)
     factor = 30000.0 / maxValue;
 
-  for (int moveIdx = 0; moveIdx < locsBuf.size(); moveIdx++)
+  for (int moveIdx = 0; moveIdx < locsBuf.size(); moveIdx+2)
   {
     double value = playSelectionValuesBuf[moveIdx] * factor;
     assert(value <= 30001.0);
-    buf.push_back(PolicyTargetMove(locsBuf[moveIdx], (int16_t)round(value)));
+    buf.push_back(PolicyTargetMove(locsBuf[moveIdx],locsBuf[moveIdx+1],(int16_t)round(value)));
   }
 }
 
@@ -1350,7 +1350,7 @@ FinishedGameData *Play::runGame(
   if (extraBlackAndKomi.makeGameFairForEmptyBoard)
   {
     Board b(startBoard.x_size, startBoard.y_size);
-    BoardHistory h(b, pla, startHist.rules, startHist.encorePhase);
+    BoardHistory h(b, pla, startHist.rules, 0);
     //Restore baseline on empty hist, adjust empty hist to fair, then apply to real history.
     PlayUtils::setKomiWithoutNoise(extraBlackAndKomi, h);
     PlayUtils::adjustKomiToEven(botB, botW, b, h, pla, playSettings.compensateKomiVisits, logger, otherGameProps, gameRand);
@@ -1361,7 +1361,6 @@ FinishedGameData *Play::runGame(
   {
     double extraBlackTemperature = playSettings.handicapTemperature;
     assert(extraBlackTemperature > 0.0 && extraBlackTemperature < 10.0);
-    PlayUtils::playExtraBlack(botB, extraBlackAndKomi.extraBlack, board, hist, extraBlackTemperature, gameRand);
     assert(hist.moveHistory.size() == 0);
   }
   if (extraBlackAndKomi.makeGameFair)
@@ -1471,7 +1470,7 @@ FinishedGameData *Play::runGame(
         double temperature = playSettings.policyInitAreaTemperature;
         assert(temperature > 0.0 && temperature < 10.0);
         PlayUtils::initializeGameUsingPolicy(botB, botW, board, hist, pla, gameRand, doEndGameIfAllPassAlive, proportionOfBoardArea, temperature);
-        hist.setKomi(oldKomi);
+        hist.rules.komi = (oldKomi);
       }
       bool shouldCompensate =
           playSettings.compensateAfterPolicyInitProb > 0.0 && gameRand.nextBool(playSettings.compensateAfterPolicyInitProb);
@@ -1487,7 +1486,7 @@ FinishedGameData *Play::runGame(
   }
 
   //Make sure there's some minimum tiny amount of data about how the encore phases work
-  if (playSettings.forSelfPlay && !otherGameProps.isHintPos && hist.rules.scoringRule == Rules::SCORING_TERRITORY && hist.encorePhase == 0 && gameRand.nextBool(0.04))
+  if (playSettings.forSelfPlay && !otherGameProps.isHintPos && hist.rules.scoringRule == Rules::SCORING_TERRITORY && gameRand.nextBool(0.04))
   {
     //Play out to go a quite a bit later in the game.
     double proportionOfBoardArea = 0.25;
@@ -1505,8 +1504,7 @@ FinishedGameData *Play::runGame(
       //Since we played out the game a bunch we should get a good mix of stones that were present or not present at the start
       //of the second encore phase if we're going into the second.
       int encorePhase = gameRand.nextInt(1, 2);
-      board.clearSimpleKoLoc();
-      hist.clear(board, pla, hist.rules, encorePhase);
+      hist.clear(board, pla, hist.rules);
 
       gameData->mode = FinishedGameData::MODE_CLEANUP_TRAINING;
       gameData->beganInEncorePhase = encorePhase;
@@ -1537,8 +1535,6 @@ FinishedGameData *Play::runGame(
   //Main play loop
   for (int i = 0; i < maxMovesPerGame; i++)
   {
-    if (doEndGameIfAllPassAlive)
-      hist.endGameIfAllPassAlive(board);
     if (hist.isGameFinished)
       break;
     if (shouldStop != nullptr && shouldStop())
@@ -1550,7 +1546,7 @@ FinishedGameData *Play::runGame(
         toMoveBot, pla, playSettings, gameRand, historicalMctsWinLossValues, clearBotBeforeSearch, otherGameProps);
     Loc loc = runBotWithLimits(toMoveBot, pla, playSettings, limits, logger);
 
-    if (loc == Board::NULL_LOC || !toMoveBot->isLegalStrict(loc, pla))
+    if (loc == Board::NULL_LOC || !toMoveBot->rootHistory.isLegal(loc, pla))
       failIllegalMove(toMoveBot, logger, board, loc);
     if (logSearchInfo)
       logSearch(toMoveBot, logger, loc, otherGameProps);
