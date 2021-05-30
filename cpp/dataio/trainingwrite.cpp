@@ -129,7 +129,7 @@ void FinishedGameData::printDebug(ostream& out) const {
     if(policyTargetsByTurn[i].policyTargets != NULL) {
       const vector<PolicyTargetMove>& target = *(policyTargetsByTurn[i].policyTargets);
       for(int j = 0; j<target.size(); j++)
-        out << Location::toString(target[j].loc,startBoard) << " " << target[j].policyTarget << " ";
+        out << Location::toString(target[j].fromLoc,startBoard) << " "<< Location::toString(target[j].toLoc,startBoard) << " " << target[j].policyTarget << " ";
     }
     out << endl;
   }
@@ -269,8 +269,7 @@ static void fillPolicyTarget(const vector<PolicyTargetMove>& policyTargetMoves, 
   size_t size = policyTargetMoves.size();
   for(size_t i = 0; i<size; i++) {
     const PolicyTargetMove& move = policyTargetMoves[i];
-    int pos = NNPos::locToPos(move.loc, boardXSize, dataXLen, dataYLen);
-    assert(pos >= 0 && pos < policySize);
+    int pos = NNPos::locToDoublePos(move.fromLoc,move.toLoc, boardXSize, dataXLen, dataYLen);
     target[pos] = move.policyTarget;
   }
 }
@@ -359,10 +358,6 @@ void TrainingWriteBuffers::addRow(
   {
     MiscNNInputParams nnInputParams;
     nnInputParams.drawEquivalentWinsForWhite = data.drawEquivalentWinsForWhite;
-    //Note: this is coordinated with the fact that selfplay does not use this feature on side positions
-    if(!isSidePosition)
-      nnInputParams.playoutDoublingAdvantage = getOpp(nextPlayer) == data.playoutDoublingAdvantagePla ? -data.playoutDoublingAdvantage : data.playoutDoublingAdvantage;
-
     bool inputsUseNHWC = false;
     float* rowBin = binaryInputNCHWUnpacked;
     float* rowGlobal = globalInputNC.data + curRows * numGlobalChannels;
@@ -497,8 +492,8 @@ void TrainingWriteBuffers::addRow(
   rowGlobal[46] = (float)((gameHash.hash1 >> 44) & 0xFFFFF);
 
   //Various other data
-  rowGlobal[47] = hist.currentSelfKomi(nextPlayer,data.drawEquivalentWinsForWhite);
-  rowGlobal[48] = (hist.encorePhase == 2 || hist.rules.scoringRule == Rules::SCORING_AREA) ? 1.0f : 0.0f;
+  rowGlobal[47] = 0.0f;
+  rowGlobal[48] = 0.0f;
 
   //Earlier neural net metadata
   rowGlobal[49] = data.changedNeuralNets.size() > 0 ? 1.0f : 0.0f;
@@ -526,7 +521,7 @@ void TrainingWriteBuffers::addRow(
   {
     //Possibly this should count whiteHandicapBonusScore too, but in selfplay this never changes
     //after the start of a game
-    float whiteBonusPoints = data.endHist.whiteBonusScore - hist.whiteBonusScore;
+    float whiteBonusPoints = 0.0f;
     float selfBonusPoints = (nextPlayer == P_WHITE ? whiteBonusPoints : -whiteBonusPoints);
     rowGlobal[61] = selfBonusPoints != 0 ? selfBonusPoints : 0.0f; //Conditional avoids negative zero
   }
@@ -570,6 +565,7 @@ void TrainingWriteBuffers::addRow(
       rowOwnership[i] = 0;
 
     //Fill ownership info
+    /*
     Player opp = getOpp(nextPlayer);
     for(int y = 0; y<board.y_size; y++) {
       for(int x = 0; x<board.x_size; x++) {
@@ -581,7 +577,7 @@ void TrainingWriteBuffers::addRow(
         if(finalFullArea[loc] != C_EMPTY && finalOwnership[loc] == C_EMPTY)
           rowOwnership[pos+posArea] = (finalFullArea[loc] == nextPlayer ? 1 : -1);
       }
-    }
+    }*/
 
     //Fill score vector "onehot"-like
     for(int i = 0; i<scoreDistrLen; i++)
@@ -628,12 +624,14 @@ void TrainingWriteBuffers::addRow(
     Player opp = getOpp(nextPlayer);
     for(int y = 0; y<board.y_size; y++) {
       for(int x = 0; x<board.x_size; x++) {
+        /*
         int pos = NNPos::xyToPos(x,y,dataXLen);
         Loc loc = Location::getLoc(x,y,board.x_size);
         if(board2.colors[loc] == pla) rowOwnership[pos+posArea*2] = 1;
         else if(board2.colors[loc] == opp) rowOwnership[pos+posArea*2] = -1;
         if(board3.colors[loc] == pla) rowOwnership[pos+posArea*3] = 1;
         else if(board3.colors[loc] == opp) rowOwnership[pos+posArea*3] = -1;
+        */
       }
     }
   }
@@ -656,11 +654,13 @@ void TrainingWriteBuffers::addRow(
 
     for(int y = 0; y<board.y_size; y++) {
       for(int x = 0; x<board.x_size; x++) {
+        /*
         int pos = NNPos::xyToPos(x,y,dataXLen);
         Loc loc = Location::getLoc(x,y,board.x_size);
         float scoring = (nextPlayer == P_WHITE ? finalWhiteScoring[loc] : -finalWhiteScoring[loc]);
         assert(scoring <= 1.0f && scoring >= -1.0f);
         rowOwnership[pos+posArea*4] = convertRadiusOneToRadius120(scoring,rand);
+        */
       }
     }
   }
@@ -917,8 +917,7 @@ void TrainingDataWriter::writeGame(const FinishedGameData& data) {
 
       Move move = data.endHist.moveHistory[turnIdx];
       assert(move.pla == nextPlayer);
-      assert(hist.isLegal(board,move.loc,move.pla));
-      hist.makeBoardMoveAssumeLegal(board, move.loc, move.pla, NULL);
+      hist.makeBoardMoveAssumeLegal(board, move.fromLoc,move.toLoc, move.pla, NULL);
       nextPlayer = getOpp(nextPlayer);
 
       posHistForFutureBoards.push_back(board);
@@ -981,8 +980,7 @@ void TrainingDataWriter::writeGame(const FinishedGameData& data) {
 
     Move move = data.endHist.moveHistory[turnIdx];
     assert(move.pla == nextPlayer);
-    assert(hist.isLegal(board,move.loc,move.pla));
-    hist.makeBoardMoveAssumeLegal(board, move.loc, move.pla, NULL);
+    hist.makeBoardMoveAssumeLegal(board, move.fromLoc,move.toLoc, move.pla, NULL);
     nextPlayer = getOpp(nextPlayer);
   }
 

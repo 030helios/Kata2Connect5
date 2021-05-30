@@ -5,11 +5,12 @@
 #include "../neuralnet/nninputs.h"
 #include "../neuralnet/nninterface.h"
 
-STRUCT_NAMED_PAIR(Loc,loc,int16_t,policyTarget,PolicyTargetMove);
-STRUCT_NAMED_PAIR(std::vector<PolicyTargetMove>*,policyTargets,int64_t,unreducedNumVisits,PolicyTarget);
+STRUCT_NAMED_TRIPLE(Loc, fromLoc, Loc, toLoc, int16_t, policyTarget, PolicyTargetMove);
+STRUCT_NAMED_PAIR(std::vector<PolicyTargetMove> *, policyTargets, int64_t, unreducedNumVisits, PolicyTarget);
 
 //Summary of value-head-related training targets for outputted data.
-struct ValueTargets {
+struct ValueTargets
+{
   //As usual, these are from the perspective of white.
   float win;
   float loss;
@@ -23,14 +24,16 @@ struct ValueTargets {
 };
 
 //Some basic extra stats to record outputted data about the neural net's raw evaluation on the position.
-struct NNRawStats {
+struct NNRawStats
+{
   double whiteWinLoss;
   double whiteScoreMean;
   double policyEntropy;
 };
 
 //A side position that was searched off the main line of the game, to give some data about an alternative move.
-struct SidePosition {
+struct SidePosition
+{
   Board board;
   BoardHistory hist;
   Player pla;
@@ -43,22 +46,23 @@ struct SidePosition {
   int numNeuralNetChangesSoFar; //Number of neural net changes this game before the creation of this side position
 
   SidePosition();
-  SidePosition(const Board& board, const BoardHistory& hist, Player pla, int numNeuralNetChangesSoFar);
+  SidePosition(const Board &board, const BoardHistory &hist, Player pla, int numNeuralNetChangesSoFar);
   ~SidePosition();
 };
 
-STRUCT_NAMED_PAIR(std::string,name,int,turnIdx,ChangedNeuralNet);
+STRUCT_NAMED_PAIR(std::string, name, int, turnIdx, ChangedNeuralNet);
 
-struct FinishedGameData {
+struct FinishedGameData
+{
   std::string bName;
   std::string wName;
   int bIdx;
   int wIdx;
 
-  Board startBoard; //Board as of the end of startHist, beginning of training period
+  Board startBoard;       //Board as of the end of startHist, beginning of training period
   BoardHistory startHist; //Board history as of start of training period
-  BoardHistory endHist; //Board history as of end of training period
-  Player startPla; //Player to move as of end of startHist.
+  BoardHistory endHist;   //Board history as of end of training period
+  Player startPla;        //Player to move as of end of startHist.
   Hash128 gameHash;
 
   double drawEquivalentWinsForWhite;
@@ -84,13 +88,13 @@ struct FinishedGameData {
   std::vector<PolicyTarget> policyTargetsByTurn;
   std::vector<ValueTargets> whiteValueTargetsByTurn; //Except this one, we may have some of
   std::vector<NNRawStats> nnRawStatsByTurn;
-  Color* finalFullArea;
-  Color* finalOwnership;
-  bool* finalSekiAreas;
-  float* finalWhiteScoring;
+  Color *finalFullArea;
+  Color *finalOwnership;
+  bool *finalSekiAreas;
+  float *finalWhiteScoring;
 
-  std::vector<SidePosition*> sidePositions;
-  std::vector<ChangedNeuralNet*> changedNeuralNets;
+  std::vector<SidePosition *> sidePositions;
+  std::vector<ChangedNeuralNet *> changedNeuralNets;
 
   static constexpr int NUM_MODES = 8;
   static constexpr int MODE_NORMAL = 0;
@@ -105,10 +109,11 @@ struct FinishedGameData {
   FinishedGameData();
   ~FinishedGameData();
 
-  void printDebug(std::ostream& out) const;
+  void printDebug(std::ostream &out) const;
 };
 
-struct TrainingWriteBuffers {
+struct TrainingWriteBuffers
+{
   int inputsVersion;
   int maxRows;
   int numBinaryChannels;
@@ -118,7 +123,7 @@ struct TrainingWriteBuffers {
   int packedBoardArea;
 
   int curRows;
-  float* binaryInputNCHWUnpacked;
+  float *binaryInputNCHWUnpacked;
 
   //Input feature planes that have spatial extent, all of which happen to be binary.
   //Packed bitwise, with each (HW) zero-padded to a round byte.
@@ -214,58 +219,57 @@ struct TrainingWriteBuffers {
   TrainingWriteBuffers(int inputsVersion, int maxRows, int numBinaryChannels, int numGlobalChannels, int dataXLen, int dataYLen);
   ~TrainingWriteBuffers();
 
-  TrainingWriteBuffers(const TrainingWriteBuffers&) = delete;
-  TrainingWriteBuffers& operator=(const TrainingWriteBuffers&) = delete;
+  TrainingWriteBuffers(const TrainingWriteBuffers &) = delete;
+  TrainingWriteBuffers &operator=(const TrainingWriteBuffers &) = delete;
 
   void clear();
 
   void addRow(
-    const Board& board, const BoardHistory& hist, Player nextPlayer,
-    int turnAfterStart,
-    float targetWeight,
-    int64_t unreducedNumVisits,
-    const std::vector<PolicyTargetMove>* policyTarget0, //can be null
-    const std::vector<PolicyTargetMove>* policyTarget1, //can be null
-    const std::vector<ValueTargets>& whiteValueTargets,
-    int whiteValueTargetsIdx, //index in whiteValueTargets corresponding to this turn.
-    const NNRawStats& nnRawStats,
-    const Board* finalBoard,
-    Color* finalFullArea,
-    Color* finalOwnership,
-    float* finalWhiteScoring,
-    const std::vector<Board>* posHistForFutureBoards, //can be null
-    bool isSidePosition,
-    int numNeuralNetsBehindLatest,
-    const FinishedGameData& data,
-    Rand& rand
-  );
+      const Board &board, const BoardHistory &hist, Player nextPlayer,
+      int turnAfterStart,
+      float targetWeight,
+      int64_t unreducedNumVisits,
+      const std::vector<PolicyTargetMove> *policyTarget0, //can be null
+      const std::vector<PolicyTargetMove> *policyTarget1, //can be null
+      const std::vector<ValueTargets> &whiteValueTargets,
+      int whiteValueTargetsIdx, //index in whiteValueTargets corresponding to this turn.
+      const NNRawStats &nnRawStats,
+      const Board *finalBoard,
+      Color *finalFullArea,
+      Color *finalOwnership,
+      float *finalWhiteScoring,
+      const std::vector<Board> *posHistForFutureBoards, //can be null
+      bool isSidePosition,
+      int numNeuralNetsBehindLatest,
+      const FinishedGameData &data,
+      Rand &rand);
 
-  void writeToZipFile(const std::string& fileName);
-  void writeToTextOstream(std::ostream& out);
-
+  void writeToZipFile(const std::string &fileName);
+  void writeToTextOstream(std::ostream &out);
 };
 
-class TrainingDataWriter {
- public:
-  TrainingDataWriter(const std::string& outputDir, int inputsVersion, int maxRowsPerFile, double firstFileMinRandProp, int dataXLen, int dataYLen, const std::string& randSeed);
-  TrainingDataWriter(std::ostream* debugOut, int inputsVersion, int maxRowsPerFile, double firstFileMinRandProp, int dataXLen, int dataYLen, int onlyWriteEvery, const std::string& randSeed);
-  TrainingDataWriter(const std::string& outputDir, std::ostream* debugOut, int inputsVersion, int maxRowsPerFile, double firstFileMinRandProp, int dataXLen, int dataYLen, int onlyWriteEvery, const std::string& randSeed);
+class TrainingDataWriter
+{
+public:
+  TrainingDataWriter(const std::string &outputDir, int inputsVersion, int maxRowsPerFile, double firstFileMinRandProp, int dataXLen, int dataYLen, const std::string &randSeed);
+  TrainingDataWriter(std::ostream *debugOut, int inputsVersion, int maxRowsPerFile, double firstFileMinRandProp, int dataXLen, int dataYLen, int onlyWriteEvery, const std::string &randSeed);
+  TrainingDataWriter(const std::string &outputDir, std::ostream *debugOut, int inputsVersion, int maxRowsPerFile, double firstFileMinRandProp, int dataXLen, int dataYLen, int onlyWriteEvery, const std::string &randSeed);
   ~TrainingDataWriter();
 
-  void writeGame(const FinishedGameData& data);
+  void writeGame(const FinishedGameData &data);
   void flushIfNonempty();
-  bool flushIfNonempty(std::string& resultingFilename);
+  bool flushIfNonempty(std::string &resultingFilename);
 
   bool isEmpty() const;
   int64_t numRowsInBuffer() const;
 
- private:
+private:
   std::string outputDir;
   int inputsVersion;
   Rand rand;
-  TrainingWriteBuffers* writeBuffers;
+  TrainingWriteBuffers *writeBuffers;
 
-  std::ostream* debugOut;
+  std::ostream *debugOut;
   int debugOnlyWriteEvery;
   int64_t rowCount;
 
@@ -273,8 +277,6 @@ class TrainingDataWriter {
   int firstFileMaxRows;
 
   void writeAndClearIfFull();
-
 };
 
-
-#endif  // DATAIO_TRAININGWRITE_H_
+#endif // DATAIO_TRAININGWRITE_H_
