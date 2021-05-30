@@ -189,12 +189,8 @@ string GTPConfig::makeConfig(
   else if(rules.taxRule == Rules::TAX_SEKI) replace("$$TAX_RULE", "taxRule = SEKI  # options: NONE, SEKI, ALL");
   else if(rules.taxRule == Rules::TAX_ALL)  replace("$$TAX_RULE", "taxRule = ALL  # options: NONE, SEKI, ALL");
   else { ASSERT_UNREACHABLE; }
-
-  if(rules.multiStoneSuicideLegal) replace("$$MULTI_STONE_SUICIDE", "multiStoneSuicideLegal = true");
-  else                             replace("$$MULTI_STONE_SUICIDE", "multiStoneSuicideLegal = false");
-
-  if(rules.hasButton) replace("$$BUTTON", "hasButton = true");
-  else                replace("$$BUTTON", "hasButton = false");
+  replace("$$MULTI_STONE_SUICIDE", "multiStoneSuicideLegal = false");
+  replace("$$BUTTON", "hasButton = false");
 
   if(rules.friendlyPassOk) replace("$$FRIENDLY_PASS_OK", "friendlyPassOk = true");
   else                     replace("$$FRIENDLY_PASS_OK", "friendlyPassOk = false");

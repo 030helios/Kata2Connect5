@@ -509,20 +509,7 @@ vector<SearchParams> Setup::loadParams(
     else                                      params.useNonBuggyLcb = (setupFor != SETUP_FOR_DISTRIBUTED && setupFor != SETUP_FOR_OTHER);
 
 
-    if(cfg.contains("rootEndingBonusPoints"+idxStr)) params.rootEndingBonusPoints = cfg.getDouble("rootEndingBonusPoints"+idxStr, -1.0, 1.0);
-    else if(cfg.contains("rootEndingBonusPoints"))   params.rootEndingBonusPoints = cfg.getDouble("rootEndingBonusPoints",        -1.0, 1.0);
-    else                                             params.rootEndingBonusPoints = 0.5;
-    if(cfg.contains("rootPruneUselessMoves"+idxStr)) params.rootPruneUselessMoves = cfg.getBool("rootPruneUselessMoves"+idxStr);
-    else if(cfg.contains("rootPruneUselessMoves"))   params.rootPruneUselessMoves = cfg.getBool("rootPruneUselessMoves");
-    else                                             params.rootPruneUselessMoves = true;
-    if(cfg.contains("conservativePass"+idxStr)) params.conservativePass = cfg.getBool("conservativePass"+idxStr);
-    else if(cfg.contains("conservativePass"))   params.conservativePass = cfg.getBool("conservativePass");
-    else                                        params.conservativePass = false;
-    if(cfg.contains("fillDameBeforePass"+idxStr)) params.fillDameBeforePass = cfg.getBool("fillDameBeforePass"+idxStr);
-    else if(cfg.contains("fillDameBeforePass"))   params.fillDameBeforePass = cfg.getBool("fillDameBeforePass");
-    else                                          params.fillDameBeforePass = false;
     //Controlled by GTP directly, not used in any other mode
-    params.avoidMYTDaggerHackPla = C_EMPTY;
     if(cfg.contains("wideRootNoise"+idxStr)) params.wideRootNoise = cfg.getDouble("wideRootNoise"+idxStr, 0.0, 5.0);
     else if(cfg.contains("wideRootNoise"))   params.wideRootNoise = cfg.getDouble("wideRootNoise", 0.0, 5.0);
     else                                     params.wideRootNoise = 0.0;
@@ -541,9 +528,6 @@ vector<SearchParams> Setup::loadParams(
     else
       params.nnPolicyTemperature = 1.0f;
 
-    if(cfg.contains("antiMirror"+idxStr)) params.antiMirror = cfg.getBool("antiMirror"+idxStr);
-    else if(cfg.contains("antiMirror"))   params.antiMirror = cfg.getBool("antiMirror");
-    else                                  params.antiMirror = false;
 
     if(cfg.contains("subtreeValueBiasFactor"+idxStr)) params.subtreeValueBiasFactor = cfg.getDouble("subtreeValueBiasFactor"+idxStr, 0.0, 1.0);
     else if(cfg.contains("subtreeValueBiasFactor")) params.subtreeValueBiasFactor = cfg.getDouble("subtreeValueBiasFactor", 0.0, 1.0);
@@ -637,12 +621,10 @@ Rules Setup::loadSingleRulesExceptForKomi(
     string scoringRule = cfg.getString("scoringRule", Rules::scoringRuleStrings());
     bool multiStoneSuicideLegal = cfg.getBool("multiStoneSuicideLegal");
     bool hasButton = cfg.contains("hasButton") ? cfg.getBool("hasButton") : false;
-    float komi = 7.5f;
+    float komi = 0.0f;
 
     rules.koRule = Rules::parseKoRule(koRule);
     rules.scoringRule = Rules::parseScoringRule(scoringRule);
-    rules.multiStoneSuicideLegal = multiStoneSuicideLegal;
-    rules.hasButton = hasButton;
     rules.komi = komi;
 
     if(cfg.contains("taxRule")) {
@@ -652,9 +634,6 @@ Rules Setup::loadSingleRulesExceptForKomi(
     else {
       rules.taxRule = (rules.scoringRule == Rules::SCORING_TERRITORY ? Rules::TAX_SEKI : Rules::TAX_NONE);
     }
-
-    if(rules.hasButton && rules.scoringRule != Rules::SCORING_AREA)
-      throw StringError("Config specifies hasButton=true on a scoring system other than AREA");
 
     //Also handles parsing of legacy option whiteBonusPerHandicapStone
     if(cfg.contains("whiteBonusPerHandicapStone") && cfg.contains("whiteHandicapBonus"))
@@ -677,9 +656,7 @@ Rules Setup::loadSingleRulesExceptForKomi(
 
     //Drop default komi to 6.5 for territory rules, and to 7.0 for button
     if(rules.scoringRule == Rules::SCORING_TERRITORY)
-      rules.komi = 6.5f;
-    else if(rules.hasButton)
-      rules.komi = 7.0f;
+      rules.komi = 0.0f;
   }
 
   return rules;

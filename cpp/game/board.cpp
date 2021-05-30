@@ -254,10 +254,12 @@ bool Board::getIsLegalCapture(Player pla, Loc fromLoc, Loc toLoc) const
 //Check if moving here is illegal.
 bool Board::isLegal(Loc fromLoc, Loc toLoc, Player pla) const
 {
+  if(fromLoc==toLoc)
+    return false;
+  if (!(isOnBoard(fromLoc)&& isOnBoard(toLoc)))
+    return false;
   if (colors[toLoc] == C_EMPTY && Location::isAdjacent(toLoc, fromLoc, 6))
-  {
     return true;
-  }
   return getIsLegalCapture(pla, fromLoc, toLoc);
 }
 
