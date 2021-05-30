@@ -23,9 +23,6 @@ struct Rules {
   static const int TAX_ALL = 2;
   int taxRule;
 
-  bool multiStoneSuicideLegal;
-  bool hasButton;
-
   static const int WHB_ZERO = 0;
   static const int WHB_N = 1;
   static const int WHB_N_MINUS_ONE = 2;
@@ -58,7 +55,6 @@ struct Rules {
   bool operator!=(const Rules& other) const;
 
   bool equalsIgnoringKomi(const Rules& other) const;
-  bool gameResultWillBeInteger() const;
 
   static Rules getTrompTaylorish();
   static Rules getSimpleTerritory();
