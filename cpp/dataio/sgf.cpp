@@ -169,6 +169,7 @@ bool SgfNode::hasPlacements() const {
 }
 
 void SgfNode::accumPlacements(vector<Move>& moves, int xSize, int ySize) const {
+  /*
   if(props == NULL)
     return;
 
@@ -198,10 +199,11 @@ void SgfNode::accumPlacements(vector<Move>& moves, int xSize, int ySize) const {
   if(contains(*props,"AE")) {
     const vector<string>& ae = map_get(*props,"AE");
     handleRectangleList(ae,C_EMPTY);
-  }
+  }*/
 }
 
 void SgfNode::accumMoves(vector<Move>& moves, int xSize, int ySize) const {
+  /*
   if(move.pla == C_BLACK) {
     if((move.x == COORD_MAX && move.y == COORD_MAX) ||
        (move.x == 19 && move.y == 19 && (xSize <= 19 || ySize <= 19))) //handle "tt"
@@ -236,6 +238,7 @@ void SgfNode::accumMoves(vector<Move>& moves, int xSize, int ySize) const {
       moves.push_back(Move(loc,P_WHITE));
     }
   }
+  */
 }
 
 Color SgfNode::getPLSpecifiedColor() const {
@@ -592,6 +595,7 @@ void Sgf::iterAllUniquePositions(
   Rand* rand,
   std::function<void(PositionSample&,const BoardHistory&,const std::string&)> f
 ) const {
+  /*
   XYSize size = getXYSize();
   int xSize = size.x;
   int ySize = size.y;
@@ -608,6 +612,7 @@ void Sgf::iterAllUniquePositions(
   PositionSample sampleBuf;
   std::vector<std::pair<int64_t,int64_t>> variationTraceNodesBranch;
   iterAllUniquePositionsHelper(board,hist,nextPla,rules,xSize,ySize,sampleBuf,0,uniqueHashes,hashComments,hashParent,flipIfPassOrWFirst,rand,variationTraceNodesBranch,f);
+  */
 }
 
 void Sgf::iterAllUniquePositionsHelper(
@@ -623,6 +628,7 @@ void Sgf::iterAllUniquePositionsHelper(
   std::vector<std::pair<int64_t,int64_t>>& variationTraceNodesBranch,
   std::function<void(PositionSample&,const BoardHistory&,const std::string&)> f
 ) const {
+  /*
   vector<Move> buf;
   for(size_t i = 0; i<nodes.size(); i++) {
 
@@ -705,7 +711,7 @@ void Sgf::iterAllUniquePositionsHelper(
     );
     assert(variationTraceNodesBranch.size() > 0);
     variationTraceNodesBranch.erase(variationTraceNodesBranch.begin()+(variationTraceNodesBranch.size()-1));
-  }
+  }*/
 }
 
 void Sgf::samplePositionIfUniqueHelper(
@@ -719,6 +725,7 @@ void Sgf::samplePositionIfUniqueHelper(
   const std::string& comments,
   std::function<void(PositionSample&,const BoardHistory&,const std::string&)> f
 ) const {
+  /*
   //If the game is over or there were two consecutive passes, skip
   if(hist.isGameFinished || (
        hist.moveHistory.size() >= 2
@@ -790,6 +797,7 @@ void Sgf::samplePositionIfUniqueHelper(
   }
 
   f(sampleBuf,hist,comments);
+  */
 }
 
 static uint64_t parseHex64(const string& str) {
@@ -833,6 +841,7 @@ set<Hash128> Sgf::readExcludes(const vector<string>& files) {
 
 string Sgf::PositionSample::toJsonLine(const Sgf::PositionSample& sample) {
   json data;
+  /*
   data["xSize"] = sample.board.x_size;
   data["ySize"] = sample.board.y_size;
   data["board"] = Board::toStringSimple(sample.board,'/');
@@ -849,12 +858,14 @@ string Sgf::PositionSample::toJsonLine(const Sgf::PositionSample& sample) {
   data["initialTurnNumber"] = sample.initialTurnNumber;
   data["hintLoc"] = Location::toString(sample.hintLoc,sample.board);
   data["weight"] = sample.weight;
+  */
   return data.dump();
 }
 
 Sgf::PositionSample Sgf::PositionSample::ofJsonLine(const string& s) {
   json data = json::parse(s);
   PositionSample sample;
+  /*
   try {
     int xSize = data["xSize"].get<int>();
     int ySize = data["ySize"].get<int>();
@@ -885,11 +896,13 @@ Sgf::PositionSample Sgf::PositionSample::ofJsonLine(const string& s) {
   catch(nlohmann::detail::exception& e) {
     throw StringError("Error parsing position sample json\n" + s + "\n" + e.what());
   }
+  */
   return sample;
 }
 
 Sgf::PositionSample Sgf::PositionSample::getColorFlipped() const {
   Sgf::PositionSample other = *this;
+  /*
   Board newBoard(other.board.x_size,other.board.y_size);
   for(int y = 0; y < other.board.y_size; y++) {
     for(int x = 0; x < other.board.x_size; x++) {
@@ -902,11 +915,12 @@ Sgf::PositionSample Sgf::PositionSample::getColorFlipped() const {
   other.nextPla = getOpp(other.nextPla);
   for(int i = 0; i<other.moves.size(); i++)
     other.moves[i].pla = getOpp(other.moves[i].pla);
-
+  */
   return other;
 }
 
 bool Sgf::PositionSample::isEqualForTesting(const Sgf::PositionSample& other, bool checkNumCaptures, bool checkSimpleKo) const {
+  /*
   if(!board.isEqualForTesting(other.board,checkNumCaptures,checkSimpleKo))
     return false;
   if(nextPla != other.nextPla)
@@ -925,6 +939,7 @@ bool Sgf::PositionSample::isEqualForTesting(const Sgf::PositionSample& other, bo
     return false;
   if(weight != other.weight)
     return false;
+    */
   return true;
 }
 
@@ -1351,6 +1366,7 @@ Rules CompactSgf::getRulesOrWarn(const Rules& defaultRules, std::function<void(c
 
 
 void CompactSgf::setupInitialBoardAndHist(const Rules& initialRules, Board& board, Player& nextPla, BoardHistory& hist) const {
+  /*
   Color plPlayer = rootNode.getPLSpecifiedColor();
   if(plPlayer == P_BLACK || plPlayer == P_WHITE)
     nextPla = plPlayer;
@@ -1375,9 +1391,11 @@ void CompactSgf::setupInitialBoardAndHist(const Rules& initialRules, Board& boar
   }
 
   hist = BoardHistory(board,nextPla,initialRules,0);
+  */
 }
 
 void CompactSgf::playMovesAssumeLegal(Board& board, Player& nextPla, BoardHistory& hist, int64_t turnIdx) const {
+  /*
   if(turnIdx < 0 || turnIdx > moves.size())
     throw StringError(
       Global::strprintf(
@@ -1407,6 +1425,7 @@ void CompactSgf::playMovesTolerant(Board& board, Player& nextPla, BoardHistory& 
       throw StringError("Illegal move in " + fileName + " turn " + Global::int64ToString(i) + " move " + Location::toString(moves[i].loc, board.x_size, board.y_size));
     nextPla = getOpp(moves[i].pla);
   }
+  */
 }
 
 void CompactSgf::setupBoardAndHistAssumeLegal(const Rules& initialRules, Board& board, Player& nextPla, BoardHistory& hist, int64_t turnIdx) const {
@@ -1467,6 +1486,7 @@ void WriteSgf::writeSgf(
   bool tryNicerRulesString,
   bool omitResignPlayerMove
 ) {
+  /*
   const Board& initialBoard = endHist.initialBoard;
   const Rules& rules = endHist.rules;
 
@@ -1653,4 +1673,5 @@ void WriteSgf::writeSgf(
 
   }
   out << ")";
+  */
 }
