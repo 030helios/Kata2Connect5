@@ -18,9 +18,9 @@ namespace NNPos {
   //Extra score distribution radius, used for writing score in data rows and for the neural net score belief output
   constexpr int EXTRA_SCORE_DISTR_RADIUS = 60;
 
-  int xyToPos(int x, int y, int nnXLen);
-  int locToPos(Loc loc, int boardXSize, int nnXLen, int nnYLen);
-  Loc posToLoc(int pos, int boardXSize, int boardYSize, int nnXLen, int nnYLen);
+  int locToDoublePos(Loc fromLoc,Loc toLoc, int boardXSize, int nnXLen, int nnYLen);
+  Loc posToFromLoc(int pos, int boardXSize, int boardYSize, int nnXLen, int nnYLen);
+  Loc posToToLoc(int pos, int boardXSize, int boardYSize, int nnXLen, int nnYLen);
   bool isPassPos(int pos, int nnXLen, int nnYLen);
   int getPolicySize(int nnXLen, int nnYLen);
 }
@@ -35,10 +35,7 @@ namespace NNInputs {
 
 struct MiscNNInputParams {
   double drawEquivalentWinsForWhite = 0.5;
-  bool conservativePass = false;
-  double playoutDoublingAdvantage = 0.0;
   float nnPolicyTemperature = 1.0f;
-  bool avoidMYTDaggerHack = false;
   // If no symmetry is specified, it will use default or random based on config, unless node is already cached.
   int symmetry = NNInputs::SYMMETRY_NOTSPECIFIED;
 
@@ -166,7 +163,7 @@ namespace ScoreValue {
   //The number of wins a game result should count as
   double whiteWinsOfWinner(Player winner, double drawEquivalentWinsForWhite);
   //The score difference that a game result should count as on average
-  double whiteScoreDrawAdjust(double finalWhiteMinusBlackScore, double drawEquivalentWinsForWhite, const BoardHistory& hist);
+  double whiteScoreDrawAdjust(double finalWhiteMinusBlackScore);
 
   //The unscaled utility of achieving a certain score difference
   double whiteScoreValueOfScoreSmooth(double finalWhiteMinusBlackScore, double center, double scale, double drawEquivalentWinsForWhite, const Board& b, const BoardHistory& hist);
