@@ -442,6 +442,7 @@ private:
       Player pla) const;
   double getPassingScoreValueBonus(const SearchNode &parent, const SearchNode *child, double scoreValue) const;
 
+//used to be just locs, modified so that it's more readible than to switch between fromLoc and toLoc
   bool getPlaySelectionValuesAlreadyLocked(
       const SearchNode &node,
       vector<Loc> &fromLocs,
