@@ -156,7 +156,6 @@ void Tests::runTrainingWriteTests() {
   Rules rules;
   rules.koRule = Rules::KO_SIMPLE;
   rules.scoringRule = Rules::SCORING_TERRITORY;
-  rules.multiStoneSuicideLegal = false;
   rules.taxRule = Rules::TAX_SEKI;
   rules.komi = 5;
   run("testtrainingwrite-jp",rules,0.5,inputsVersion,5,5,5,5,false);
@@ -343,7 +342,6 @@ void Tests::runSelfplayInitTestsWithNN(const string& modelFile) {
   run("testselfplayinithE2",Rules::getTrompTaylorish(),0.5,2,true);
 
   Rules r = Rules::getTrompTaylorish();
-  r.hasButton = true;
   run("testselfplayinit0button",r,0.5,0,false);
   run("testselfplayinit1button",r,0.5,0,false);
   run("testselfplayinith1-0button",r,0.5,1,false);
@@ -522,7 +520,6 @@ void Tests::runMoreSelfplayTestsWithNN(const string& modelFile) {
   run("testasym!",Rules::getTrompTaylorish(),true,false,false,false,false,false,false);
   run("test lead!",Rules::getTrompTaylorish(),false,true,false,false,false,false,false);
   Rules r = Rules::getTrompTaylorish();
-  r.hasButton = true;
   run("test lead int button!",r,false,true,false,false,false,false,false);
   run("test surprise!",Rules::getTrompTaylorish(),false,false,true,false,false,false,false);
   run("test value surprise!",Rules::getTrompTaylorish(),false,false,false,true,false,false,false);
@@ -794,7 +791,6 @@ xxxxxxxxx
   }
 
   Rules buttonRules = Rules::getTrompTaylorish();
-  buttonRules.hasButton = true;
   {
     Board board = Board::parseBoard(9,9,R"%%(
 .........
@@ -1881,7 +1877,7 @@ void Tests::runSekiTrainWriteTests(const string& modelFile) {
   for(int r = 0; r<ruless.size(); r++) {
     run(sgfStr,"def",ruless[r]);
   }
-
+  /*
   {
     cout << "==============================================================" << endl;
     cout << "Also testing status logic inference!" << endl;
@@ -1968,7 +1964,7 @@ xo.ox.xoo
     delete bot;
     cout << "==============================================================" << endl;
   }
-
+  */
   delete nnEval;
   NeuralNet::globalCleanup();
 }

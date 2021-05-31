@@ -49,7 +49,7 @@ static void printPolicyValueOwnership(const Board& board, const NNResultBuf& buf
 }
 
 static void runBotOnPosition(AsyncBot* bot, Board board, Player nextPla, BoardHistory hist, TestSearchOptions opts) {
-
+  /*
   if(!opts.ignorePosition)
     bot->setPosition(nextPla,board,hist);
 
@@ -124,9 +124,11 @@ static void runBotOnPosition(AsyncBot* bot, Board board, Player nextPla, BoardHi
   }
   if(!opts.noClearBot)
     bot->clearSearch();
+    */
 }
 
 static void runBotOnSgf(AsyncBot* bot, const string& sgfStr, const Rules& defaultRules, int turnIdx, float overrideKomi, TestSearchOptions opts) {
+  /*
   CompactSgf* sgf = CompactSgf::parse(sgfStr);
 
   Board board;
@@ -137,6 +139,7 @@ static void runBotOnSgf(AsyncBot* bot, const string& sgfStr, const Rules& defaul
   hist.setKomi(overrideKomi);
   runBotOnPosition(bot,board,nextPla,hist,opts);
   delete sgf;
+  */
 }
 
 static NNEvaluator* startNNEval(
@@ -357,7 +360,7 @@ static void runBasicPositions(NNEvaluator* nnEval, Logger& logger)
 }
 
 static void runOwnershipAndMisc(NNEvaluator* nnEval, NNEvaluator* nnEval11, NNEvaluator* nnEvalPTemp, Logger& logger)
-{
+{/*
   {
     cout << "GAME 5 ==========================================================================" << endl;
     cout << "(A simple opening to test neural net outputs including ownership map)" << endl;
@@ -768,6 +771,7 @@ xx.o.o.o.
 
     delete bot;
   }
+  */
 }
 
 static void runV8Tests(NNEvaluator* nnEval, NNEvaluator* nnEval19Exact, Logger& logger)
@@ -886,7 +890,7 @@ static void runV8Tests(NNEvaluator* nnEval, NNEvaluator* nnEval19Exact, Logger& 
     delete sgf;
   }
 
-
+  /*
   {
     cout << "===================================================================" << endl;
     cout << "Testing PDA + pondering, p200 v400" << endl;
@@ -1148,7 +1152,7 @@ static void runV8Tests(NNEvaluator* nnEval, NNEvaluator* nnEval19Exact, Logger& 
     }
 
   }
-
+*/
 
   {
     //Reset random seeds for nnEval
@@ -1219,7 +1223,7 @@ static void runV8Tests(NNEvaluator* nnEval, NNEvaluator* nnEval19Exact, Logger& 
 }
 
 static void runMoreV8Tests(NNEvaluator* nnEval, Logger& logger)
-{
+{/*
   {
     cout << "TEST VALUE BIAS ==========================================================================" << endl;
 
@@ -1260,7 +1264,6 @@ static void runMoreV8Tests(NNEvaluator* nnEval, Logger& logger)
     delete botC;
     delete sgf;
   }
-
   {
     Board board = Board::parseBoard(11,11,R"%%(
 .o.xox.x.o.
@@ -1436,8 +1439,6 @@ oxxxooxoooo
       }
     }
   }
-
-
   {
     cout << "TEST Ending bonus points ==========================================================================" << endl;
 
@@ -2087,11 +2088,12 @@ o....xo..
 
   }
 
-
+*/
 }
 
 static void runMoreV8TestsRandomizedNNEvals(NNEvaluator* nnEval, Logger& logger)
 {
+  /*
   {
     cout << "TEST sampled symmetries ==========================================================================" << endl;
     Board board = Board::parseBoard(15,15,R"%%(
@@ -2179,7 +2181,7 @@ static void runMoreV8TestsRandomizedNNEvals(NNEvaluator* nnEval, Logger& logger)
     }
 
   }
-
+  */
 }
 
 void Tests::runSearchTests(const string& modelFile, bool inputsNHWC, bool useNHWC, int symmetry, bool useFP16) {
@@ -2253,6 +2255,7 @@ void Tests::runSearchTestsV8(const string& modelFile, bool inputsNHWC, bool useN
 
 
 void Tests::runNNLessSearchTests() {
+  /*
   cout << "Running neuralnetless search tests" << endl;
   NeuralNet::globalInitialize();
 
@@ -2992,7 +2995,7 @@ xxxxxxxxx
     cout << json << endl;
   }
 
-  NeuralNet::globalCleanup();
+  NeuralNet::globalCleanup();*/
 }
 
 void Tests::runNNOnTinyBoard(const string& modelFile, bool inputsNHWC, bool useNHWC, int symmetry, bool useFP16) {
@@ -3081,6 +3084,7 @@ void Tests::runNNSymmetries(const string& modelFile, bool inputsNHWC, bool useNH
 
 
 void Tests::runNNOnManyPoses(const string& modelFile, bool inputsNHWC, bool useNHWC, int symmetry, bool useFP16, const string& comparisonFile) {
+  /*
   TestCommon::overrideForOpenCL(inputsNHWC, useNHWC);
   NeuralNet::globalInitialize();
 
@@ -3153,12 +3157,13 @@ void Tests::runNNOnManyPoses(const string& modelFile, bool inputsNHWC, bool useN
   delete nnEval;
   delete sgf;
   NeuralNet::globalCleanup();
-
+  */
 }
 
 STRUCT_NAMED_TRIPLE(Board,board,BoardHistory,hist,Player,nextPla,NNBatchingTestItem);
 
 void Tests::runNNBatchingTest(const string& modelFile, bool inputsNHWC, bool useNHWC, bool useFP16) {
+  /*
   TestCommon::overrideForOpenCL(inputsNHWC, useNHWC);
   Logger logger;
   logger.setLogToStdout(false);
@@ -3277,5 +3282,6 @@ void Tests::runNNBatchingTest(const string& modelFile, bool inputsNHWC, bool use
 
   delete nnEval;
   cout << "Done" << endl;
+  */
 }
 

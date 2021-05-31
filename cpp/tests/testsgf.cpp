@@ -31,12 +31,12 @@ void Tests::runSgfTests() {
     out << "placements" << endl;
     for(int i = 0; i < sgf->placements.size(); i++) {
       Move move = sgf->placements[i];
-      out << PlayerIO::colorToChar(move.pla) << " " << Location::toString(move.loc,board) << endl;
+      out << PlayerIO::colorToChar(move.pla) << " " << Location::toString(move.fromLoc,board) <<" " << Location::toString(move.toLoc,board) << endl;
     }
     out << "moves" << endl;
     for(int i = 0; i < sgf->moves.size(); i++) {
       Move move = sgf->moves[i];
-      out << PlayerIO::colorToChar(move.pla) << " " << Location::toString(move.loc,board) << endl;
+      out << PlayerIO::colorToChar(move.pla) << " " << Location::toString(move.fromLoc,board) <<" " << Location::toString(move.toLoc,board) << endl;
     }
 
     out << "Initial board hist " << endl;

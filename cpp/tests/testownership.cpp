@@ -43,6 +43,7 @@ void Tests::runOwnershipTests(const string& configFile, const string& modelFile)
     cout << "=================================================================================" << endl;
     cout << rules << endl;
     cout << board << endl;
+    /*
     for(int y = 0; y<board.y_size; y++) {
       for(int x = 0; x<board.x_size; x++) {
         int pos = NNPos::xyToPos(x,y,nnXLen);
@@ -57,7 +58,7 @@ void Tests::runOwnershipTests(const string& configFile, const string& modelFile)
         cout << s;
       }
       cout << endl;
-    }
+    }*/
     cout << endl;
   };
 
