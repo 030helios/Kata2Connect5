@@ -244,13 +244,13 @@ struct Search
     bool makeMove(Loc fromLoc, Loc toLoc, Player movePla);
 
     // Run an entire search from start to finish
-    Loc runWholeSearchAndGetMove(Player movePla, Logger &logger);
+    Move runWholeSearchAndGetMove(Player movePla, Logger &logger);
     void runWholeSearch(Player movePla, Logger &logger);
     void runWholeSearch(Logger &logger, std::atomic<bool> &shouldStopNow);
 
     // Pondering indicates that we are searching "for" the last player that we did a non-ponder search for, and should use
     // ponder search limits.
-    Loc runWholeSearchAndGetMove(Player movePla, Logger &logger, bool pondering);
+    Move runWholeSearchAndGetMove(Player movePla, Logger &logger, bool pondering);
     void runWholeSearch(Player movePla, Logger &logger, bool pondering);
     void runWholeSearch(Logger &logger, std::atomic<bool> &shouldStopNow, bool pondering);
 
