@@ -86,7 +86,7 @@ struct Sgf {
     //Turn number as of the start of board.
     int initialTurnNumber;
     //Hinted move that may be good at the end of position sample, or Board::NULL_LOC
-    Loc hintLoc;
+    Move hintLoc;
     //The weight of this sample, for random selection
     double weight;
 

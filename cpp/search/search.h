@@ -158,7 +158,7 @@ struct Search
     Player rootPla;
     Board rootBoard;
     BoardHistory rootHistory;
-    Loc rootHintLoc;
+    Move rootHintLoc;
 
     // External user-specified moves that are illegal or that should be nontrivially searched, and the number of turns for
     // which they should be excluded. Empty if not active, else of length MAX_ARR_SIZE and nonzero anywhere a move should
@@ -228,7 +228,7 @@ struct Search
     void setPosition(Player pla, const Board &board, const BoardHistory &history);
 
     void setPlayerAndClearHistory(Player pla);
-    void setRootHintLoc(Loc hintLoc);
+    void setRootHintLoc(Move hintLoc);
     void setAvoidMoveUntilByLoc(const std::vector<int> &bVec, const std::vector<int> &wVec);
     void setAlwaysIncludeOwnerMap(bool b);
     void setParams(SearchParams params);

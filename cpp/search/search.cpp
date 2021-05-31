@@ -169,7 +169,7 @@ Search::Search(SearchParams params, NNEvaluator *nnEval, const string &rSeed)
     : rootPla(P_BLACK),
       rootBoard(),
       rootHistory(),
-      rootHintLoc(Board::NULL_LOC),
+      rootHintLoc(Move(0,0,0)),
       avoidMoveUntilByLocBlack(),
       avoidMoveUntilByLocWhite(),
       rootSafeArea(NULL),
@@ -274,12 +274,12 @@ void Search::setAvoidMoveUntilByLoc(const std::vector<int> &bVec, const std::vec
   avoidMoveUntilByLocWhite = wVec;
 }
 
-void Search::setRootHintLoc(Loc loc)
+void Search::setRootHintLoc(Move loc)
 {
   // When we positively change the hint loc, we clear the search to make absolutely sure
   // that the hintloc takes effect, and that all nnevals (including the root noise that adds the hintloc) has a chance
   // to happen
-  if (loc != Board::NULL_LOC && rootHintLoc != loc)
+  if (loc.fromLoc != Board::NULL_LOC &&loc.toLoc != Board::NULL_LOC && rootHintLoc.fromLoc != loc.fromLoc&& rootHintLoc.toLoc != loc.toLoc)
     clearSearch();
   rootHintLoc = loc;
 }
@@ -1207,7 +1207,7 @@ void Search::maybeAddPolicyNoiseAndTempAlreadyLocked(SearchThread &thread, Searc
     return;
   if (
       !searchParams.rootNoiseEnabled && searchParams.rootPolicyTemperature == 1.0 &&
-      searchParams.rootPolicyTemperatureEarly == 1.0 && rootHintLoc == Board::NULL_LOC)
+      searchParams.rootPolicyTemperatureEarly == 1.0 && rootHintLoc.fromLoc != Board::NULL_LOC &&rootHintLoc.toLoc != Board::NULL_LOC)
     return;
   if (node.nnOutput->noisedPolicyProbs != NULL)
     return;
