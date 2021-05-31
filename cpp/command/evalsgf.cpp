@@ -11,7 +11,8 @@
 
 using namespace std;
 
-int MainCmds::evalsgf(int argc, const char* const* argv) {
+int MainCmds::evalsgf(int argc, const char *const *argv)
+{
   Board::initHash();
   ScoreValue::initTables();
   Rand seedRand;
@@ -36,32 +37,33 @@ int MainCmds::evalsgf(int argc, const char* const* argv) {
   bool printLead;
   int printMaxDepth;
   bool rawNN;
-  try {
+  try
+  {
     KataGoCommandLine cmd("Run a search on a position from an sgf file, for debugging.");
-    cmd.addConfigFileArg("","gtp_example.cfg");
+    cmd.addConfigFileArg("", "gtp_example.cfg");
     cmd.addModelFileArg();
 
-    TCLAP::UnlabeledValueArg<string> sgfFileArg("","Sgf file to analyze",true,string(),"FILE");
-    TCLAP::ValueArg<int> moveNumArg("m","move-num","Sgf move num to analyze, 1-indexed",true,0,"MOVENUM");
+    TCLAP::UnlabeledValueArg<string> sgfFileArg("", "Sgf file to analyze", true, string(), "FILE");
+    TCLAP::ValueArg<int> moveNumArg("m", "move-num", "Sgf move num to analyze, 1-indexed", true, 0, "MOVENUM");
 
-    TCLAP::ValueArg<string> printBranchArg("","print-branch","Move branch in search tree to print",false,string(),"MOVE MOVE ...");
-    TCLAP::ValueArg<string> printArg("p","print","Alias for -print-branch",false,string(),"MOVE MOVE ...");
-    TCLAP::ValueArg<string> extraMovesArg("","extra-moves","Extra moves to force-play before doing search",false,string(),"MOVE MOVE ...");
-    TCLAP::ValueArg<string> extraArg("e","extra","Alias for -extra-moves",false,string(),"MOVE MOVE ...");
-    TCLAP::ValueArg<string> hintLocArg("","hint-loc","Hint loc",false,string(),"MOVE");
-    TCLAP::ValueArg<long> visitsArg("v","visits","Set the number of visits",false,-1,"VISITS");
-    TCLAP::ValueArg<int> threadsArg("t","threads","Set the number of threads",false,-1,"THREADS");
-    TCLAP::ValueArg<float> overrideKomiArg("","override-komi","Artificially set komi",false,std::numeric_limits<float>::quiet_NaN(),"KOMI");
-    TCLAP::SwitchArg printOwnershipArg("","print-ownership","Print ownership");
-    TCLAP::SwitchArg printRootNNValuesArg("","print-root-nn-values","Print root nn values");
-    TCLAP::SwitchArg printPolicyArg("","print-policy","Print policy");
-    TCLAP::SwitchArg printLogPolicyArg("","print-log-policy","Print log policy");
-    TCLAP::SwitchArg printDirichletShapeArg("","print-dirichlet-shape","Print dirichlet shape");
-    TCLAP::SwitchArg printScoreNowArg("","print-score-now","Print score now");
-    TCLAP::SwitchArg printRootEndingBonusArg("","print-root-ending-bonus","Print root ending bonus now");
-    TCLAP::SwitchArg printLeadArg("","print-lead","Compute and print lead");
-    TCLAP::ValueArg<int> printMaxDepthArg("","print-max-depth","How deep to print",false,1,"DEPTH");
-    TCLAP::SwitchArg rawNNArg("","raw-nn","Perform single raw neural net eval");
+    TCLAP::ValueArg<string> printBranchArg("", "print-branch", "Move branch in search tree to print", false, string(), "MOVE MOVE ...");
+    TCLAP::ValueArg<string> printArg("p", "print", "Alias for -print-branch", false, string(), "MOVE MOVE ...");
+    TCLAP::ValueArg<string> extraMovesArg("", "extra-moves", "Extra moves to force-play before doing search", false, string(), "MOVE MOVE ...");
+    TCLAP::ValueArg<string> extraArg("e", "extra", "Alias for -extra-moves", false, string(), "MOVE MOVE ...");
+    TCLAP::ValueArg<string> hintLocArg("", "hint-loc", "Hint loc", false, string(), "MOVE");
+    TCLAP::ValueArg<long> visitsArg("v", "visits", "Set the number of visits", false, -1, "VISITS");
+    TCLAP::ValueArg<int> threadsArg("t", "threads", "Set the number of threads", false, -1, "THREADS");
+    TCLAP::ValueArg<float> overrideKomiArg("", "override-komi", "Artificially set komi", false, std::numeric_limits<float>::quiet_NaN(), "KOMI");
+    TCLAP::SwitchArg printOwnershipArg("", "print-ownership", "Print ownership");
+    TCLAP::SwitchArg printRootNNValuesArg("", "print-root-nn-values", "Print root nn values");
+    TCLAP::SwitchArg printPolicyArg("", "print-policy", "Print policy");
+    TCLAP::SwitchArg printLogPolicyArg("", "print-log-policy", "Print log policy");
+    TCLAP::SwitchArg printDirichletShapeArg("", "print-dirichlet-shape", "Print dirichlet shape");
+    TCLAP::SwitchArg printScoreNowArg("", "print-score-now", "Print score now");
+    TCLAP::SwitchArg printRootEndingBonusArg("", "print-root-ending-bonus", "Print root ending bonus now");
+    TCLAP::SwitchArg printLeadArg("", "print-lead", "Compute and print lead");
+    TCLAP::ValueArg<int> printMaxDepthArg("", "print-max-depth", "How deep to print", false, 1, "DEPTH");
+    TCLAP::SwitchArg rawNNArg("", "raw-nn", "Perform single raw neural net eval");
     cmd.add(sgfFileArg);
     cmd.add(moveNumArg);
 
@@ -87,7 +89,7 @@ int MainCmds::evalsgf(int argc, const char* const* argv) {
     cmd.add(printLeadArg);
     cmd.add(printMaxDepthArg);
     cmd.add(rawNNArg);
-    cmd.parse(argc,argv);
+    cmd.parse(argc, argv);
 
     modelFile = cmd.getModelFile();
     sgfFile = sgfFileArg.getValue();
@@ -111,56 +113,54 @@ int MainCmds::evalsgf(int argc, const char* const* argv) {
     printMaxDepth = printMaxDepthArg.getValue();
     rawNN = rawNNArg.getValue();
 
-    if(printBranch.length() > 0 && print.length() > 0) {
+    if (printBranch.length() > 0 && print.length() > 0)
+    {
       cerr << "Error: -print-branch and -print both specified" << endl;
       return 1;
     }
-    if(printBranch.length() <= 0)
+    if (printBranch.length() <= 0)
       printBranch = print;
 
-    if(extraMoves.length() > 0 && extra.length() > 0) {
+    if (extraMoves.length() > 0 && extra.length() > 0)
+    {
       cerr << "Error: -extra-moves and -extra both specified" << endl;
       return 1;
     }
-    if(extraMoves.length() <= 0)
+    if (extraMoves.length() <= 0)
       extraMoves = extra;
 
     cmd.getConfig(cfg);
   }
-  catch (TCLAP::ArgException &e) {
+  catch (TCLAP::ArgException &e)
+  {
     cerr << "Error: " << e.error() << " for argument " << e.argId() << endl;
     return 1;
   }
 
   //Parse rules -------------------------------------------------------------------
   Rules defaultRules = Rules::getTrompTaylorish();
-  Player perspective = Setup::parseReportAnalysisWinrates(cfg,P_BLACK);
+  Player perspective = Setup::parseReportAnalysisWinrates(cfg, P_BLACK);
 
   //Parse sgf file and board ------------------------------------------------------------------
 
-  CompactSgf* sgf = CompactSgf::loadFile(sgfFile);
+  CompactSgf *sgf = CompactSgf::loadFile(sgfFile);
 
   Board board;
   Player nextPla;
   BoardHistory hist;
 
-  auto setUpBoardUsingRules = [&board,&nextPla,&hist,overrideKomi,moveNum,&sgf,&extraMoves](const Rules& initialRules) {
+  auto setUpBoardUsingRules = [&board, &nextPla, &hist, overrideKomi, moveNum, &sgf, &extraMoves](const Rules &initialRules)
+  {
     sgf->setupInitialBoardAndHist(initialRules, board, nextPla, hist);
-    vector<Move>& moves = sgf->moves;
+    vector<Move> &moves = sgf->moves;
 
-    if(!isnan(overrideKomi)) {
-      if(overrideKomi > board.x_size * board.y_size || overrideKomi < -board.x_size * board.y_size)
-        throw StringError("Invalid komi, greater than the area of the board");
-      hist.setKomi(overrideKomi);
-    }
-
-    if(moveNum < 0)
+    if (moveNum < 0)
       throw StringError("Move num " + Global::intToString(moveNum) + " requested but must be non-negative");
-    if(moveNum > moves.size())
+    if (moveNum > moves.size())
       throw StringError("Move num " + Global::intToString(moveNum) + " requested but sgf has only " + Global::int64ToString(moves.size()));
 
-    sgf->playMovesTolerant(board,nextPla,hist,moveNum,false);
-
+    sgf->playMovesTolerant(board, nextPla, hist, moveNum, false);
+    /*
     vector<Loc> extraMoveLocs = Location::parseSequence(extraMoves,board);
     for(size_t i = 0; i<extraMoveLocs.size(); i++) {
       Loc loc = extraMoveLocs[i];
@@ -171,22 +171,21 @@ int MainCmds::evalsgf(int argc, const char* const* argv) {
       }
       hist.makeBoardMoveAssumeLegal(board,loc,nextPla,NULL);
       nextPla = getOpp(nextPla);
-    }
+    }*/
   };
 
   Rules initialRules = sgf->getRulesOrWarn(
-    defaultRules,
-    [](const string& msg) { cout << msg << endl; }
-  );
+      defaultRules,
+      [](const string &msg)
+      { cout << msg << endl; });
   setUpBoardUsingRules(initialRules);
 
   //Parse move sequence arguments------------------------------------------
 
   PrintTreeOptions options;
   options = options.maxDepth(printMaxDepth);
-  if(printBranch.length() > 0)
-    options = options.onlyBranch(board,printBranch);
-
+  if (printBranch.length() > 0)
+    options = options.onlyBranch(board, printBranch);
 
   //Load neural net and start bot------------------------------------------
 
@@ -194,48 +193,50 @@ int MainCmds::evalsgf(int argc, const char* const* argv) {
   logger.setLogToStdout(true);
   logger.write("Engine starting...");
 
-  SearchParams params = Setup::loadSingleParams(cfg,Setup::SETUP_FOR_GTP);
-  if(maxVisits < -1 || maxVisits == 0)
+  SearchParams params = Setup::loadSingleParams(cfg, Setup::SETUP_FOR_GTP);
+  if (maxVisits < -1 || maxVisits == 0)
     throw StringError("maxVisits: invalid value");
-  else if(maxVisits == -1)
+  else if (maxVisits == -1)
     logger.write("No max visits specified on cmdline, using defaults in " + cfg.getFileName());
-  else {
+  else
+  {
     params.maxVisits = maxVisits;
     params.maxPlayouts = maxVisits; //Also set this so it doesn't cap us either
   }
-  if(numThreads < -1 || numThreads == 0)
+  if (numThreads < -1 || numThreads == 0)
     throw StringError("numThreads: invalid value");
-  else if(numThreads == -1)
+  else if (numThreads == -1)
     logger.write("No num threads specified on cmdline, using defaults in " + cfg.getFileName());
-  else {
+  else
+  {
     params.numThreads = numThreads;
   }
 
   string searchRandSeed;
-  if(cfg.contains("searchRandSeed"))
+  if (cfg.contains("searchRandSeed"))
     searchRandSeed = cfg.getString("searchRandSeed");
   else
     searchRandSeed = Global::uint64ToString(seedRand.nextUInt64());
 
-  NNEvaluator* nnEval;
+  NNEvaluator *nnEval;
   {
     Setup::initializeSession(cfg);
     int maxConcurrentEvals = params.numThreads * 2 + 16; // * 2 + 16 just to give plenty of headroom
     int expectedConcurrentEvals = params.numThreads;
-    int defaultMaxBatchSize = std::max(8,((params.numThreads+3)/4)*4);
+    int defaultMaxBatchSize = std::max(8, ((params.numThreads + 3) / 4) * 4);
     string expectedSha256 = "";
     nnEval = Setup::initializeNNEvaluator(
-      modelFile,modelFile,expectedSha256,cfg,logger,seedRand,maxConcurrentEvals,expectedConcurrentEvals,
-      board.x_size,board.y_size,defaultMaxBatchSize,
-      Setup::SETUP_FOR_GTP
-    );
+        modelFile, modelFile, expectedSha256, cfg, logger, seedRand, maxConcurrentEvals, expectedConcurrentEvals,
+        board.x_size, board.y_size, defaultMaxBatchSize,
+        Setup::SETUP_FOR_GTP);
   }
   logger.write("Loaded neural net");
 
   {
     bool rulesWereSupported;
-    Rules supportedRules = nnEval->getSupportedRules(initialRules,rulesWereSupported);
-    if(!rulesWereSupported) {
+    Rules supportedRules = nnEval->getSupportedRules(initialRules, rulesWereSupported);
+    if (!rulesWereSupported)
+    {
       cout << "Warning: Rules " << initialRules << " from sgf not supported by neural net, using " << supportedRules << " instead" << endl;
       //Attempt to re-set-up the board using supported rules
       setUpBoardUsingRules(supportedRules);
@@ -243,41 +244,43 @@ int MainCmds::evalsgf(int argc, const char* const* argv) {
   }
 
   //Check for unused config keys
-  cfg.warnUnusedKeys(cerr,&logger);
+  cfg.warnUnusedKeys(cerr, &logger);
 
-  if(rawNN) {
+  if (rawNN)
+  {
     NNResultBuf buf;
     bool skipCache = true;
     bool includeOwnerMap = true;
     MiscNNInputParams nnInputParams;
     nnInputParams.drawEquivalentWinsForWhite = params.drawEquivalentWinsForWhite;
-    nnEval->evaluate(board,hist,nextPla,nnInputParams,buf,skipCache,includeOwnerMap);
+    nnEval->evaluate(board, hist, nextPla, nnInputParams, buf, skipCache, includeOwnerMap);
 
     cout << "Rules: " << hist.rules << endl;
-    cout << "Encore phase " << hist.encorePhase << endl;
     Board::printBoard(cout, board, Board::NULL_LOC, &(hist.moveHistory));
-    buf.result->debugPrint(cout,board);
+    buf.result->debugPrint(cout, board);
     return 0;
   }
 
-  AsyncBot* bot = new AsyncBot(params, nnEval, &logger, searchRandSeed);
+  AsyncBot *bot = new AsyncBot(params, nnEval, &logger, searchRandSeed);
 
-  bot->setPosition(nextPla,board,hist);
-  if(hintLoc != "") {
-    bot->setRootHintLoc(Location::ofString(hintLoc,board));
+  bot->setPosition(nextPla, board, hist);
+  if (hintLoc != "")
+  {
+    bot->setRootHintLoc(Location::ofString(hintLoc, board));
   }
 
   //Print initial state----------------------------------------------------------------
-  const Search* search = bot->getSearchStopAndWait();
+  const Search *search = bot->getSearchStopAndWait();
   ostringstream sout;
   sout << "Rules: " << hist.rules << endl;
-  sout << "Encore phase " << hist.encorePhase << endl;
   Board::printBoard(sout, board, Board::NULL_LOC, &(hist.moveHistory));
 
-  if(options.branch_.size() > 0) {
+  if (options.branch_.size() > 0)
+  {
     Board copy = board;
     BoardHistory copyHist = hist;
     Player pla = nextPla;
+    /*
     for(int i = 0; i<options.branch_.size(); i++) {
       Loc loc = options.branch_[i];
       if(!copyHist.isLegal(copy,loc,pla)) {
@@ -287,7 +290,7 @@ int MainCmds::evalsgf(int argc, const char* const* argv) {
       }
       copyHist.makeBoardMoveAssumeLegal(copy,loc,pla,NULL);
       pla = getOpp(pla);
-    }
+    }*/
     Board::printBoard(sout, copy, Board::NULL_LOC, &(copyHist.moveHistory));
   }
 
@@ -299,102 +302,141 @@ int MainCmds::evalsgf(int argc, const char* const* argv) {
 
   ClockTimer timer;
   nnEval->clearStats();
-  Loc loc = bot->genMoveSynchronous(bot->getSearch()->rootPla,TimeControls());
+  Move loc = bot->genMoveSynchronous(bot->getSearch()->rootPla, TimeControls());
   (void)loc;
 
   //Postprocess------------------------------------------------------------
 
-  if(printOwnership) {
+  if (printOwnership)
+  {
     sout << "Ownership map (ROOT position):\n";
-    search->printRootOwnershipMap(sout,perspective);
+    search->printRootOwnershipMap(sout, perspective);
   }
 
-  if(printRootNNValues) {
-    if(search->rootNode->nnOutput != nullptr) {
-      NNOutput* nnOutput = search->rootNode->nnOutput.get();
+  if (printRootNNValues)
+  {
+    if (search->rootNode->nnOutput != nullptr)
+    {
+      NNOutput *nnOutput = search->rootNode->nnOutput.get();
       cout << "White win: " << nnOutput->whiteWinProb << endl;
       cout << "White loss: " << nnOutput->whiteLossProb << endl;
       cout << "White noresult: " << nnOutput->whiteNoResultProb << endl;
       cout << "White score mean " << nnOutput->whiteScoreMean << endl;
-      cout << "White score stdev " << sqrt(max(0.0,(double)nnOutput->whiteScoreMeanSq - nnOutput->whiteScoreMean*nnOutput->whiteScoreMean)) << endl;
+      cout << "White score stdev " << sqrt(max(0.0, (double)nnOutput->whiteScoreMeanSq - nnOutput->whiteScoreMean * nnOutput->whiteScoreMean)) << endl;
     }
   }
 
-  if(printPolicy) {
-    if(search->rootNode->nnOutput != nullptr) {
-      NNOutput* nnOutput = search->rootNode->nnOutput.get();
-      float* policyProbs = nnOutput->getPolicyProbsMaybeNoised();
+  if (printPolicy)
+  {
+    if (search->rootNode->nnOutput != nullptr)
+    {
+      NNOutput *nnOutput = search->rootNode->nnOutput.get();
+      float *policyProbs = nnOutput->getPolicyProbsMaybeNoised();
       cout << "Root policy: " << endl;
-      for(int y = 0; y<board.y_size; y++) {
-        for(int x = 0; x<board.x_size; x++) {
-          int pos = NNPos::xyToPos(x,y,nnOutput->nnXLen);
-          double prob = policyProbs[pos];
-          if(prob < 0)
-            cout << "  -  " << " ";
-          else
-            cout << Global::strprintf("%5.2f",prob*100) << " ";
+      for (int y = 0; y < board.y_size; y++)
+      {
+        for (int x = 0; x < board.x_size; x++)
+        {
+          for (int i = 0; i < board.x_size; i++)
+          {
+            for (int j = 0; j < board.y_size; j++)
+            {
+              int from = Location::getLoc(x, y, 6);
+              int to = Location::getLoc(i, j, 6);
+              int pos = NNPos::locToDoublePos(from, to, board.x_size, 6, 6);
+              double prob = policyProbs[pos];
+              if (prob < 0)
+                cout << "  -  "
+                     << " ";
+              else
+                cout << Global::strprintf("%5.2f", prob * 100) << " ";
+            }
+          }
         }
         cout << endl;
       }
-      double prob = policyProbs[NNPos::locToPos(Board::PASS_LOC,board.x_size,nnOutput->nnXLen,nnOutput->nnYLen)];
-      cout << "Pass " << Global::strprintf("%5.2f",prob*100) << endl;
     }
   }
-  if(printLogPolicy) {
-    if(search->rootNode->nnOutput != nullptr) {
-      NNOutput* nnOutput = search->rootNode->nnOutput.get();
-      float* policyProbs = nnOutput->getPolicyProbsMaybeNoised();
+  if (printLogPolicy)
+  {
+    if (search->rootNode->nnOutput != nullptr)
+    {
+      NNOutput *nnOutput = search->rootNode->nnOutput.get();
+      float *policyProbs = nnOutput->getPolicyProbsMaybeNoised();
       cout << "Root policy: " << endl;
-      for(int y = 0; y<board.y_size; y++) {
-        for(int x = 0; x<board.x_size; x++) {
-          int pos = NNPos::xyToPos(x,y,nnOutput->nnXLen);
-          double prob = policyProbs[pos];
-          if(prob < 0)
-            cout << "  _  " << " ";
-          else
-            cout << Global::strprintf("%+5.2f",log(prob)) << " ";
+      for (int y = 0; y < board.y_size; y++)
+      {
+        for (int x = 0; x < board.x_size; x++)
+        {
+          for (int i = 0; i < board.x_size; i++)
+          {
+            for (int j = 0; j < board.y_size; j++)
+            {
+              int from = Location::getLoc(x, y, 6);
+              int to = Location::getLoc(i, j, 6);
+              int pos = NNPos::locToDoublePos(from, to, board.x_size, 6, 6);
+              double prob = policyProbs[pos];
+              if (prob < 0)
+                cout << "  _  "
+                     << " ";
+              else
+                cout << Global::strprintf("%+5.2f", log(prob)) << " ";
+            }
+          }
         }
         cout << endl;
       }
-      double prob = policyProbs[NNPos::locToPos(Board::PASS_LOC,board.x_size,nnOutput->nnXLen,nnOutput->nnYLen)];
-      cout << "Pass " << Global::strprintf("%+5.2f",log(prob)) << endl;
     }
   }
 
-  if(printDirichletShape) {
-    if(search->rootNode->nnOutput != nullptr) {
-      NNOutput* nnOutput = search->rootNode->nnOutput.get();
-      float* policyProbs = nnOutput->getPolicyProbsMaybeNoised();
+  if (printDirichletShape)
+  {
+    if (search->rootNode->nnOutput != nullptr)
+    {
+      NNOutput *nnOutput = search->rootNode->nnOutput.get();
+      float *policyProbs = nnOutput->getPolicyProbsMaybeNoised();
       double alphaDistr[NNPos::MAX_NN_POLICY_SIZE];
       int policySize = nnOutput->nnXLen * nnOutput->nnYLen;
       Search::computeDirichletAlphaDistribution(policySize, policyProbs, alphaDistr);
       cout << "Dirichlet alphas with 10.83 total concentration: " << endl;
-      for(int y = 0; y<board.y_size; y++) {
-        for(int x = 0; x<board.x_size; x++) {
-          int pos = NNPos::xyToPos(x,y,nnOutput->nnXLen);
-          double alpha = alphaDistr[pos];
-          if(alpha < 0)
-            cout << "  -  " << " ";
-          else
-            cout << Global::strprintf("%5.4f",alpha * 10.83) << " ";
+      for (int y = 0; y < board.y_size; y++)
+      {
+        for (int x = 0; x < board.x_size; x++)
+        {
+          for (int i = 0; i < board.x_size; i++)
+          {
+            for (int j = 0; j < board.y_size; j++)
+            {
+              int from = Location::getLoc(x, y, 6);
+              int to = Location::getLoc(i, j, 6);
+              int pos = NNPos::locToDoublePos(from, to, board.x_size, 6, 6);
+              double alpha = alphaDistr[pos];
+              if (alpha < 0)
+                cout << "  -  "
+                     << " ";
+              else
+                cout << Global::strprintf("%5.4f", alpha * 10.83) << " ";
+            }
+          }
         }
         cout << endl;
       }
-      double alpha = alphaDistr[NNPos::locToPos(Board::PASS_LOC,board.x_size,nnOutput->nnXLen,nnOutput->nnYLen)];
-      cout << "Pass " << Global::strprintf("%5.2f",alpha * 10.83) << endl;
     }
   }
 
-  if(printScoreNow) {
+  if (printScoreNow)
+  {
     sout << "Score now (ROOT position):\n";
     Board copy(board);
     BoardHistory copyHist(hist);
     Color area[Board::MAX_ARR_SIZE];
-    copyHist.endAndScoreGameNow(copy,area);
+    copyHist.endAndScoreGameNow(copy, area);
 
-    for(int y = 0; y<copy.y_size; y++) {
-      for(int x = 0; x<copy.x_size; x++) {
-        Loc l = Location::getLoc(x,y,copy.x_size);
+    for (int y = 0; y < copy.y_size; y++)
+    {
+      for (int x = 0; x < copy.x_size; x++)
+      {
+        Loc l = Location::getLoc(x, y, copy.x_size);
         sout << PlayerIO::colorToChar(area[l]);
       }
       sout << endl;
@@ -402,11 +444,13 @@ int MainCmds::evalsgf(int argc, const char* const* argv) {
     sout << endl;
 
     sout << "Komi: " << copyHist.rules.komi << endl;
-    sout << "WBonus: " << copyHist.whiteBonusScore << endl;
-    sout << "Final: "; WriteSgf::printGameResult(sout, copyHist); sout << endl;
+    sout << "Final: ";
+    WriteSgf::printGameResult(sout, copyHist);
+    sout << endl;
   }
 
-  if(printRootEndingBonus) {
+  if (printRootEndingBonus)
+  {
     sout << "Ending bonus (ROOT position)\n";
     search->printRootEndingScoreValueBonus(sout);
   }
@@ -423,12 +467,12 @@ int MainCmds::evalsgf(int argc, const char* const* argv) {
   search->printTree(sout, search->rootNode, options, perspective);
   logger.write(sout.str());
 
-  if(printLead) {
+  if (printLead)
+  {
     BoardHistory hist2(hist);
     double lead = PlayUtils::computeLead(
-      bot->getSearchStopAndWait(), NULL, board, hist2, nextPla,
-      20, logger, OtherGameProperties()
-    );
+        bot->getSearchStopAndWait(), NULL, board, hist2, nextPla,
+        20, logger, OtherGameProperties());
     cout << "LEAD: " << lead << endl;
   }
 

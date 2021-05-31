@@ -131,8 +131,10 @@ int MainCmds::analysis(int argc, const char* const* argv) {
     params = Setup::loadSingleParams(config,Setup::SETUP_FOR_ANALYSIS);
     perspective = Setup::parseReportAnalysisWinrates(config,defaultPerspective);
     //Set a default for conservativePass that differs from matches or selfplay
+    /*
     if(!config.contains("conservativePass") && !config.contains("conservativePass0"))
       params.conservativePass = true;
+      */
   };
 
   SearchParams defaultParams;
@@ -645,23 +647,30 @@ int MainCmds::analysis(int argc, const char* const* argv) {
             return false;
           }
 
-          Loc loc;
-          if(!Location::tryOfString(s1, boardXSize, boardYSize, loc) ||
-             (!allowPass && loc == Board::PASS_LOC) ||
-             (loc == Board::NULL_LOC)) {
+          Loc from;
+          if(!Location::tryOfString(s1, boardXSize, boardYSize, from) ||
+             (from == Board::PASS_LOC) ||
+             (from == Board::NULL_LOC)) {
             reportErrorForId(rbase.id, field, "Could not parse board location: " + s1);
             return false;
           }
-          buf.push_back(Move(loc,pla));
+          Loc to;
+          if(!Location::tryOfString(s1, boardXSize, boardYSize, to) ||
+             (to == Board::PASS_LOC) ||
+             (to == Board::NULL_LOC)) {
+            reportErrorForId(rbase.id, field, "Could not parse board location: " + s1);
+            return false;
+          }
+          buf.push_back(Move(from,to,pla));
         }
         return true;
       };
-
+      /*
       vector<Move> placements;
       if(input.find("initialStones") != input.end()) {
         if(!parseBoardMoves(input, "initialStones", placements, false))
           continue;
-      }
+      }*/
       vector<Move> moveHistory;
       if(input.find("moves") != input.end()) {
         if(!parseBoardMoves(input, "moves", moveHistory, true))
@@ -955,17 +964,17 @@ int MainCmds::analysis(int argc, const char* const* argv) {
           continue;
       }
 
-
       Board board(boardXSize,boardYSize);
+      /*
       for(int i = 0; i<placements.size(); i++) {
         board.setStone(placements[i].loc,placements[i].pla);
-      }
+      }*/
 
       if(initialPlayer == C_EMPTY) {
         if(moveHistory.size() > 0)
           initialPlayer = moveHistory[0].pla;
         else
-          initialPlayer = BoardHistory::numHandicapStonesOnBoard(board) > 0 ? P_WHITE : P_BLACK;
+          initialPlayer = /*BoardHistory::numHandicapStonesOnBoard(board) > 0 ? P_WHITE : */P_BLACK;
       }
 
       bool rulesWereSupported;
@@ -979,7 +988,6 @@ int MainCmds::analysis(int argc, const char* const* argv) {
 
       Player nextPla = initialPlayer;
       BoardHistory hist(board,nextPla,rules,0);
-      hist.setAssumeMultipleStartingBlackMovesAreHandicap(assumeMultipleStartingBlackMovesAreHandicap);
 
       //Build and enqueue requests
       vector<AnalyzeRequest*> newRequests;
@@ -1019,19 +1027,8 @@ int MainCmds::analysis(int argc, const char* const* argv) {
           break;
 
         Player movePla = moveHistory[turnNumber].pla;
-        Loc moveLoc = moveHistory[turnNumber].loc;
-        if(movePla != nextPla) {
-          board.clearSimpleKoLoc();
-          hist.clear(board,movePla,rules,hist.encorePhase);
-          hist.setAssumeMultipleStartingBlackMovesAreHandicap(assumeMultipleStartingBlackMovesAreHandicap);
-        }
 
-        bool suc = hist.makeBoardMoveTolerant(board,moveLoc,movePla,preventEncore);
-        if(!suc) {
-          reportErrorForId(rbase.id, "moves", "Illegal move " + Global::intToString(turnNumber) + ": " + Location::toString(moveLoc,board));
-          foundIllegalMove = true;
-          break;
-        }
+        hist.makeBoardMoveAssumeLegal(board,moveHistory[turnNumber].fromLoc,moveHistory[turnNumber].toLoc,movePla,NULL);
         nextPla = getOpp(movePla);
       }
 
