@@ -39,7 +39,6 @@ SearchParams::SearchParams()
    lcbStdevs(4.0),
    minVisitPropForLCB(0.05),
    useNonBuggyLcb(false),
-   rootPruneUselessMoves(false),
    wideRootNoise(0.0),
    playoutDoublingAdvantage(0.0),
    playoutDoublingAdvantagePla(C_EMPTY),
@@ -88,7 +87,6 @@ SearchParams SearchParams::forTestsV1() {
   params.useLcbForSelection = true;
   params.lcbStdevs = 5;
   params.minVisitPropForLCB = 0.15;
-  params.rootPruneUselessMoves = true;
   params.useNonBuggyLcb = true;
   return params;
 }

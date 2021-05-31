@@ -25,7 +25,8 @@ struct AnalysisData {
   double ess; //Effective sample size taking into account weighting, could be somewhat smaller than visits
   double weightFactor; //Due to child value weighting
   int order; //Preference order of the moves, 0 is best
-  std::vector<Loc> pv;
+  std::vector<Loc> pvFrom;
+  std::vector<Loc> pvTo;
   std::vector<int64_t> pvVisits;
 
   const SearchNode* node; //ONLY valid so long as search is not cleared
