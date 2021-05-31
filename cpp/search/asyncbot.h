@@ -14,6 +14,7 @@ class AsyncBot {
   //Unless otherwise specified, functions in this class are NOT threadsafe, although they may spawn off asynchronous events.
   //Usage of this API should be single-threaded!
 
+  Search* search;
   const Board& getRootBoard() const;
   const BoardHistory& getRootHist() const;
   Player getRootPla() const;
@@ -94,7 +95,6 @@ class AsyncBot {
 
 
  private:
-  Search* search;
   Logger* logger;
 
   std::mutex controlMutex;

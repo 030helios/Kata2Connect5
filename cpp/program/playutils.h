@@ -7,117 +7,107 @@
 
 //This is a grab-bag of various useful higher-level functions that select moves or evaluate the board in various ways.
 
-namespace PlayUtils {
+namespace PlayUtils
+{
   ExtraBlackAndKomi chooseExtraBlackAndKomi(
-    float base, float stdev, double allowIntegerProb,
-    double handicapProb, int numExtraBlackFixed,
-    double bigStdevProb, float bigStdev, double sqrtBoardArea, Rand& rand
-  );
-  void setKomiWithoutNoise(const ExtraBlackAndKomi& extraBlackAndKomi, BoardHistory& hist); //Also ignores allowInteger
-  void setKomiWithNoise(const ExtraBlackAndKomi& extraBlackAndKomi, BoardHistory& hist, Rand& rand);
+      float base, float stdev, double allowIntegerProb,
+      double handicapProb, int numExtraBlackFixed,
+      double bigStdevProb, float bigStdev, double sqrtBoardArea, Rand &rand);
+  void setKomiWithoutNoise(const ExtraBlackAndKomi &extraBlackAndKomi, BoardHistory &hist); //Also ignores allowInteger
+  void setKomiWithNoise(const ExtraBlackAndKomi &extraBlackAndKomi, BoardHistory &hist, Rand &rand);
 
   ReportedSearchValues getWhiteScoreValues(
-    Search* bot,
-    const Board& board,
-    const BoardHistory& hist,
-    Player pla,
-    int64_t numVisits,
-    Logger& logger,
-    const OtherGameProperties& otherGameProps
-  );
+      Search *bot,
+      const Board &board,
+      const BoardHistory &hist,
+      Player pla,
+      int64_t numVisits,
+      Logger &logger,
+      const OtherGameProperties &otherGameProps);
 
-  Move chooseRandomLegalMove(const Board& board, const BoardHistory& hist, Player pla, Rand& gameRand, Move banMove);
-  int chooseRandomLegalMoves(const Board& board, const BoardHistory& hist, Player pla, Rand& gameRand, Move* buf, int len);
+  Move chooseRandomLegalMove(const Board &board, const BoardHistory &hist, Player pla, Rand &gameRand, Move banMove);
+  int chooseRandomLegalMoves(const Board &board, const BoardHistory &hist, Player pla, Rand &gameRand, Move *buf, int len);
 
   Move chooseRandomPolicyMove(
-    const NNOutput* nnOutput,
-    const Board& board,
-    const BoardHistory& hist,
-    Player pla,
-    Rand& gameRand,
-    double temperature,
-    bool allowPass,
-    Move banMove
-  );
+      const NNOutput *nnOutput,
+      const Board &board,
+      const BoardHistory &hist,
+      Player pla,
+      Rand &gameRand,
+      double temperature,
+      bool allowPass,
+      Move banMove);
 
   Move getGameInitializationMove(
-    Search* botB, Search* botW, Board& board, const BoardHistory& hist, Player pla, NNResultBuf& buf,
-    Rand& gameRand, double temperature
-  );
+      Search *botB, Search *botW, Board &board, const BoardHistory &hist, Player pla, NNResultBuf &buf,
+      Rand &gameRand, double temperature);
   void initializeGameUsingPolicy(
-    Search* botB, Search* botW, Board& board, BoardHistory& hist, Player& pla,
-    Rand& gameRand, bool doEndGameIfAllPassAlive,
-    double proportionOfBoardArea, double temperature
-  );
+      Search *botB, Search *botW, Board &board, BoardHistory &hist, Player &pla,
+      Rand &gameRand, bool doEndGameIfAllPassAlive,
+      double proportionOfBoardArea, double temperature);
 
-  float roundAndClipKomi(double unrounded, const Board& board, bool looseClipping);
+  float roundAndClipKomi(double unrounded, const Board &board, bool looseClipping);
 
   void adjustKomiToEven(
-    Search* botB,
-    Search* botW, //can be NULL if only one bot
-    const Board& board,
-    BoardHistory& hist,
-    Player pla,
-    int64_t numVisits,
-    Logger& logger,
-    const OtherGameProperties& otherGameProps,
-    Rand& rand
-  );
+      Search *botB,
+      Search *botW, //can be NULL if only one bot
+      const Board &board,
+      BoardHistory &hist,
+      Player pla,
+      int64_t numVisits,
+      Logger &logger,
+      const OtherGameProperties &otherGameProps,
+      Rand &rand);
 
   //Lead from WHITE's perspective
   float computeLead(
-    Search* botB,
-    Search* botW, //can be NULL if only one bot
-    const Board& board,
-    BoardHistory& hist,
-    Player pla,
-    int64_t numVisits,
-    Logger& logger,
-    const OtherGameProperties& otherGameProps
-  );
+      Search *botB,
+      Search *botW, //can be NULL if only one bot
+      const Board &board,
+      BoardHistory &hist,
+      Player pla,
+      int64_t numVisits,
+      Logger &logger,
+      const OtherGameProperties &otherGameProps);
 
   double getSearchFactor(
-    double searchFactorWhenWinningThreshold,
-    double searchFactorWhenWinning,
-    const SearchParams& params,
-    const std::vector<double>& recentWinLossValues,
-    Player pla
-  );
+      double searchFactorWhenWinningThreshold,
+      double searchFactorWhenWinning,
+      const SearchParams &params,
+      const std::vector<double> &recentWinLossValues,
+      Player pla);
 
-  double getHackedLCBForWinrate(const Search* search, const AnalysisData& data, Player pla);
+  double getHackedLCBForWinrate(const Search *search, const AnalysisData &data, Player pla);
 
   std::vector<double> computeOwnership(
-    Search* bot,
-    const Board& board,
-    const BoardHistory& hist,
-    Player pla,
-    int64_t numVisits,
-    Logger& logger
-  );
+      Search *bot,
+      const Board &board,
+      const BoardHistory &hist,
+      Player pla,
+      int64_t numVisits,
+      Logger &logger);
 
   //Determine all living and dead stones, if the game were terminated right now and
   //the rules were interpreted naively and directly.
   //Returns a vector indexed by board Loc (length Board::MAX_ARR_SIZE).
   std::vector<bool> computeAnticipatedStatusesSimple(
-    const Board& board,
-    const BoardHistory& hist
-  );
+      const Board &board,
+      const BoardHistory &hist);
 
   //Determine all living and dead stones, trying to be clever and use the ownership prediction
   //of the neural net.
   //Returns a vector indexed by board Loc (length Board::MAX_ARR_SIZE).
   std::vector<bool> computeAnticipatedStatusesWithOwnership(
-    Search* bot,
-    const Board& board,
-    const BoardHistory& hist,
-    Player pla,
-    int64_t numVisits,
-    Logger& logger,
-    std::vector<double>& ownershipsBuf
-  );
+      Search *bot,
+      const Board &board,
+      const BoardHistory &hist,
+      Player pla,
+      int64_t numVisits,
+      Logger &logger,
+      std::vector<double> &ownershipsBuf);
 
-
-  struct BenchmarkResults {
+  struct BenchmarkResults
+  {
     int numThreads = 0;
     int totalPositionsSearched = 0;
     int totalPositions = 0;
@@ -129,48 +119,44 @@ namespace PlayUtils {
 
     std::string toStringNotDone() const;
     std::string toString() const;
-    std::string toStringWithElo(const BenchmarkResults* baseline, double secondsPerGameMove) const;
+    std::string toStringWithElo(const BenchmarkResults *baseline, double secondsPerGameMove) const;
 
     double computeEloEffect(double secondsPerGameMove) const;
 
-    static void printEloComparison(const std::vector<BenchmarkResults>& results, double secondsPerGameMove);
+    static void printEloComparison(const std::vector<BenchmarkResults> &results, double secondsPerGameMove);
   };
 
   //Run benchmark on sgf positions. ALSO prints to stdout the ongoing result as it benchmarks.
   BenchmarkResults benchmarkSearchOnPositionsAndPrint(
-    const SearchParams& params,
-    const CompactSgf* sgf,
-    int numPositionsToUse,
-    NNEvaluator* nnEval,
-    Logger& logger,
-    const BenchmarkResults* baseline,
-    double secondsPerGameMove,
-    bool printElo
-  );
+      const SearchParams &params,
+      const CompactSgf *sgf,
+      int numPositionsToUse,
+      NNEvaluator *nnEval,
+      Logger &logger,
+      const BenchmarkResults *baseline,
+      double secondsPerGameMove,
+      bool printElo);
 
-  void printGenmoveLog(std::ostream& out, const AsyncBot* bot, const NNEvaluator* nnEval, Loc moveLoc, double timeTaken, Player perspective);
+  void printGenmoveLog(std::ostream &out, const AsyncBot *bot, const NNEvaluator *nnEval, Loc from, Loc to, double timeTaken, Player perspective);
 
-  Rules genRandomRules(Rand& rand);
+  Rules genRandomRules(Rand &rand);
 
   Loc maybeCleanupBeforePass(
-    enabled_t cleanupBeforePass,
-    enabled_t friendlyPass,
-    const Player pla,
-    Loc moveLoc,
-    const AsyncBot* bot
-  );
+      enabled_t cleanupBeforePass,
+      enabled_t friendlyPass,
+      const Player pla,
+      Loc moveLoc,
+      const AsyncBot *bot);
 
   Loc maybeFriendlyPass(
-    enabled_t cleanupBeforePass,
-    enabled_t friendlyPass,
-    const Player pla,
-    Loc moveLoc,
-    Search* bot,
-    int64_t numVisits,
-    Logger& logger
-  );
+      enabled_t cleanupBeforePass,
+      enabled_t friendlyPass,
+      const Player pla,
+      Loc moveLoc,
+      Search *bot,
+      int64_t numVisits,
+      Logger &logger);
 
 }
-
 
 #endif //PROGRAM_PLAY_UTILS_H_

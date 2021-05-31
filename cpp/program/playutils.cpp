@@ -102,7 +102,7 @@ Move PlayUtils::chooseRandomLegalMove(const Board &board, const BoardHistory &hi
         {
           int from = Location::getLoc(x, y, board.x_size);
           int to = Location::getLoc(i, j, board.x_size);
-          if(from==banMove.fromLoc && to == banMove.toLoc)
+          if (from == banMove.fromLoc && to == banMove.toLoc)
             continue;
           if (hist.isLegal(board, from, to, pla))
           {
@@ -249,10 +249,10 @@ void PlayUtils::initializeGameUsingPolicy(
   for (int i = 0; i < numInitialMovesToPlay; i++)
   {
     Move mov = getGameInitializationMove(botB, botW, board, hist, pla, buf, gameRand, temperature);
-    
-    assert(hist.isLegal(board, mov.fromLoc,mov.toLoc, pla));
+
+    assert(hist.isLegal(board, mov.fromLoc, mov.toLoc, pla));
     //Make the move!
-    hist.makeBoardMoveAssumeLegal(board, mov.fromLoc,mov.toLoc, pla, NULL);
+    hist.makeBoardMoveAssumeLegal(board, mov.fromLoc, mov.toLoc, pla, NULL);
     pla = getOpp(pla);
 
     //Rarely, playing the random moves out this way will end the game
@@ -566,7 +566,7 @@ float PlayUtils::computeLead(
   float oldKomi = hist.rules.komi;
   double naiveKomi = getNaiveEvenKomiHelper(scoreWLCache, botB, botW, board, hist, pla, numVisits, logger, otherGameProps, looseClipping);
 
-  bool granularityIsCoarse = hist.rules.scoringRule == Rules::SCORING_AREA ;
+  bool granularityIsCoarse = hist.rules.scoringRule == Rules::SCORING_AREA;
   if (!granularityIsCoarse)
   {
     assert(hist.rules.komi == oldKomi);
@@ -861,7 +861,7 @@ PlayUtils::BenchmarkResults PlayUtils::benchmarkSearchOnPositionsAndPrint(
   vector<Move> moves = sgf->moves;
   string posSeed = "benchmarkPosSeed|";
   for (int i = 0; i < moves.size(); i++)
-  {/*
+  { /*
     posSeed += Global::intToString((int)moves[i].loc);
     */
     posSeed += "|";
@@ -919,14 +919,14 @@ PlayUtils::BenchmarkResults PlayUtils::benchmarkSearchOnPositionsAndPrint(
     int nextIdx = possiblePositionIdxs[i];
     while (moveNum < moves.size() && moveNum < nextIdx)
     {
-      bool suc = hist.isLegal(board, moves[moveNum].fromLoc,moves[moveNum].toLoc, moves[moveNum].pla);
+      bool suc = hist.isLegal(board, moves[moveNum].fromLoc, moves[moveNum].toLoc, moves[moveNum].pla);
       if (suc)
-        hist.makeBoardMoveAssumeLegal(board, moves[moveNum].fromLoc,moves[moveNum].toLoc, moves[moveNum].pla,NULL);
+        hist.makeBoardMoveAssumeLegal(board, moves[moveNum].fromLoc, moves[moveNum].toLoc, moves[moveNum].pla, NULL);
       if (!suc)
       {
         cerr << endl;
         cerr << board << endl;
-        cerr << "SGF Illegal move " << (moveNum + 1) << " for " << PlayerIO::colorToChar(moves[moveNum].pla) << ": " << Location::toString(moves[moveNum].fromLoc, board) <<" "<< Location::toString(moves[moveNum].toLoc, board) << endl;
+        cerr << "SGF Illegal move " << (moveNum + 1) << " for " << PlayerIO::colorToChar(moves[moveNum].pla) << ": " << Location::toString(moves[moveNum].fromLoc, board) << " " << Location::toString(moves[moveNum].toLoc, board) << endl;
         throw StringError("Illegal move in SGF");
       }
       nextPla = getOpp(moves[moveNum].pla);
@@ -960,10 +960,11 @@ PlayUtils::BenchmarkResults PlayUtils::benchmarkSearchOnPositionsAndPrint(
   return results;
 }
 
-void PlayUtils::printGenmoveLog(ostream &out, const AsyncBot *bot, const NNEvaluator *nnEval, Loc moveLoc, double timeTaken, Player perspective)
+void PlayUtils::printGenmoveLog(ostream &out, const AsyncBot *bot, const NNEvaluator *nnEval, Loc from, Loc to, double timeTaken, Player perspective)
 {
   const Search *search = bot->getSearch();
-  Board::printBoard(out, bot->getRootBoard(), moveLoc, &(bot->getRootHist().moveHistory));
+  Board::printBoard(out, bot->getRootBoard(), from, &(bot->getRootHist().moveHistory));
+  Board::printBoard(out, bot->getRootBoard(), to, &(bot->getRootHist().moveHistory));
   out << bot->getRootHist().rules << "\n";
   if (!std::isnan(timeTaken))
     out << "Time taken: " << timeTaken << "\n";
