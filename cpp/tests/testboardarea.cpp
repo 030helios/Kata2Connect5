@@ -20,7 +20,7 @@ void Tests::runBoardAreaTests() {
       bool unsafeBigTerritories = unsafeBigTerritoriesBuf[mode/2];
       bool nonPassAliveStones = nonPassAliveStonesBuf[mode/2];
       Board copy(board);
-      copy.calculateArea(result,nonPassAliveStones,safeBigTerritories,unsafeBigTerritories,multiStoneSuicideLegal);
+      //copy.calculateArea(result,nonPassAliveStones,safeBigTerritories,unsafeBigTerritories,multiStoneSuicideLegal);
       out << "Safe big territories " << safeBigTerritories << " "
       << "Unsafe big territories " << unsafeBigTerritories << " "
       << "Non pass alive stones " << nonPassAliveStones << " "
@@ -1502,7 +1502,7 @@ o.o.xxoxo
     bool nonPassAliveStones = false;
     bool safeBigTerritories = true;
     bool unsafeBigTerritories = false;
-    board.calculateArea(result,nonPassAliveStones,safeBigTerritories,unsafeBigTerritories,multiStoneSuicideLegal);
+    /*board.calculateArea(result,nonPassAliveStones,safeBigTerritories,unsafeBigTerritories,multiStoneSuicideLegal);
 
     out << endl;
     out << "NonPassAliveSelfConn black" << endl;
@@ -1533,7 +1533,7 @@ o.o.xxoxo
       out << endl;
     }
     out << endl;
-
+    */
     string expected = R"%%(
 
 NonPassAliveSelfConn black
@@ -1586,7 +1586,7 @@ o.oxo.o...x.x
     bool nonPassAliveStones = true;
     bool safeBigTerritories = true;
     bool unsafeBigTerritories = true;
-    board.calculateArea(result,nonPassAliveStones,safeBigTerritories,unsafeBigTerritories,multiStoneSuicideLegal);
+    //board.calculateArea(result,nonPassAliveStones,safeBigTerritories,unsafeBigTerritories,multiStoneSuicideLegal);
 
     float scoring[Board::MAX_ARR_SIZE];
 
@@ -1672,7 +1672,7 @@ ox.oxo.o.x.o.
     bool nonPassAliveStones = true;
     bool safeBigTerritories = true;
     bool unsafeBigTerritories = false;
-    board.calculateArea(result,nonPassAliveStones,safeBigTerritories,unsafeBigTerritories,multiStoneSuicideLegal);
+    //board.calculateArea(result,nonPassAliveStones,safeBigTerritories,unsafeBigTerritories,multiStoneSuicideLegal);
 
     float scoring[Board::MAX_ARR_SIZE];
 
@@ -1758,7 +1758,7 @@ ox.oxo.o.x.o.
     bool nonPassAliveStones = true;
     bool safeBigTerritories = true;
     bool unsafeBigTerritories = true;
-    board.calculateArea(result,nonPassAliveStones,safeBigTerritories,unsafeBigTerritories,multiStoneSuicideLegal);
+    //board.calculateArea(result,nonPassAliveStones,safeBigTerritories,unsafeBigTerritories,multiStoneSuicideLegal);
 
     float scoring[Board::MAX_ARR_SIZE];
 
@@ -1832,7 +1832,7 @@ Group tax
       bool keepStones = keepStonesBuf[mode/2];
       int whiteMinusBlackIndependentLifeRegionCount = 0;
       Board copy(board);
-      copy.calculateIndependentLifeArea(result,whiteMinusBlackIndependentLifeRegionCount,keepTerritories,keepStones,multiStoneSuicideLegal);
+      //copy.calculateIndependentLifeArea(result,whiteMinusBlackIndependentLifeRegionCount,keepTerritories,keepStones,multiStoneSuicideLegal);
       out << "Keep Territories " << keepTerritories << " "
       << "Keep Stones " << keepStones << " "
       << "Suicide " << multiStoneSuicideLegal << endl;
