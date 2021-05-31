@@ -88,7 +88,7 @@ void PlayUtils::setKomiWithNoise(const ExtraBlackAndKomi &extraBlackAndKomi, Boa
 {
 }
 
-Move PlayUtils::chooseRandomLegalMove(const Board &board, const BoardHistory &hist, Player pla, Rand &gameRand, Loc banMove)
+Move PlayUtils::chooseRandomLegalMove(const Board &board, const BoardHistory &hist, Player pla, Rand &gameRand, Move banMove)
 {
   int numLegalMoves = 0;
   Move moves[Board::MAX_ARR_SIZE * Board::MAX_ARR_SIZE];
@@ -102,6 +102,8 @@ Move PlayUtils::chooseRandomLegalMove(const Board &board, const BoardHistory &hi
         {
           int from = Location::getLoc(x, y, board.x_size);
           int to = Location::getLoc(i, j, board.x_size);
+          if(from==banMove.fromLoc && to == banMove.toLoc)
+            continue;
           if (hist.isLegal(board, from, to, pla))
           {
             moves[numLegalMoves] = Move(from, to, pla);
@@ -155,7 +157,7 @@ int PlayUtils::chooseRandomLegalMoves(const Board &board, const BoardHistory &hi
 }
 
 Move PlayUtils::chooseRandomPolicyMove(
-    const NNOutput *nnOutput, const Board &board, const BoardHistory &hist, Player pla, Rand &gameRand, double temperature, bool allowPass, Loc banMove)
+    const NNOutput *nnOutput, const Board &board, const BoardHistory &hist, Player pla, Rand &gameRand, double temperature, bool allowPass, Move banMove)
 {
   const float *policyProbs = nnOutput->policyProbs;
   int nnXLen = nnOutput->nnXLen;

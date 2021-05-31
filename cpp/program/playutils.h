@@ -26,7 +26,7 @@ namespace PlayUtils {
     const OtherGameProperties& otherGameProps
   );
 
-  Move chooseRandomLegalMove(const Board& board, const BoardHistory& hist, Player pla, Rand& gameRand, Loc banMove);
+  Move chooseRandomLegalMove(const Board& board, const BoardHistory& hist, Player pla, Rand& gameRand, Move banMove);
   int chooseRandomLegalMoves(const Board& board, const BoardHistory& hist, Player pla, Rand& gameRand, Move* buf, int len);
 
   Move chooseRandomPolicyMove(
@@ -37,7 +37,7 @@ namespace PlayUtils {
     Rand& gameRand,
     double temperature,
     bool allowPass,
-    Loc banMove
+    Move banMove
   );
 
   Move getGameInitializationMove(
