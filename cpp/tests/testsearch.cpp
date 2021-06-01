@@ -1201,7 +1201,7 @@ static void runV8Tests(NNEvaluator* nnEval, NNEvaluator* nnEval19Exact, Logger& 
       cout << "Test real hintloc T16 (with symmetry sampling)" << endl;
       cout << "===================================================================" << endl;
       AsyncBot* bot = new AsyncBot(params, nnEval, &logger, "hintloc");
-      bot->setRootHintLoc(Location::ofString("T16",board));
+      //bot->setRootHintLoc(Location::ofString("T16",board));
       runBotOnPosition(bot, board, nextPla, hist, opts);
       delete bot;
     }
@@ -1210,7 +1210,7 @@ static void runV8Tests(NNEvaluator* nnEval, NNEvaluator* nnEval19Exact, Logger& 
       cout << "Test bad hintloc O18 (with symmetry sampling)" << endl;
       cout << "===================================================================" << endl;
       AsyncBot* bot = new AsyncBot(params, nnEval, &logger, "hintloc");
-      bot->setRootHintLoc(Location::ofString("O18",board));
+      //bot->setRootHintLoc(Location::ofString("O18",board));
       runBotOnPosition(bot, board, nextPla, hist, opts);
       delete bot;
     }
