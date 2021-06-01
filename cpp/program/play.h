@@ -242,7 +242,7 @@ namespace Play
   FinishedGameData *runGame(
       const Board &startBoard, Player pla, const BoardHistory &startHist, ExtraBlackAndKomi extraBlackAndKomi,
       MatchPairer::BotSpec &botSpecB, MatchPairer::BotSpec &botSpecW,
-      const string &searchRandSeed,
+      const std::string &searchRandSeed,
       bool doEndGameIfAllPassAlive, bool clearBotBeforeSearch,
       Logger &logger, bool logSearchInfo, bool logMoves,
       int maxMovesPerGame, const std::function<bool()> &shouldStop,
@@ -304,7 +304,7 @@ public:
   //Will return NULL if stopped before the game completes. The caller is responsible for freeing the data
   //if it isn't NULL.
   FinishedGameData *runGame(
-      const string &seed,
+      const std::string &seed,
       const MatchPairer::BotSpec &bSpecB,
       const MatchPairer::BotSpec &bSpecW,
       ForkData *forkData,
