@@ -14,6 +14,7 @@ static void printNNInputHWAndBoard(
     ostream &out, int inputsVersion, const Board &board, const BoardHistory &hist,
     int nnXLen, int nnYLen, bool inputsUseNHWC, T *row, int c)
 {
+  /*
   int numFeatures;
   static_assert(NNModelVersion::latestInputsVersionImplemented == 7, "");
   if (inputsVersion == 3)
@@ -36,7 +37,8 @@ static void printNNInputHWAndBoard(
     for (int x = 0; x < nnXLen; x++)
     {
       Loc loc = Location::getLoc(x, y, board.x_size);
-      int pos = NNPos::locToDoublePos(Loc(0,0,board.x_size),loc,board.x_size,nnXLen,nnYLen);
+      Loc zero = Loc(0,0,board.x_size);
+      int pos = NNPos::locToDoublePos(zero,loc,board.x_size,nnXLen,nnYLen);
       if (x > 0)
         out << " ";
       if (inputsUseNHWC)
@@ -70,6 +72,7 @@ static void printNNInputHWAndBoard(
     out << endl;
   }
   out << endl;
+  */
 }
 
 template <typename T>
