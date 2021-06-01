@@ -311,7 +311,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
 
         if(logSearchInfo) {
           ostringstream sout;
-          PlayUtils::printGenmoveLog(sout,bot,nnEval,Board::NULL_LOC,NAN,request->perspective);
+          PlayUtils::printGenmoveLog(sout,bot,nnEval,Board::NULL_LOC,Board::NULL_LOC,NAN,request->perspective);
           logger.write(sout.str());
         }
 
