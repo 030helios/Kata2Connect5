@@ -59,7 +59,7 @@ struct OtherGameProperties {
 
   int hintTurn = -1;
   Hash128 hintPosHash;
-  Loc hintLoc = Board::NULL_LOC;
+  Move hintMove = Move(0,0,0);
 
   //Note: these two behave slightly differently than the ones in searchParams - as properties for the whole
   //game, they make the playouts *actually* vary instead of only making the neural net think they do.

@@ -1244,7 +1244,7 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
       for (int j = startIdx; j < m; j++)
         sample.moves.push_back(moves[j]);
       sample.initialTurnNumber = startIdx;
-      sample.hintLoc = moves[m];
+      sample.hintMove = moves[m];
       sample.weight = weight;
 
       if (autoKomi)
@@ -1354,7 +1354,7 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
     for (int j = startTurn; j < moveHistorySize - 1; j++)
       sample.moves.push_back(treeHist.moveHistory[j]);
     sample.initialTurnNumber = initialTurnNumber;
-    sample.hintLoc = treeHist.moveHistory[moveHistorySize - 1];
+    sample.hintMove = treeHist.moveHistory[moveHistorySize - 1];
     sample.weight = 0.0; //dummy, filled in below
 
     //Don't use the SGF rules - randomize them for a bit more entropy
@@ -1395,7 +1395,7 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
 
     shared_ptr<NNOutput> &nnOutput = buf.result;
 
-    int pos = NNPos::locToDoublePos(sample.hintLoc.fromLoc, sample.hintLoc.toLoc, board.x_size, nnOutput->nnXLen, nnOutput->nnYLen);
+    int pos = NNPos::locToDoublePos(sample.hintMove.fromLoc, sample.hintMove.toLoc, board.x_size, nnOutput->nnXLen, nnOutput->nnYLen);
     double policyProb = nnOutput->policyProbs[pos];
     if (policyProb > maxPolicy)
       return;
@@ -1405,7 +1405,7 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
     sample.weight = weight;
 
     expensiveEvaluateMove(
-        search, sample.hintLoc, pla, board, hist,
+        search, sample.hintMove, pla, board, hist,
         sample, markedAsHintPos);
   };
 
@@ -1735,7 +1735,7 @@ int MainCmds::trystartposes(int argc, const char *const *argv)
       PlayUtils::adjustKomiToEven(search, NULL, board, hist, pla, numVisits, logger, props, seedRand);
     }
 
-    Move hintLoc = startPos.hintLoc;
+    Move hintMove = startPos.hintMove;
 
     {
       ReportedSearchValues values;
@@ -1753,21 +1753,21 @@ int MainCmds::trystartposes(int argc, const char *const *argv)
       cout << endl;
     }
 
-    if (hintLoc.fromLoc != Board::NULL_LOC && hintLoc.toLoc != Board::NULL_LOC)
+    if (hintMove.fromLoc != Board::NULL_LOC && hintMove.toLoc != Board::NULL_LOC)
     {
       /*
-      if (search->getChosenMoveLoc() == hintLoc)
+      if (search->getChosenMoveLoc() == hintMove)
       {
-        cout << "There was a hintpos " << Location::toString(hintLoc, board) << ", but it was the chosen move"
+        cout << "There was a hintpos " << Location::toString(hintMove, board) << ", but it was the chosen move"
              << "\n";
         cout << endl;
       }
       else
       {
         ReportedSearchValues values;
-        cout << "There was a hintpos " << Location::toString(hintLoc, board) << ", re-searching after playing it: "
+        cout << "There was a hintpos " << Location::toString(hintMove, board) << ", re-searching after playing it: "
              << "\n";
-        bool suc = maybeGetValuesAfterMove(search, logger, hintLoc, pla, board, hist, 1.0, values);
+        bool suc = maybeGetValuesAfterMove(search, logger, hintMove, pla, board, hist, 1.0, values);
         (void)suc;
         assert(suc);
         Board::printBoard(cout, search->getRootBoard(), search->getChosenMoveLoc(), &(search->getRootHist().moveHistory));
@@ -1903,14 +1903,14 @@ int MainCmds::viewstartposes(int argc, const char *const *argv)
       throw StringError("Illegal move in startpos: " + Sgf::PositionSample::toJsonLine(startPos));
     }
 
-    Move hintLoc = startPos.hintLoc;
+    Move hintMove = startPos.hintMove;
     cout << "StartPos: " << s << "/" << startPoses.size() << "\n";
     cout << "Next pla: " << PlayerIO::playerToString(pla) << "\n";
     cout << "Weight: " << startPos.weight << "\n";
-    cout << "HintLoc: " << Location::toString(hintLoc.fromLoc, board) << "\n";
-    cout << "to: " << Location::toString(hintLoc.toLoc, board) << "\n";
-    Board::printBoard(cout, board, hintLoc.fromLoc, &(hist.moveHistory));
-    Board::printBoard(cout, board, hintLoc.toLoc, &(hist.moveHistory));
+    cout << "HintLoc: " << Location::toString(hintMove.fromLoc, board) << "\n";
+    cout << "to: " << Location::toString(hintMove.toLoc, board) << "\n";
+    Board::printBoard(cout, board, hintMove.fromLoc, &(hist.moveHistory));
+    Board::printBoard(cout, board, hintMove.toLoc, &(hist.moveHistory));
     cout << endl;
 
     bool autoKomi = true;
@@ -1924,8 +1924,8 @@ int MainCmds::viewstartposes(int argc, const char *const *argv)
     if (bot != NULL)
     {
       bot->setPosition(pla, board, hist);
-      if (hintLoc.fromLoc != Board::NULL_LOC && hintLoc.toLoc != Board::NULL_LOC)
-        bot->setRootHintLoc(hintLoc);
+      if (hintMove.fromLoc != Board::NULL_LOC && hintMove.toLoc != Board::NULL_LOC)
+        bot->setRootHintLoc(hintMove);
       else
         bot->setRootHintLoc(Move(0, 0, 0));
       bot->genMoveSynchronous(bot->getSearch()->rootPla, TimeControls());

@@ -228,7 +228,7 @@ struct Search
     void setPosition(Player pla, const Board &board, const BoardHistory &history);
 
     void setPlayerAndClearHistory(Player pla);
-    void setRootHintLoc(Move hintLoc);
+    void setRootHintLoc(Move hintMove);
     void setAvoidMoveUntilByLoc(const std::vector<int> &bVec, const std::vector<int> &wVec);
     void setAlwaysIncludeOwnerMap(bool b);
     void setParams(SearchParams params);

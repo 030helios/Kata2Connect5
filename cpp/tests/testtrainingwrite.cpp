@@ -480,7 +480,9 @@ void Tests::runMoreSelfplayTestsWithNN(const string& modelFile) {
       otherGameProps.isHintPos = true;
       otherGameProps.hintTurn = initialHist.moveHistory.size();
       otherGameProps.hintPosHash = initialBoard.pos_hash;
-      otherGameProps.hintLoc = Location::ofString("A1",initialBoard);
+      /*
+      otherGameProps.hintMove = Location::ofString("A1",initialBoard);
+      */
       otherGameProps.allowPolicyInit = false;
     }
     bool logSearchInfo = testPolicySurpriseWeight || testHint;
@@ -1634,7 +1636,9 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     startPosSample.nextPla = P_BLACK;
     startPosSample.moves = std::vector<Move>();
     startPosSample.initialTurnNumber = 0;
-    startPosSample.hintLoc = Board::NULL_LOC;
+    /*
+    startPosSample.hintMove = Board::NULL_LOC;
+    */
     startPosSample.weight = 1.0;
 
     std::map<string,string> cfgParams({
@@ -1686,7 +1690,9 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     startPosSample.nextPla = P_BLACK;
     startPosSample.moves = std::vector<Move>();
     startPosSample.initialTurnNumber = 0;
-    startPosSample.hintLoc = Board::NULL_LOC;
+    /*
+    startPosSample.hintMove = Board::NULL_LOC;
+    */
     startPosSample.weight = 1.0;
 
     std::map<string,string> cfgParams({

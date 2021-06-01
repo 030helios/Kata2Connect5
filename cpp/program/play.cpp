@@ -454,7 +454,7 @@ void GameInitializer::createGameSharedUnsynchronized(
     otherGameProps.allowPolicyInit = false; //On initial positions, don't play extra moves at start
     otherGameProps.isFork = true;
     otherGameProps.isHintFork = initialPosition->isHintFork;
-    otherGameProps.hintLoc = Board::NULL_LOC;
+    otherGameProps.hintMove = Move(0,0,0);
     otherGameProps.hintTurn = initialPosition->isHintFork ? (int)hist.moveHistory.size() : -1;
     extraBlackAndKomi.makeGameFair = rand.nextBool(forkCompensateKomiProb);
     extraBlackAndKomi.makeGameFairForEmptyBoard = false;
@@ -499,14 +499,14 @@ void GameInitializer::createGameSharedUnsynchronized(
     pla = startPos.nextPla;
     hist.clear(board, pla, rules);
     hist.setInitialTurnNumber(startPos.initialTurnNumber);
-    Loc hintLoc = startPos.hintLoc;
+    Move hintMove = startPos.hintMove;
     for (size_t i = 0; i < startPos.moves.size(); i++)
     {
       bool isLegal = hist.isLegal(board, startPos.moves[i].fromLoc, startPos.moves[i].toLoc, startPos.moves[i].pla);
       if (!isLegal)
       {
-        //If we stop due to illegality, it doesn't make sense to still use the hintLoc
-        hintLoc = Board::NULL_LOC;
+        //If we stop due to illegality, it doesn't make sense to still use the hintMove
+        hintMove = Move(0,0,0);
         break;
       }
       hist.makeBoardMoveAssumeLegal(board, startPos.moves[i].fromLoc, startPos.moves[i].toLoc, startPos.moves[i].pla, NULL);
@@ -521,12 +521,12 @@ void GameInitializer::createGameSharedUnsynchronized(
         komiBigStdevProb, komiBigStdev, sqrt(board.x_size * board.y_size), rand);
     PlayUtils::setKomiWithNoise(extraBlackAndKomi, hist, rand);
 
-    otherGameProps.isSgfPos = hintLoc == Board::NULL_LOC;
-    otherGameProps.isHintPos = hintLoc != Board::NULL_LOC;
-    otherGameProps.allowPolicyInit = hintLoc == Board::NULL_LOC; //On sgf positions, do allow extra moves at start
+    otherGameProps.isSgfPos = (hintMove.fromLoc == Board::NULL_LOC || hintMove.toLoc == Board::NULL_LOC );
+    otherGameProps.isHintPos = !(hintMove.fromLoc == Board::NULL_LOC || hintMove.toLoc == Board::NULL_LOC );
+    otherGameProps.allowPolicyInit = (hintMove.fromLoc == Board::NULL_LOC || hintMove.toLoc == Board::NULL_LOC ); //On sgf positions, do allow extra moves at start
     otherGameProps.isFork = false;
     otherGameProps.isHintFork = false;
-    otherGameProps.hintLoc = hintLoc;
+    otherGameProps.hintMove = hintMove;
     otherGameProps.hintTurn = hist.moveHistory.size();
     otherGameProps.hintPosHash = board.pos_hash;
     makeGameFairProb = sgfCompensateKomiProb;
@@ -550,7 +550,7 @@ void GameInitializer::createGameSharedUnsynchronized(
     otherGameProps.allowPolicyInit = true; //Handicap and regular games do allow policy init
     otherGameProps.isFork = false;
     otherGameProps.isHintFork = false;
-    otherGameProps.hintLoc = Board::NULL_LOC;
+    otherGameProps.hintMove = Move(0,0,0);
     otherGameProps.hintTurn = -1;
     makeGameFairProb = extraBlackAndKomi.extraBlack > 0 ? handicapCompensateKomiProb : 0.0;
   }
@@ -825,11 +825,11 @@ static void logSearch(Search *bot, Logger &logger, Loc from, Loc to, OtherGamePr
   sout << "\n";
   sout << "Rules: " << bot->getRootHist().rules << "\n";
   sout << "Root visits: " << bot->getRootVisits() << "\n";
-  if (otherGameProps.hintLoc != Board::NULL_LOC &&
+  if ( (otherGameProps.hintMove.fromLoc != Board::NULL_LOC && otherGameProps.hintMove.toLoc != Board::NULL_LOC ) &&
       otherGameProps.hintTurn == bot->getRootHist().moveHistory.size() &&
       otherGameProps.hintPosHash == bot->getRootBoard().pos_hash)
   {
-    sout << "HintLoc " << Location::toString(otherGameProps.hintLoc, bot->getRootBoard()) << "\n";
+    sout << "HintLoc " << Location::toString(otherGameProps.hintMove.fromLoc, bot->getRootBoard()) << " " << Location::toString(otherGameProps.hintMove.toLoc, bot->getRootBoard()) << "\n";
   }
   sout << "Policy surprise " << bot->getPolicySurprise() << "\n";
   sout << "Raw WL " << bot->getRootRawNNValuesRequireSuccess().winLossValue << "\n";
@@ -1061,7 +1061,7 @@ struct SearchLimitsThisMove
   double playoutDoublingAdvantage;
   Player playoutDoublingAdvantagePla;
 
-  Loc hintLoc;
+  Move hintMove;
 };
 
 static SearchLimitsThisMove getSearchLimitsThisMove(
@@ -1078,16 +1078,16 @@ static SearchLimitsThisMove getSearchLimitsThisMove(
   float targetWeight = 1.0f;
   double playoutDoublingAdvantage = 0.0;
   Player playoutDoublingAdvantagePla = C_EMPTY;
-  Loc hintLoc = Board::NULL_LOC;
+  Move hintMove = Move(0,0,0);
   double cheapSearchProb = playSettings.cheapSearchProb;
 
   const BoardHistory &hist = toMoveBot->getRootHist();
-  if (otherGameProps.hintLoc != Board::NULL_LOC)
+  if (otherGameProps.hintMove.fromLoc != Board::NULL_LOC && otherGameProps.hintMove.toLoc != Board::NULL_LOC )
   {
     if (otherGameProps.hintTurn == hist.moveHistory.size() &&
         otherGameProps.hintPosHash == toMoveBot->getRootBoard().pos_hash)
     {
-      hintLoc = otherGameProps.hintLoc;
+      hintMove = otherGameProps.hintMove;
       doAlterVisitsPlayouts = true;
       double cap = (double)((int64_t)1L << 50);
       numAlterVisits = (int64_t)ceil(std::min(cap, numAlterVisits * 4.0));
@@ -1095,12 +1095,12 @@ static SearchLimitsThisMove getSearchLimitsThisMove(
     }
   }
   //For the first few turns after a hint move or fork, reduce the probability of cheap search
-  if ((otherGameProps.hintLoc != Board::NULL_LOC || otherGameProps.isHintFork) && otherGameProps.hintTurn + 6 > hist.moveHistory.size())
+  if (((otherGameProps.hintMove.fromLoc != Board::NULL_LOC && otherGameProps.hintMove.toLoc != Board::NULL_LOC ) || otherGameProps.isHintFork) && otherGameProps.hintTurn + 6 > hist.moveHistory.size())
   {
     cheapSearchProb *= 0.5;
   }
 
-  if (hintLoc == Board::NULL_LOC && cheapSearchProb > 0.0 && gameRand.nextBool(cheapSearchProb))
+  if ((otherGameProps.hintMove.fromLoc == Board::NULL_LOC || otherGameProps.hintMove.toLoc == Board::NULL_LOC ) && cheapSearchProb > 0.0 && gameRand.nextBool(cheapSearchProb))
   {
     if (playSettings.cheapSearchVisits <= 0)
       throw StringError("playSettings.cheapSearchVisits <= 0");
@@ -1120,7 +1120,7 @@ static SearchLimitsThisMove getSearchLimitsThisMove(
       removeRootNoise = true;
     }
   }
-  else if (hintLoc == Board::NULL_LOC && playSettings.reduceVisits)
+  else if ((otherGameProps.hintMove.fromLoc == Board::NULL_LOC || otherGameProps.hintMove.toLoc == Board::NULL_LOC ) && playSettings.reduceVisits)
   {
     if (playSettings.reducedVisitsMin <= 0)
       throw StringError("playSettings.reducedVisitsMin <= 0");
@@ -1196,7 +1196,7 @@ static SearchLimitsThisMove getSearchLimitsThisMove(
   limits.targetWeight = targetWeight;
   limits.playoutDoublingAdvantage = playoutDoublingAdvantage;
   limits.playoutDoublingAdvantagePla = playoutDoublingAdvantagePla;
-  limits.hintLoc = hintLoc;
+  limits.hintMove = hintMove;
   return limits;
 }
 
@@ -1255,17 +1255,17 @@ static Move runBotWithLimits(
       toMoveBot->searchParams.maxVisits = oldMaxVisits;
     }
 
-    if (limits.hintLoc != Board::NULL_LOC)
+    if ((limits.hintMove.fromLoc != Board::NULL_LOC &&limits.hintMove.toLoc != Board::NULL_LOC ))
     {
       assert(limits.clearBotBeforeSearchThisMove);
       //This will actually forcibly clear the search
-      toMoveBot->setRootHintLoc(limits.hintLoc);
+      toMoveBot->setRootHintLoc(limits.hintMove);
     }
 
     mov = toMoveBot->runWholeSearchAndGetMove(pla, logger);
 
-    if (limits.hintLoc != Board::NULL_LOC)
-      toMoveBot->setRootHintLoc(Board::NULL_LOC);
+    if ((limits.hintMove.fromLoc != Board::NULL_LOC &&limits.hintMove.toLoc != Board::NULL_LOC ))
+      toMoveBot->setRootHintLoc(Move(0,0,0));
 
     toMoveBot->searchParams = oldParams;
   }
@@ -1749,7 +1749,7 @@ FinishedGameData *Play::runGame(
 
     //If we had a hintloc, then don't trust the first value, it will be corrupted a bit by the forced playouts.
     //Just copy the next turn's value.
-    if (otherGameProps.hintLoc != Board::NULL_LOC)
+    if ((otherGameProps.hintMove.fromLoc != Board::NULL_LOC &&otherGameProps.hintMove.toLoc != Board::NULL_LOC ))
     {
       gameData->whiteValueTargetsByTurn[0] = gameData->whiteValueTargetsByTurn[std::min((size_t)1, gameData->whiteValueTargetsByTurn.size() - 1)];
     }
@@ -2242,11 +2242,11 @@ void Play::maybeHintForkGame(
   if (finishedGameData->startHist.encorePhase != 0)
     return;
   bool hintFork =
-      otherGameProps.hintLoc != Board::NULL_LOC &&
+      otherGameProps.hintMove != Board::NULL_LOC &&
       finishedGameData->startBoard.pos_hash == otherGameProps.hintPosHash &&
       finishedGameData->startHist.moveHistory.size() == otherGameProps.hintTurn &&
       finishedGameData->endHist.moveHistory.size() > finishedGameData->startHist.moveHistory.size() &&
-      finishedGameData->endHist.moveHistory[finishedGameData->startHist.moveHistory.size()].loc != otherGameProps.hintLoc;
+      finishedGameData->endHist.moveHistory[finishedGameData->startHist.moveHistory.size()].loc != otherGameProps.hintMove;
 
   if (!hintFork)
     return;
@@ -2259,10 +2259,10 @@ void Play::maybeHintForkGame(
   if (hist.isGameFinished)
     return;
 
-  if (!hist.isLegal(board, otherGameProps.hintLoc, pla))
+  if (!hist.isLegal(board, otherGameProps.hintMove, pla))
     return;
 
-  hist.makeBoardMoveAssumeLegal(board, otherGameProps.hintLoc, pla, NULL);
+  hist.makeBoardMoveAssumeLegal(board, otherGameProps.hintMove, pla, NULL);
   pla = getOpp(pla);
 
   //If the game is over now, don't actually do anything

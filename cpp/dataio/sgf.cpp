@@ -788,7 +788,7 @@ void Sgf::samplePositionIfUniqueHelper(
   for(int i = startTurnIdx; i<(int)hist.moveHistory.size(); i++)
     sampleBuf.moves.push_back(hist.moveHistory[i]);
   sampleBuf.initialTurnNumber = initialTurnNumber + startTurnIdx;
-  sampleBuf.hintLoc = Board::NULL_LOC;
+  sampleBuf.hintMove = Board::NULL_LOC;
   sampleBuf.weight = 1.0;
 
   if(flipIfPassOrWFirst) {
@@ -856,7 +856,7 @@ string Sgf::PositionSample::toJsonLine(const Sgf::PositionSample& sample) {
   data["moveLocs"] = moveLocs;
   data["movePlas"] = movePlas;
   data["initialTurnNumber"] = sample.initialTurnNumber;
-  data["hintLoc"] = Location::toString(sample.hintLoc,sample.board);
+  data["hintMove"] = Location::toString(sample.hintMove,sample.board);
   data["weight"] = sample.weight;
   */
   return data.dump();
@@ -881,12 +881,12 @@ Sgf::PositionSample Sgf::PositionSample::ofJsonLine(const string& s) {
       sample.moves.push_back(Move(moveLoc,movePla));
     }
     sample.initialTurnNumber = data["initialTurnNumber"].get<int>();
-    string hintLocStr = Global::toLower(Global::trim(data["hintLoc"].get<string>()));
+    string hintLocStr = Global::toLower(Global::trim(data["hintMove"].get<string>()));
     if(hintLocStr == "" || hintLocStr == "''" || hintLocStr == "\"\"" ||
        hintLocStr == "null" || hintLocStr == "'null'" || hintLocStr == "\"null\"")
-      sample.hintLoc = Board::NULL_LOC;
+      sample.hintMove = Board::NULL_LOC;
     else
-      sample.hintLoc = Location::ofString(data["hintLoc"].get<string>(),sample.board);
+      sample.hintMove = Location::ofString(data["hintMove"].get<string>(),sample.board);
 
     if(data.find("weight") != data.end())
       sample.weight = data["weight"].get<double>();
@@ -935,7 +935,7 @@ bool Sgf::PositionSample::isEqualForTesting(const Sgf::PositionSample& other, bo
   }
   if(initialTurnNumber != other.initialTurnNumber)
     return false;
-  if(hintLoc != other.hintLoc)
+  if(hintMove != other.hintMove)
     return false;
   if(weight != other.weight)
     return false;

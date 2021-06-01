@@ -23,7 +23,7 @@ int MainCmds::evalsgf(int argc, const char *const *argv)
   int moveNum;
   string printBranch;
   string extraMoves;
-  string hintLoc;
+  string hintMove;
   int64_t maxVisits;
   int numThreads;
   float overrideKomi;
@@ -98,7 +98,7 @@ int MainCmds::evalsgf(int argc, const char *const *argv)
     string print = printArg.getValue();
     extraMoves = extraMovesArg.getValue();
     string extra = extraArg.getValue();
-    hintLoc = hintLocArg.getValue();
+    hintMove = hintLocArg.getValue();
     maxVisits = (int64_t)visitsArg.getValue();
     numThreads = threadsArg.getValue();
     overrideKomi = overrideKomiArg.getValue();
@@ -264,9 +264,11 @@ int MainCmds::evalsgf(int argc, const char *const *argv)
   AsyncBot *bot = new AsyncBot(params, nnEval, &logger, searchRandSeed);
 
   bot->setPosition(nextPla, board, hist);
-  if (hintLoc != "")
+  if (hintMove != "")
   {
-    bot->setRootHintLoc(Location::ofString(hintLoc, board));
+    /*
+    bot->setRootHintLoc(Location::ofString(hintMove, board));
+    */
   }
 
   //Print initial state----------------------------------------------------------------
