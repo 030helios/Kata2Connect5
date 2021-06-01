@@ -10,19 +10,19 @@
 
 namespace TestCommon {
   inline void testAssertFailed(const char *msg, const char *file, int line) {
-    Global::fatalError(string("Failed test assert: ") + string(msg) + "\n" + string("file: ") + string(file) + "\n" + string("line: ") + Global::intToString(line));
+    Global::fatalError(std::string("Failed test assert: ") + std::string(msg) + "\n" + std::string("file: ") + std::string(file) + "\n" + std::string("line: ") + Global::intToString(line));
   }
 
-  inline void expect(const char* name, const string& actual, const string& expected) {
+  inline void expect(const char* name, const std::string& actual, const std::string& expected) {
     using namespace std;
     string a = Global::trim(actual);
     string e = Global::trim(expected);
-    vector<string> alines = Global::split(a,'\n');
-    vector<string> elines = Global::split(e,'\n');
+    std::vector<string> alines = Global::split(a,'\n');
+    std::vector<string> elines = Global::split(e,'\n');
 
     bool matches = true;
     int firstLineDiff = 0;
-    for(int i = 0; i<max(alines.size(),elines.size()); i++) {
+    for(int i = 0; i<std::max(alines.size(),elines.size()); i++) {
       if(i >= alines.size() || i >= elines.size()) {
         firstLineDiff = i;
         matches = false;
@@ -59,7 +59,7 @@ namespace TestCommon {
     }
   }
 
-  inline void expect(const char* name, ostringstream& actual, const string& expected) {
+  inline void expect(const char* name, std::ostringstream& actual, const std::string& expected) {
     expect(name,actual.str(),expected);
     actual.str("");
     actual.clear();

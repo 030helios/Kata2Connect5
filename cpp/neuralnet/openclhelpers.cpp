@@ -87,11 +87,11 @@ void OpenCLHelpers::checkErrors(cl_int error, const char* file, const char* func
 }
 
 template<typename T>
-static size_t byteSizeofVectorContents(const typename vector<T>& vec) {
+static size_t byteSizeofVectorContents(const typename std::vector<T>& vec) {
     return sizeof(T) * vec.size();
 }
 
-cl_program OpenCLHelpers::compileProgram(const string& name, cl_context context, const vector<cl_device_id>& devices, const string& str, const string& options) {
+cl_program OpenCLHelpers::compileProgram(const string& name, cl_context context, const std::vector<cl_device_id>& devices, const string& str, const string& options) {
   const char* lines[1] = {str.c_str()};
   const size_t sizes[1] = {str.size()};
   cl_int err;
@@ -106,7 +106,7 @@ cl_program OpenCLHelpers::compileProgram(const string& name, cl_context context,
     s += OpenCLHelpers::getErrorMessage(err) + string("\n");
     for(int i = 0; i<devices.size(); i++) {
       cl_int err2;
-      vector<char> buf(100000);
+      std::vector<char> buf(100000);
       size_t retSize;
       err2 = clGetProgramBuildInfo(program, devices[i], CL_PROGRAM_BUILD_LOG, byteSizeofVectorContents(buf), buf.data(), &retSize);
       CHECK_ERR(err2);
@@ -122,7 +122,7 @@ cl_program OpenCLHelpers::compileProgram(const string& name, cl_context context,
 bool OpenCLHelpers::tryCompileProgram(
   const string& name,
   cl_context context,
-  const vector<cl_device_id>& devices,
+  const std::vector<cl_device_id>& devices,
   const string& str,
   const string& options,
   cl_program& buf,
@@ -138,7 +138,7 @@ bool OpenCLHelpers::tryCompileProgram(
   return true;
 }
 
-cl_mem OpenCLHelpers::createReadOnlyBuffer(cl_context clContext, vector<float>& data) {
+cl_mem OpenCLHelpers::createReadOnlyBuffer(cl_context clContext, std::vector<float>& data) {
   cl_int err;
   cl_mem buf = clCreateBuffer(
     clContext,
@@ -150,7 +150,7 @@ cl_mem OpenCLHelpers::createReadOnlyBuffer(cl_context clContext, vector<float>& 
   CHECK_ERR(err);
   return buf;
 }
-cl_mem OpenCLHelpers::createReadOnlyBuffer(cl_context clContext, vector<half_t>& data) {
+cl_mem OpenCLHelpers::createReadOnlyBuffer(cl_context clContext, std::vector<half_t>& data) {
   cl_int err;
   cl_mem buf = clCreateBuffer(
     clContext,
@@ -163,7 +163,7 @@ cl_mem OpenCLHelpers::createReadOnlyBuffer(cl_context clContext, vector<half_t>&
   return buf;
 }
 
-cl_mem OpenCLHelpers::createReadWriteBuffer(cl_context clContext, vector<float>& data) {
+cl_mem OpenCLHelpers::createReadWriteBuffer(cl_context clContext, std::vector<float>& data) {
   cl_int err;
   cl_mem buf = clCreateBuffer(
     clContext,
@@ -175,7 +175,7 @@ cl_mem OpenCLHelpers::createReadWriteBuffer(cl_context clContext, vector<float>&
   CHECK_ERR(err);
   return buf;
 }
-cl_mem OpenCLHelpers::createReadWriteBuffer(cl_context clContext, vector<half_t>& data) {
+cl_mem OpenCLHelpers::createReadWriteBuffer(cl_context clContext, std::vector<half_t>& data) {
   cl_int err;
   cl_mem buf = clCreateBuffer(
     clContext,
@@ -222,28 +222,28 @@ cl_mem OpenCLHelpers::createReadWriteBufferHalf(cl_context clContext, size_t num
 }
 
 
-void OpenCLHelpers::blockingReadBuffer(cl_command_queue commandQueue, cl_mem srcBuf, size_t numElts, vector<float>& dstBuf) {
+void OpenCLHelpers::blockingReadBuffer(cl_command_queue commandQueue, cl_mem srcBuf, size_t numElts, std::vector<float>& dstBuf) {
   dstBuf.resize(numElts);
   cl_bool blocking = CL_TRUE;
   cl_int err;
   err = clEnqueueReadBuffer(commandQueue, srcBuf, blocking, 0, byteSizeofVectorContents(dstBuf), dstBuf.data(), 0, NULL, NULL);
   CHECK_ERR(err);
 }
-void OpenCLHelpers::blockingReadBuffer(cl_command_queue commandQueue, cl_mem srcBuf, size_t numElts, vector<half_t>& dstBuf) {
+void OpenCLHelpers::blockingReadBuffer(cl_command_queue commandQueue, cl_mem srcBuf, size_t numElts, std::vector<half_t>& dstBuf) {
   dstBuf.resize(numElts);
   cl_bool blocking = CL_TRUE;
   cl_int err;
   err = clEnqueueReadBuffer(commandQueue, srcBuf, blocking, 0, byteSizeofVectorContents(dstBuf), dstBuf.data(), 0, NULL, NULL);
   CHECK_ERR(err);
 }
-void OpenCLHelpers::blockingReadBufferHalfToFloat(cl_command_queue commandQueue, cl_mem srcBuf, size_t numElts, vector<float>& dstBuf) {
-  vector<half_t> tmpHalf;
+void OpenCLHelpers::blockingReadBufferHalfToFloat(cl_command_queue commandQueue, cl_mem srcBuf, size_t numElts, std::vector<float>& dstBuf) {
+  std::vector<half_t> tmpHalf;
   blockingReadBuffer(commandQueue, srcBuf, numElts, tmpHalf);
    dstBuf.resize(numElts);
   for(size_t i = 0; i<numElts; i++)
     dstBuf[i] = tmpHalf[i];
 }
-void OpenCLHelpers::blockingReadBuffer(cl_command_queue commandQueue, cl_mem srcBuf, size_t numElts, vector<float>& dstBuf, bool useFP16) {
+void OpenCLHelpers::blockingReadBuffer(cl_command_queue commandQueue, cl_mem srcBuf, size_t numElts, std::vector<float>& dstBuf, bool useFP16) {
   if(useFP16)
     blockingReadBufferHalfToFloat(commandQueue, srcBuf, numElts, dstBuf);
   else
@@ -258,21 +258,21 @@ vector<DeviceInfo> DeviceInfo::getAllDeviceInfosOnSystem(Logger* logger) {
 
   cl_int err;
   cl_uint numPlatforms;
-  vector<cl_platform_id> platformIds(maxPlatforms);
+  std::vector<cl_platform_id> platformIds(maxPlatforms);
   err = clGetPlatformIDs(platformIds.size(), platformIds.data(), &numPlatforms);
   CHECK_ERR(err);
   assert(numPlatforms <= platformIds.size());
   platformIds.resize(numPlatforms);
 
   constexpr int bufLen = 16384;
-  vector<char> buf(bufLen);
+  std::vector<char> buf(bufLen);
   for(int i = 0; i<bufLen; i++)
     buf[i] = '\0';
 
   int numDevicesTotal = 0;
-  vector<cl_device_id> deviceIds(maxDevices);
-  vector<cl_platform_id> platformIdsForDevices;
-  vector<string> platformDescsForDevices;
+  std::vector<cl_device_id> deviceIds(maxDevices);
+  std::vector<cl_platform_id> platformIdsForDevices;
+  std::vector<string> platformDescsForDevices;
   for(int platformIdx = 0; platformIdx < numPlatforms && numDevicesTotal < deviceIds.size(); platformIdx++) {
     size_t sizeRet;
     cl_platform_id platformId = platformIds[platformIdx];
@@ -320,7 +320,7 @@ vector<DeviceInfo> DeviceInfo::getAllDeviceInfosOnSystem(Logger* logger) {
   }
   deviceIds.resize(numDevicesTotal);
 
-  vector<DeviceInfo> allDeviceInfos;
+  std::vector<DeviceInfo> allDeviceInfos;
   for(int gpuIdx = 0; gpuIdx<numDevicesTotal; gpuIdx++) {
     size_t sizeRet;
 
@@ -367,9 +367,9 @@ vector<DeviceInfo> DeviceInfo::getAllDeviceInfosOnSystem(Logger* logger) {
       else if((deviceType & CL_DEVICE_TYPE_ACCELERATOR) != 0) defaultDesirability += 100000;
       else if(deviceType == CL_DEVICE_TYPE_DEFAULT) defaultDesirability += 50000;
 
-      vector<string> versionPieces = Global::split(Global::trim(openCLVersion));
+      std::vector<string> versionPieces = Global::split(Global::trim(openCLVersion));
       if(versionPieces.size() >= 2) {
-        vector<string> majorMinor = Global::split(Global::trim(versionPieces[1]),'.');
+        std::vector<string> majorMinor = Global::split(Global::trim(versionPieces[1]),'.');
         if(majorMinor.size() == 2) {
           int major = 0;
           int minor = 0;
@@ -410,7 +410,7 @@ vector<DeviceInfo> DeviceInfo::getAllDeviceInfosOnSystem(Logger* logger) {
 //----------------------------------------------------------------------------------------
 
 
-DevicesContext::DevicesContext(const vector<DeviceInfo>& allDeviceInfos, const vector<int>& gIdxsToUse, Logger* logger, bool enableProfiling)
+DevicesContext::DevicesContext(const std::vector<DeviceInfo>& allDeviceInfos, const std::vector<int>& gIdxsToUse, Logger* logger, bool enableProfiling)
   : initializedPlatforms(),
     devicesToUse(),
     uniqueDeviceNamesToUse()
@@ -425,8 +425,8 @@ DevicesContext::DevicesContext(const vector<DeviceInfo>& allDeviceInfos, const v
   }
 
   //Sort and ensure no duplicates
-  vector<int> gpuIdxsToUse = gIdxsToUse;
-  sort(gpuIdxsToUse.begin(),gpuIdxsToUse.end());
+  std::vector<int> gpuIdxsToUse = gIdxsToUse;
+  std::sort(gpuIdxsToUse.begin(),gpuIdxsToUse.end());
   for(size_t i = 1; i<gpuIdxsToUse.size(); i++) {
     if(gpuIdxsToUse[i-1] == gpuIdxsToUse[i])
       throw StringError("Requested gpuIdx/device more than once: " + Global::intToString(gpuIdxsToUse[i]));
@@ -438,10 +438,10 @@ DevicesContext::DevicesContext(const vector<DeviceInfo>& allDeviceInfos, const v
       gpuIdxsToUse.erase(gpuIdxsToUse.begin());
     else
       gpuIdxsToUse[0] = defaultGpuIdx;
-    sort(gpuIdxsToUse.begin(),gpuIdxsToUse.end());
+    std::sort(gpuIdxsToUse.begin(),gpuIdxsToUse.end());
   }
 
-  vector<cl_device_id> deviceIdsToUse;
+  std::vector<cl_device_id> deviceIdsToUse;
   for(size_t i = 0; i<gpuIdxsToUse.size(); i++) {
     int gpuIdx = gpuIdxsToUse[i];
     if(gpuIdx < 0 || gpuIdx >= allDeviceInfos.size()) {
@@ -568,7 +568,7 @@ const InitializedDevice* DevicesContext::findGpuExn(int gpuIdx) const {
 }
 
 vector<const InitializedDevice*> DevicesContext::findDevicesToUseWithName(const string& name) const {
-  vector<const InitializedDevice*> devices;
+  std::vector<const InitializedDevice*> devices;
   for(int i = 0; i<devicesToUse.size(); i++) {
     if(devicesToUse[i]->info.name == name) {
       devices.push_back(devicesToUse[i]);
@@ -577,7 +577,7 @@ vector<const InitializedDevice*> DevicesContext::findDevicesToUseWithName(const 
   return devices;
 }
 vector<cl_device_id> DevicesContext::findDeviceIdsToUseWithName(const string& name) const {
-  vector<cl_device_id> deviceIds;
+  std::vector<cl_device_id> deviceIds;
   for(int i = 0; i<devicesToUse.size(); i++) {
     if(devicesToUse[i]->info.name == name)
       deviceIds.push_back(devicesToUse[i]->info.deviceId);
@@ -964,8 +964,8 @@ cl_int OpenCLHelpers::performGPool(
   static constexpr int nKernelDims = 3;
   size_t localSizes[nKernelDims] = {
     (size_t)tuneParams.gPool.XYSTRIDE,
-    min((size_t)tuneParams.gPool.CHANNELSTRIDE,powerOf2ify(gpoolChannels)),
-    min((size_t)tuneParams.gPool.BATCHSTRIDE,powerOf2ify(batchSize))
+    std::min((size_t)tuneParams.gPool.CHANNELSTRIDE,powerOf2ify(gpoolChannels)),
+    std::min((size_t)tuneParams.gPool.BATCHSTRIDE,powerOf2ify(batchSize))
   };
   size_t globalSizes[nKernelDims] = {
     (size_t)tuneParams.gPool.XYSTRIDE,
@@ -998,8 +998,8 @@ cl_int OpenCLHelpers::performValueHeadPool(
   static constexpr int nKernelDims = 3;
   size_t localSizes[nKernelDims] = {
     (size_t)tuneParams.gPool.XYSTRIDE,
-    min((size_t)tuneParams.gPool.CHANNELSTRIDE,powerOf2ify(gpoolChannels)),
-    min((size_t)tuneParams.gPool.BATCHSTRIDE,powerOf2ify(batchSize))
+    std::min((size_t)tuneParams.gPool.CHANNELSTRIDE,powerOf2ify(gpoolChannels)),
+    std::min((size_t)tuneParams.gPool.BATCHSTRIDE,powerOf2ify(batchSize))
   };
   size_t globalSizes[nKernelDims] = {
     (size_t)tuneParams.gPool.XYSTRIDE,
@@ -1036,7 +1036,7 @@ cl_int OpenCLHelpers::computeMaskSums(
   size_t localSizes[nKernelDims] = {
     (size_t)tuneParams.gPool.XYSTRIDE,
     1,
-    min((size_t)tuneParams.gPool.BATCHSTRIDE,powerOf2ify(batchSize))
+    std::min((size_t)tuneParams.gPool.BATCHSTRIDE,powerOf2ify(batchSize))
   };
   size_t globalSizes[nKernelDims] = {
     (size_t)tuneParams.gPool.XYSTRIDE,

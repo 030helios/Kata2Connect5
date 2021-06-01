@@ -16,8 +16,8 @@
 
 using namespace std;
 
-static atomic<bool> sigReceived(false);
-static atomic<bool> shouldStop(false);
+static std::atomic<bool> sigReceived(false);
+static std::atomic<bool> shouldStop(false);
 static void signalHandler(int signal)
 {
   if (signal == SIGINT || signal == SIGTERM)
@@ -29,7 +29,7 @@ static void signalHandler(int signal)
 
 static void writeLine(
     const Search *search, const BoardHistory &baseHist,
-    const vector<double> &winLossHistory, const vector<double> &scoreHistory, const vector<double> &scoreStdevHistory)
+    const std::vector<double> &winLossHistory, const std::vector<double> &scoreHistory, const std::vector<double> &scoreStdevHistory)
 {
   const Board board = search->getRootBoard();
   int nnXLen = search->nnXLen;
@@ -85,7 +85,7 @@ static void writeLine(
   }
   cout << " ";
 
-  vector<AnalysisData> buf;
+  std::vector<AnalysisData> buf;
   if (!baseHist.isGameFinished)
   {
     int minMovesToTryToGet = 0; //just get the default number
@@ -130,8 +130,8 @@ static void initializeDemoGame(Board &board, BoardHistory &hist, Player &pla, Ra
   bot->setPosition(pla, board, hist);
 
   bot->clearSearch();
-  writeLine(bot->getSearch(), hist, vector<double>(), vector<double>(), vector<double>());
-  this_thread::sleep_for(chrono::duration<double>(2.0));
+  writeLine(bot->getSearch(), hist, std::vector<double>(), std::vector<double>(), std::vector<double>());
+  std::this_thread::sleep_for(std::chrono::duration<double>(2.0));
 }
 
 int MainCmds::demoplay(int argc, const char *const *argv)
@@ -219,13 +219,13 @@ int MainCmds::demoplay(int argc, const char *const *argv)
 
     bot->setPosition(pla, baseBoard, baseHist);
 
-    vector<double> recentWinLossValues;
-    vector<double> recentScores;
-    vector<double> recentScoreStdevs;
+    std::vector<double> recentWinLossValues;
+    std::vector<double> recentScores;
+    std::vector<double> recentScoreStdevs;
 
     double callbackPeriod = 0.05;
 
-    function<void(const Search *)> callback = [&baseHist, &recentWinLossValues, &recentScores, &recentScoreStdevs](const Search *search)
+    std::function<void(const Search *)> callback = [&baseHist, &recentWinLossValues, &recentScores, &recentScoreStdevs](const Search *search)
     {
       writeLine(search, baseHist, recentWinLossValues, recentScores, recentScoreStdevs);
     };
@@ -241,7 +241,7 @@ int MainCmds::demoplay(int argc, const char *const *argv)
 
       double searchFactor =
           //Speed up when either player is winning confidently, not just the winner only
-          min(
+          std::min(
               PlayUtils::getSearchFactor(searchFactorWhenWinningThreshold, searchFactorWhenWinning, params, recentWinLossValues, P_BLACK),
               PlayUtils::getSearchFactor(searchFactorWhenWinningThreshold, searchFactorWhenWinning, params, recentWinLossValues, P_WHITE));
       Move mov = bot->genMoveSynchronousAnalyze(pla, tc, searchFactor, callbackPeriod, callback);
@@ -322,7 +322,7 @@ int MainCmds::demoplay(int argc, const char *const *argv)
     //End of game display line
     writeLine(bot->getSearch(), baseHist, recentWinLossValues, recentScores, recentScoreStdevs);
     //Wait a bit before diving into the next game
-    this_thread::sleep_for(chrono::seconds(10));
+    std::this_thread::sleep_for(std::chrono::seconds(10));
 
     bot->clearSearch();
   }
@@ -344,8 +344,8 @@ int MainCmds::printclockinfo(int argc, const char *const *argv)
   cout << "Does nothing on windows, disabled" << endl;
 #endif
 #ifdef OS_IS_UNIX_OR_APPLE
-  cout << "Tick unit in seconds: " << chrono::steady_clock::period::num << " / " << chrono::steady_clock::period::den << endl;
-  cout << "Ticks since epoch: " << chrono::steady_clock::now().time_since_epoch().count() << endl;
+  cout << "Tick unit in seconds: " << std::chrono::steady_clock::period::num << " / " << std::chrono::steady_clock::period::den << endl;
+  cout << "Ticks since epoch: " << std::chrono::steady_clock::now().time_since_epoch().count() << endl;
 #endif
   return 0;
 }
@@ -356,9 +356,9 @@ int MainCmds::samplesgfs(int argc, const char *const *argv)
   ScoreValue::initTables();
   Rand seedRand;
 
-  vector<string> sgfDirs;
+  std::vector<string> sgfDirs;
   string outDir;
-  vector<string> excludeHashesFiles;
+  std::vector<string> excludeHashesFiles;
   double sampleProb;
   double turnWeightLambda;
   int64_t maxDepth;
@@ -436,7 +436,7 @@ int MainCmds::samplesgfs(int argc, const char *const *argv)
   {
     return Global::isSuffix(name, sgfSuffix) || Global::isSuffix(name, sgfSuffix2);
   };
-  vector<string> sgfFiles;
+  std::vector<string> sgfFiles;
   for (int i = 0; i < sgfDirs.size(); i++)
     Global::collectFiles(sgfDirs[i], sgfFilter, sgfFiles);
   logger.write("Found " + Global::int64ToString((int64_t)sgfFiles.size()) + " sgf files!");
@@ -514,13 +514,13 @@ int MainCmds::samplesgfs(int argc, const char *const *argv)
   // ---------------------------------------------------------------------------------------------------
 
   //Begin writing
-  thread writeLoopThread(writeLoop);
+  std::thread writeLoopThread(writeLoop);
 
   // ---------------------------------------------------------------------------------------------------
 
   int64_t numKept = 0;
-  set<Hash128> uniqueHashes;
-  function<void(Sgf::PositionSample &, const BoardHistory &, const string &)> posHandler =
+  std::set<Hash128> uniqueHashes;
+  std::function<void(Sgf::PositionSample &, const BoardHistory &, const string &)> posHandler =
       [sampleProb, &toWriteQueue, turnWeightLambda, &numKept, &seedRand](Sgf::PositionSample &posSample, const BoardHistory &hist, const string &comments)
   {
     (void)hist;
@@ -647,7 +647,7 @@ static bool maybeGetValuesAfterMove(
     search->runWholeSearch(newNextPla, logger, shouldStop);
   }
 
-  if (shouldStop.load(memory_order_acquire))
+  if (shouldStop.load(std::memory_order_acquire))
     return false;
   values = search->getRootValuesRequireSuccess();
   return true;
@@ -689,10 +689,10 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
 
   ConfigParser cfg;
   string nnModelFile;
-  vector<string> sgfDirs;
+  std::vector<string> sgfDirs;
   string outDir;
   int numProcessThreads;
-  vector<string> excludeHashesFiles;
+  std::vector<string> excludeHashesFiles;
   bool gameMode;
   bool treeMode;
   bool autoKomi;
@@ -829,7 +829,7 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
     Setup::initializeSession(cfg);
     int maxConcurrentEvals = params.numThreads * 2 + 16; // * 2 + 16 just to give plenty of headroom
     int expectedConcurrentEvals = params.numThreads;
-    int defaultMaxBatchSize = max(8, ((params.numThreads + 3) / 4) * 4);
+    int defaultMaxBatchSize = std::max(8, ((params.numThreads + 3) / 4) * 4);
     string expectedSha256 = "";
     nnEval = Setup::initializeNNEvaluator(
         nnModelFile, nnModelFile, expectedSha256, cfg, logger, seedRand, maxConcurrentEvals, expectedConcurrentEvals,
@@ -847,27 +847,27 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
   {
     return Global::isSuffix(name, sgfSuffix) || Global::isSuffix(name, sgfSuffix2);
   };
-  vector<string> sgfFiles;
+  std::vector<string> sgfFiles;
   for (int i = 0; i < sgfDirs.size(); i++)
     Global::collectFiles(sgfDirs[i], sgfFilter, sgfFiles);
   logger.write("Found " + Global::int64ToString((int64_t)sgfFiles.size()) + " sgf files!");
 
-  vector<size_t> permutation(sgfFiles.size());
+  std::vector<size_t> permutation(sgfFiles.size());
   for (size_t i = 0; i < sgfFiles.size(); i++)
     permutation[i] = i;
   for (size_t i = 1; i < sgfFiles.size(); i++)
   {
     size_t r = (size_t)seedRand.nextUInt64(i + 1);
-    swap(permutation[i], permutation[r]);
+    std::swap(permutation[i], permutation[r]);
   }
 
   set<Hash128> excludeHashes = Sgf::readExcludes(excludeHashesFiles);
   logger.write("Loaded " + Global::uint64ToString(excludeHashes.size()) + " excludes");
 
-  if (!atomic_is_lock_free(&shouldStop))
+  if (!std::atomic_is_lock_free(&shouldStop))
     throw StringError("shouldStop is not lock free, signal-quitting mechanism for terminating matches will NOT work!");
-  signal(SIGINT, signalHandler);
-  signal(SIGTERM, signalHandler);
+  std::signal(SIGINT, signalHandler);
+  std::signal(SIGTERM, signalHandler);
 
   // ---------------------------------------------------------------------------------------------------
   ThreadSafeQueue<string *> toWriteQueue;
@@ -910,9 +910,9 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
   };
 
   //COMMON ---------------------------------------------------------------------------------------------------
-  atomic<int64_t> numSgfsDone(0);
-  atomic<int64_t> numFilteredIndivdualPoses(0);
-  atomic<int64_t> numFilteredSgfs(0);
+  std::atomic<int64_t> numSgfsDone(0);
+  std::atomic<int64_t> numFilteredIndivdualPoses(0);
+  std::atomic<int64_t> numFilteredSgfs(0);
 
   auto isPlayerOkay = [&](const Sgf *sgf, Player pla)
   {
@@ -952,7 +952,7 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
                                    Player nextPla, const Board &board, const BoardHistory &hist,
                                    const Sgf::PositionSample &sample, bool markedAsHintPos)
   {
-    if (shouldStop.load(memory_order_acquire))
+    if (shouldStop.load(std::memory_order_acquire))
       return;
 
     if (abs(hist.rules.komi) > maxAutoKomi)
@@ -1103,7 +1103,7 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
     }
 
     const bool preventEncore = true;
-    const vector<Move> &sgfMoves = sgf->moves;
+    const std::vector<Move> &sgfMoves = sgf->moves;
 
     if (sgfMoves.size() > maxDepth)
     {
@@ -1111,15 +1111,15 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
       return;
     }
 
-    vector<Board> boards;
-    vector<BoardHistory> hists;
-    vector<Player> nextPlas;
-    vector<shared_ptr<NNOutput>> nnOutputs;
-    vector<double> winLossValues;
-    vector<double> scoreLeads;
+    std::vector<Board> boards;
+    std::vector<BoardHistory> hists;
+    std::vector<Player> nextPlas;
+    std::vector<shared_ptr<NNOutput>> nnOutputs;
+    std::vector<double> winLossValues;
+    std::vector<double> scoreLeads;
 
-    vector<Move> moves;
-    vector<double> policyPriors;
+    std::vector<Move> moves;
+    std::vector<double> policyPriors;
 
     for (int m = 0; m < sgfMoves.size() + 1; m++)
     {
@@ -1139,7 +1139,7 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
       boards.push_back(board);
       hists.push_back(hist);
       nextPlas.push_back(nextPla);
-      nnOutputs.push_back(move(buf.result));
+      nnOutputs.push_back(std::move(buf.result));
 
       shared_ptr<NNOutput> &nnOutput = nnOutputs[nnOutputs.size() - 1];
 
@@ -1182,13 +1182,13 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
 
     if (winLossValues.size() <= 0)
       return;
-    if (shouldStop.load(memory_order_acquire))
+    if (shouldStop.load(std::memory_order_acquire))
       return;
 
-    vector<double> futureValue(winLossValues.size() + 1);
-    vector<double> futureLead(winLossValues.size() + 1);
-    vector<double> pastValue(winLossValues.size());
-    vector<double> pastLead(winLossValues.size());
+    std::vector<double> futureValue(winLossValues.size() + 1);
+    std::vector<double> futureLead(winLossValues.size() + 1);
+    std::vector<double> pastValue(winLossValues.size());
+    std::vector<double> pastLead(winLossValues.size());
     futureValue[winLossValues.size()] = winLossValues[winLossValues.size() - 1];
     futureLead[winLossValues.size()] = scoreLeads[winLossValues.size()];
     for (int i = (int)winLossValues.size() - 1; i >= 0; i--)
@@ -1211,7 +1211,7 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
     for (int m = 0; m < moves.size(); m++)
     {
 
-      if (shouldStop.load(memory_order_acquire))
+      if (shouldStop.load(std::memory_order_acquire))
         break;
 
       if ((nextPlas[m] == P_BLACK && !blackOkay) || (nextPlas[m] == P_WHITE && !whiteOkay))
@@ -1238,7 +1238,7 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
 
       Sgf::PositionSample sample;
       const int numMovesToRecord = 7;
-      int startIdx = max(0, m - numMovesToRecord);
+      int startIdx = std::max(0, m - numMovesToRecord);
       sample.board = boards[startIdx];
       sample.nextPla = nextPlas[startIdx];
       for (int j = startIdx; j < m; j++)
@@ -1270,7 +1270,7 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
 
     while (true)
     {
-      if (shouldStop.load(memory_order_acquire))
+      if (shouldStop.load(std::memory_order_acquire))
         break;
 
       Sgf *sgfRaw;
@@ -1311,7 +1311,7 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
   auto treePosHandler = [&logger, &gameInit, &nnEval, &expensiveEvaluateMove, &autoKomi, &maxPolicy, &flipIfPassOrWFirst](
                             Search *search, Rand &rand, const BoardHistory &treeHist, int initialTurnNumber, bool markedAsHintPos)
   {
-    if (shouldStop.load(memory_order_acquire))
+    if (shouldStop.load(std::memory_order_acquire))
       return;
     if (treeHist.moveHistory.size() > 0x3FFFFFFF)
       throw StringError("Too many moves in history");
@@ -1411,9 +1411,9 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
 
   const int64_t maxPosQueueSize = 16384;
   ThreadSafeQueue<PosQueueEntry> posQueue(maxPosQueueSize);
-  atomic<int64_t> numPosesBegun(0);
-  atomic<int64_t> numPosesDone(0);
-  atomic<int64_t> numPosesEnqueued(0);
+  std::atomic<int64_t> numPosesBegun(0);
+  std::atomic<int64_t> numPosesDone(0);
+  std::atomic<int64_t> numPosesEnqueued(0);
 
   auto processPosLoop = [&logger, &posQueue, &params, &numPosesBegun, &numPosesDone, &numPosesEnqueued, &nnEval, &treePosHandler]()
   {
@@ -1423,7 +1423,7 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
 
     while (true)
     {
-      if (shouldStop.load(memory_order_acquire))
+      if (shouldStop.load(std::memory_order_acquire))
         break;
 
       PosQueueEntry p;
@@ -1454,15 +1454,15 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
   // ---------------------------------------------------------------------------------------------------
 
   //Begin writing
-  thread writeLoopThread(writeLoop);
+  std::thread writeLoopThread(writeLoop);
 
-  vector<thread> threads;
+  std::vector<std::thread> threads;
   for (int i = 0; i < numProcessThreads; i++)
   {
     if (gameMode)
-      threads.push_back(thread(processSgfLoop));
+      threads.push_back(std::thread(processSgfLoop));
     else if (treeMode)
-      threads.push_back(thread(processPosLoop));
+      threads.push_back(std::thread(processPosLoop));
   }
 
   // ---------------------------------------------------------------------------------------------------
@@ -1471,7 +1471,7 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
   int64_t numSgfsSkipped = 0;
   int64_t numSgfsFilteredTopLevel = 0;
 
-  set<Hash128> uniqueHashes;
+  std::set<Hash128> uniqueHashes;
 
   auto logSgfProgress = [&]()
   {
@@ -1486,7 +1486,7 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
   for (size_t i = 0; i < sgfFiles.size(); i++)
   {
     numSgfsBegun += 1;
-    if (numSgfsBegun % min((size_t)20, 1 + sgfFiles.size() / 60) == 0)
+    if (numSgfsBegun % std::min((size_t)20, 1 + sgfFiles.size() / 60) == 0)
       logSgfProgress();
 
     const string &fileName = sgfFiles[permutation[i]];
@@ -1617,7 +1617,7 @@ int MainCmds::trystartposes(int argc, const char *const *argv)
 
   ConfigParser cfg;
   string nnModelFile;
-  vector<string> startPosesFiles;
+  std::vector<string> startPosesFiles;
   double minWeight;
   try
   {
@@ -1664,7 +1664,7 @@ int MainCmds::trystartposes(int argc, const char *const *argv)
     Setup::initializeSession(cfg);
     int maxConcurrentEvals = params.numThreads * 2 + 16; // * 2 + 16 just to give plenty of headroom
     int expectedConcurrentEvals = params.numThreads;
-    int defaultMaxBatchSize = max(8, ((params.numThreads + 3) / 4) * 4);
+    int defaultMaxBatchSize = std::max(8, ((params.numThreads + 3) / 4) * 4);
     string expectedSha256 = "";
     nnEval = Setup::initializeNNEvaluator(
         nnModelFile, nnModelFile, expectedSha256, cfg, logger, seedRand, maxConcurrentEvals, expectedConcurrentEvals,
@@ -1673,11 +1673,11 @@ int MainCmds::trystartposes(int argc, const char *const *argv)
   }
   logger.write("Loaded neural net");
 
-  vector<Sgf::PositionSample> startPoses;
+  std::vector<Sgf::PositionSample> startPoses;
   for (size_t i = 0; i < startPosesFiles.size(); i++)
   {
     const string &startPosesFile = startPosesFiles[i];
-    vector<string> lines = Global::readFileLines(startPosesFile, '\n');
+    std::vector<string> lines = Global::readFileLines(startPosesFile, '\n');
     for (size_t j = 0; j < lines.size(); j++)
     {
       string line = Global::trim(lines[j]);
@@ -1791,7 +1791,7 @@ int MainCmds::viewstartposes(int argc, const char *const *argv)
 
   ConfigParser cfg;
   string modelFile;
-  vector<string> startPosesFiles;
+  std::vector<string> startPosesFiles;
   double minWeight;
   try
   {
@@ -1833,7 +1833,7 @@ int MainCmds::viewstartposes(int argc, const char *const *argv)
       Setup::initializeSession(cfg);
       int maxConcurrentEvals = params.numThreads * 2 + 16; // * 2 + 16 just to give plenty of headroom
       int expectedConcurrentEvals = params.numThreads;
-      int defaultMaxBatchSize = max(8, ((params.numThreads + 3) / 4) * 4);
+      int defaultMaxBatchSize = std::max(8, ((params.numThreads + 3) / 4) * 4);
       string expectedSha256 = "";
       nnEval = Setup::initializeNNEvaluator(
           modelFile, modelFile, expectedSha256, cfg, logger, rand, maxConcurrentEvals, expectedConcurrentEvals,
@@ -1851,11 +1851,11 @@ int MainCmds::viewstartposes(int argc, const char *const *argv)
     bot = new AsyncBot(params, nnEval, &logger, searchRandSeed);
   }
 
-  vector<Sgf::PositionSample> startPoses;
+  std::vector<Sgf::PositionSample> startPoses;
   for (size_t i = 0; i < startPosesFiles.size(); i++)
   {
     const string &startPosesFile = startPosesFiles[i];
-    vector<string> lines = Global::readFileLines(startPosesFile, '\n');
+    std::vector<string> lines = Global::readFileLines(startPosesFile, '\n');
     for (size_t j = 0; j < lines.size(); j++)
     {
       string line = Global::trim(lines[j]);
@@ -1991,7 +1991,7 @@ int MainCmds::sampleinitializations(int argc, const char *const *argv)
       Setup::initializeSession(cfg);
       int maxConcurrentEvals = params.numThreads * 2 + 16; // * 2 + 16 just to give plenty of headroom
       int expectedConcurrentEvals = params.numThreads;
-      int defaultMaxBatchSize = max(8, ((params.numThreads + 3) / 4) * 4);
+      int defaultMaxBatchSize = std::max(8, ((params.numThreads + 3) / 4) * 4);
       string expectedSha256 = "";
       nnEval = Setup::initializeNNEvaluator(
           modelFile, modelFile, expectedSha256, cfg, logger, rand, maxConcurrentEvals, expectedConcurrentEvals,

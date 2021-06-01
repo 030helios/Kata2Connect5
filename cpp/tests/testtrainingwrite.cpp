@@ -14,7 +14,7 @@ static NNEvaluator* startNNEval(
   int defaultSymmetry, bool inputsUseNHWC, bool useNHWC, bool useFP16
 ) {
   const string& modelName = modelFile;
-  vector<int> gpuIdxByServerThread = {0};
+  std::vector<int> gpuIdxByServerThread = {0};
   int maxBatchSize = 16;
   int maxConcurrentEvals = 1024;
   int nnXLen = NNPos::MAX_BOARD_LEN;
@@ -880,28 +880,28 @@ xxxxxxxx.
     nnEval->clearCache();
     nnEval->clearStats();
 
-    map<string,string> cfgParams({
-        make_pair("maxMovesPerGame","5"),
-        make_pair("logSearchInfo","false"),
-        make_pair("logMoves","false"),
-        make_pair("komiAuto","true"),
-        make_pair("komiStdev","3.0"),
-        make_pair("handicapProb","0.2"),
-        make_pair("handicapCompensateKomiProb","1.0"),
-        make_pair("forkCompensateKomiProb","1.0"),
-        make_pair("komiBigStdevProb","0.15"),
-        make_pair("komiBigStdev","40.0"),
-        make_pair("drawRandRadius","0.5"),
-        make_pair("noResultStdev","0.16"),
+    std::map<string,string> cfgParams({
+        std::make_pair("maxMovesPerGame","5"),
+        std::make_pair("logSearchInfo","false"),
+        std::make_pair("logMoves","false"),
+        std::make_pair("komiAuto","true"),
+        std::make_pair("komiStdev","3.0"),
+        std::make_pair("handicapProb","0.2"),
+        std::make_pair("handicapCompensateKomiProb","1.0"),
+        std::make_pair("forkCompensateKomiProb","1.0"),
+        std::make_pair("komiBigStdevProb","0.15"),
+        std::make_pair("komiBigStdev","40.0"),
+        std::make_pair("drawRandRadius","0.5"),
+        std::make_pair("noResultStdev","0.16"),
 
-        make_pair("bSizes","10,11,12,13"),
-        make_pair("bSizeRelProbs","1,2,2,1"),
-        make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
-        make_pair("scoringRules","AREA,TERRITORY"),
-        make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
-        make_pair("multiStoneSuicideLegals","false,true"),
-        make_pair("hasButtons","false,false,true"),
-        make_pair("allowRectangleProb","0.2"),
+        std::make_pair("bSizes","10,11,12,13"),
+        std::make_pair("bSizeRelProbs","1,2,2,1"),
+        std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
+        std::make_pair("scoringRules","AREA,TERRITORY"),
+        std::make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
+        std::make_pair("multiStoneSuicideLegals","false,true"),
+        std::make_pair("hasButtons","false,false,true"),
+        std::make_pair("allowRectangleProb","0.2"),
     });
 
     ConfigParser cfg(cfgParams);
@@ -954,7 +954,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
 
   NNEvaluator* nnEval = startNNEval(modelFile,"nneval",logger,0,inputsNHWC,useNHWC,false);
 
-  auto runStatTest = [&](const map<string,string>& cfgParams, PlaySettings playSettings, const Sgf::PositionSample* startPosSample, string name) {
+  auto runStatTest = [&](const std::map<string,string>& cfgParams, PlaySettings playSettings, const Sgf::PositionSample* startPosSample, string name) {
     cout << "--------------------------------------------------------------------------------------" << endl;
     cout << name << endl;
     nnEval->clearCache();
@@ -972,10 +972,10 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     GameRunner* gameRunner = new GameRunner(cfg, "game init stattest1", playSettings, logger);
     auto shouldStop = []() { return false; };
 
-    map<float,int> komiDistribution;
-    map<int,int> bStoneDistribution;
-    map<int,int> wStoneDistribution;
-    map<string,int> bSizeDistribution;
+    std::map<float,int> komiDistribution;
+    std::map<int,int> bStoneDistribution;
+    std::map<int,int> wStoneDistribution;
+    std::map<string,int> bSizeDistribution;
     for(int i = 0; i<1000; i++) {
       string seed = name + Global::int64ToString(i);
       FinishedGameData* data = gameRunner->runGame(seed, botSpec, botSpec, forkData, startPosSample, logger, shouldStop, nullptr, nullptr, false);
@@ -1022,28 +1022,28 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     playSettings.earlyForkGameMaxChoices = 3;
     playSettings.forSelfPlay = true;
 
-    map<string,string> cfgParams({
-        make_pair("maxMovesPerGame","0"),
-        make_pair("logSearchInfo","false"),
-        make_pair("logMoves","false"),
-        make_pair("komiAuto","true"),
-        make_pair("komiStdev","2.0"),
-        make_pair("handicapProb","0.0"),
-        make_pair("handicapCompensateKomiProb","1.0"),
-        make_pair("forkCompensateKomiProb","1.0"),
-        make_pair("komiBigStdevProb","0.0"),
-        make_pair("komiBigStdev","20.0"),
-        make_pair("drawRandRadius","0.5"),
-        make_pair("noResultStdev","0.16"),
+    std::map<string,string> cfgParams({
+        std::make_pair("maxMovesPerGame","0"),
+        std::make_pair("logSearchInfo","false"),
+        std::make_pair("logMoves","false"),
+        std::make_pair("komiAuto","true"),
+        std::make_pair("komiStdev","2.0"),
+        std::make_pair("handicapProb","0.0"),
+        std::make_pair("handicapCompensateKomiProb","1.0"),
+        std::make_pair("forkCompensateKomiProb","1.0"),
+        std::make_pair("komiBigStdevProb","0.0"),
+        std::make_pair("komiBigStdev","20.0"),
+        std::make_pair("drawRandRadius","0.5"),
+        std::make_pair("noResultStdev","0.16"),
 
-        make_pair("bSizes","19"),
-        make_pair("bSizeRelProbs","1"),
-        make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
-        make_pair("scoringRules","AREA"),
-        make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
-        make_pair("multiStoneSuicideLegals","false,true"),
-        make_pair("hasButtons","false,false,true"),
-        make_pair("allowRectangleProb","0.0"),
+        std::make_pair("bSizes","19"),
+        std::make_pair("bSizeRelProbs","1"),
+        std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
+        std::make_pair("scoringRules","AREA"),
+        std::make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
+        std::make_pair("multiStoneSuicideLegals","false,true"),
+        std::make_pair("hasButtons","false,false,true"),
+        std::make_pair("allowRectangleProb","0.0"),
     });
     runStatTest(cfgParams,playSettings,NULL,name);
   }
@@ -1065,28 +1065,28 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     playSettings.earlyForkGameMaxChoices = 3;
     playSettings.forSelfPlay = true;
 
-    map<string,string> cfgParams({
-        make_pair("maxMovesPerGame","0"),
-        make_pair("logSearchInfo","false"),
-        make_pair("logMoves","false"),
-        make_pair("komiAuto","true"),
-        make_pair("komiStdev","2.0"),
-        make_pair("handicapProb","0.0"),
-        make_pair("handicapCompensateKomiProb","1.0"),
-        make_pair("forkCompensateKomiProb","1.0"),
-        make_pair("komiBigStdevProb","0.0"),
-        make_pair("komiBigStdev","20.0"),
-        make_pair("drawRandRadius","0.5"),
-        make_pair("noResultStdev","0.16"),
+    std::map<string,string> cfgParams({
+        std::make_pair("maxMovesPerGame","0"),
+        std::make_pair("logSearchInfo","false"),
+        std::make_pair("logMoves","false"),
+        std::make_pair("komiAuto","true"),
+        std::make_pair("komiStdev","2.0"),
+        std::make_pair("handicapProb","0.0"),
+        std::make_pair("handicapCompensateKomiProb","1.0"),
+        std::make_pair("forkCompensateKomiProb","1.0"),
+        std::make_pair("komiBigStdevProb","0.0"),
+        std::make_pair("komiBigStdev","20.0"),
+        std::make_pair("drawRandRadius","0.5"),
+        std::make_pair("noResultStdev","0.16"),
 
-        make_pair("bSizes","19"),
-        make_pair("bSizeRelProbs","1"),
-        make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
-        make_pair("scoringRules","AREA,TERRITORY"),
-        make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
-        make_pair("multiStoneSuicideLegals","false,true"),
-        make_pair("hasButtons","false,false,true"),
-        make_pair("allowRectangleProb","0.0"),
+        std::make_pair("bSizes","19"),
+        std::make_pair("bSizeRelProbs","1"),
+        std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
+        std::make_pair("scoringRules","AREA,TERRITORY"),
+        std::make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
+        std::make_pair("multiStoneSuicideLegals","false,true"),
+        std::make_pair("hasButtons","false,false,true"),
+        std::make_pair("allowRectangleProb","0.0"),
     });
     runStatTest(cfgParams,playSettings,NULL,name);
   }
@@ -1108,28 +1108,28 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     playSettings.earlyForkGameMaxChoices = 3;
     playSettings.forSelfPlay = true;
 
-    map<string,string> cfgParams({
-        make_pair("maxMovesPerGame","0"),
-        make_pair("logSearchInfo","false"),
-        make_pair("logMoves","false"),
-        make_pair("komiAuto","true"),
-        make_pair("komiStdev","2.0"),
-        make_pair("handicapProb","0.0"),
-        make_pair("handicapCompensateKomiProb","1.0"),
-        make_pair("forkCompensateKomiProb","1.0"),
-        make_pair("komiBigStdevProb","0.3"),
-        make_pair("komiBigStdev","20.0"),
-        make_pair("drawRandRadius","0.5"),
-        make_pair("noResultStdev","0.16"),
+    std::map<string,string> cfgParams({
+        std::make_pair("maxMovesPerGame","0"),
+        std::make_pair("logSearchInfo","false"),
+        std::make_pair("logMoves","false"),
+        std::make_pair("komiAuto","true"),
+        std::make_pair("komiStdev","2.0"),
+        std::make_pair("handicapProb","0.0"),
+        std::make_pair("handicapCompensateKomiProb","1.0"),
+        std::make_pair("forkCompensateKomiProb","1.0"),
+        std::make_pair("komiBigStdevProb","0.3"),
+        std::make_pair("komiBigStdev","20.0"),
+        std::make_pair("drawRandRadius","0.5"),
+        std::make_pair("noResultStdev","0.16"),
 
-        make_pair("bSizes","19"),
-        make_pair("bSizeRelProbs","1"),
-        make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
-        make_pair("scoringRules","AREA"),
-        make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
-        make_pair("multiStoneSuicideLegals","false,true"),
-        make_pair("hasButtons","false,false,true"),
-        make_pair("allowRectangleProb","0.0"),
+        std::make_pair("bSizes","19"),
+        std::make_pair("bSizeRelProbs","1"),
+        std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
+        std::make_pair("scoringRules","AREA"),
+        std::make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
+        std::make_pair("multiStoneSuicideLegals","false,true"),
+        std::make_pair("hasButtons","false,false,true"),
+        std::make_pair("allowRectangleProb","0.0"),
     });
     runStatTest(cfgParams,playSettings,NULL,name);
   }
@@ -1151,28 +1151,28 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     playSettings.earlyForkGameMaxChoices = 3;
     playSettings.forSelfPlay = true;
 
-    map<string,string> cfgParams({
-        make_pair("maxMovesPerGame","0"),
-        make_pair("logSearchInfo","false"),
-        make_pair("logMoves","false"),
-        make_pair("komiAuto","true"),
-        make_pair("komiStdev","2.0"),
-        make_pair("handicapProb","0.0"),
-        make_pair("handicapCompensateKomiProb","1.0"),
-        make_pair("forkCompensateKomiProb","1.0"),
-        make_pair("komiBigStdevProb","0.3"),
-        make_pair("komiBigStdev","20.0"),
-        make_pair("drawRandRadius","0.5"),
-        make_pair("noResultStdev","0.16"),
+    std::map<string,string> cfgParams({
+        std::make_pair("maxMovesPerGame","0"),
+        std::make_pair("logSearchInfo","false"),
+        std::make_pair("logMoves","false"),
+        std::make_pair("komiAuto","true"),
+        std::make_pair("komiStdev","2.0"),
+        std::make_pair("handicapProb","0.0"),
+        std::make_pair("handicapCompensateKomiProb","1.0"),
+        std::make_pair("forkCompensateKomiProb","1.0"),
+        std::make_pair("komiBigStdevProb","0.3"),
+        std::make_pair("komiBigStdev","20.0"),
+        std::make_pair("drawRandRadius","0.5"),
+        std::make_pair("noResultStdev","0.16"),
 
-        make_pair("bSizes","9"),
-        make_pair("bSizeRelProbs","1"),
-        make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
-        make_pair("scoringRules","AREA"),
-        make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
-        make_pair("multiStoneSuicideLegals","false,true"),
-        make_pair("hasButtons","false,false,true"),
-        make_pair("allowRectangleProb","0.0"),
+        std::make_pair("bSizes","9"),
+        std::make_pair("bSizeRelProbs","1"),
+        std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
+        std::make_pair("scoringRules","AREA"),
+        std::make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
+        std::make_pair("multiStoneSuicideLegals","false,true"),
+        std::make_pair("hasButtons","false,false,true"),
+        std::make_pair("allowRectangleProb","0.0"),
     });
     runStatTest(cfgParams,playSettings,NULL,name);
   }
@@ -1195,28 +1195,28 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     playSettings.earlyForkGameMaxChoices = 3;
     playSettings.forSelfPlay = true;
 
-    map<string,string> cfgParams({
-        make_pair("maxMovesPerGame","0"),
-        make_pair("logSearchInfo","false"),
-        make_pair("logMoves","false"),
-        make_pair("komiAuto","true"),
-        make_pair("komiStdev","2.0"),
-        make_pair("handicapProb","0.0"),
-        make_pair("handicapCompensateKomiProb","1.0"),
-        make_pair("forkCompensateKomiProb","1.0"),
-        make_pair("komiBigStdevProb","0.0"),
-        make_pair("komiBigStdev","20.0"),
-        make_pair("drawRandRadius","0.5"),
-        make_pair("noResultStdev","0.16"),
+    std::map<string,string> cfgParams({
+        std::make_pair("maxMovesPerGame","0"),
+        std::make_pair("logSearchInfo","false"),
+        std::make_pair("logMoves","false"),
+        std::make_pair("komiAuto","true"),
+        std::make_pair("komiStdev","2.0"),
+        std::make_pair("handicapProb","0.0"),
+        std::make_pair("handicapCompensateKomiProb","1.0"),
+        std::make_pair("forkCompensateKomiProb","1.0"),
+        std::make_pair("komiBigStdevProb","0.0"),
+        std::make_pair("komiBigStdev","20.0"),
+        std::make_pair("drawRandRadius","0.5"),
+        std::make_pair("noResultStdev","0.16"),
 
-        make_pair("bSizes","19"),
-        make_pair("bSizeRelProbs","1"),
-        make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
-        make_pair("scoringRules","AREA"),
-        make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
-        make_pair("multiStoneSuicideLegals","false,true"),
-        make_pair("hasButtons","false,false,true"),
-        make_pair("allowRectangleProb","0.0"),
+        std::make_pair("bSizes","19"),
+        std::make_pair("bSizeRelProbs","1"),
+        std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
+        std::make_pair("scoringRules","AREA"),
+        std::make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
+        std::make_pair("multiStoneSuicideLegals","false,true"),
+        std::make_pair("hasButtons","false,false,true"),
+        std::make_pair("allowRectangleProb","0.0"),
     });
     runStatTest(cfgParams,playSettings,NULL,name);
   }
@@ -1238,28 +1238,28 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     playSettings.earlyForkGameMaxChoices = 3;
     playSettings.forSelfPlay = true;
 
-    map<string,string> cfgParams({
-        make_pair("maxMovesPerGame","0"),
-        make_pair("logSearchInfo","false"),
-        make_pair("logMoves","false"),
-        make_pair("komiAuto","true"),
-        make_pair("komiStdev","2.0"),
-        make_pair("handicapProb","0.0"),
-        make_pair("handicapCompensateKomiProb","1.0"),
-        make_pair("forkCompensateKomiProb","1.0"),
-        make_pair("komiBigStdevProb","0.0"),
-        make_pair("komiBigStdev","20.0"),
-        make_pair("drawRandRadius","0.5"),
-        make_pair("noResultStdev","0.16"),
+    std::map<string,string> cfgParams({
+        std::make_pair("maxMovesPerGame","0"),
+        std::make_pair("logSearchInfo","false"),
+        std::make_pair("logMoves","false"),
+        std::make_pair("komiAuto","true"),
+        std::make_pair("komiStdev","2.0"),
+        std::make_pair("handicapProb","0.0"),
+        std::make_pair("handicapCompensateKomiProb","1.0"),
+        std::make_pair("forkCompensateKomiProb","1.0"),
+        std::make_pair("komiBigStdevProb","0.0"),
+        std::make_pair("komiBigStdev","20.0"),
+        std::make_pair("drawRandRadius","0.5"),
+        std::make_pair("noResultStdev","0.16"),
 
-        make_pair("bSizes","19"),
-        make_pair("bSizeRelProbs","1"),
-        make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
-        make_pair("scoringRules","AREA"),
-        make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
-        make_pair("multiStoneSuicideLegals","false,true"),
-        make_pair("hasButtons","false,false,true"),
-        make_pair("allowRectangleProb","0.0"),
+        std::make_pair("bSizes","19"),
+        std::make_pair("bSizeRelProbs","1"),
+        std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
+        std::make_pair("scoringRules","AREA"),
+        std::make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
+        std::make_pair("multiStoneSuicideLegals","false,true"),
+        std::make_pair("hasButtons","false,false,true"),
+        std::make_pair("allowRectangleProb","0.0"),
     });
     runStatTest(cfgParams,playSettings,NULL,name);
   }
@@ -1281,28 +1281,28 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     playSettings.earlyForkGameMaxChoices = 3;
     playSettings.forSelfPlay = true;
 
-    map<string,string> cfgParams({
-        make_pair("maxMovesPerGame","0"),
-        make_pair("logSearchInfo","false"),
-        make_pair("logMoves","false"),
-        make_pair("komiAuto","true"),
-        make_pair("komiStdev","2.0"),
-        make_pair("handicapProb","0.0"),
-        make_pair("handicapCompensateKomiProb","1.0"),
-        make_pair("forkCompensateKomiProb","1.0"),
-        make_pair("komiBigStdevProb","0.0"),
-        make_pair("komiBigStdev","20.0"),
-        make_pair("drawRandRadius","0.5"),
-        make_pair("noResultStdev","0.16"),
+    std::map<string,string> cfgParams({
+        std::make_pair("maxMovesPerGame","0"),
+        std::make_pair("logSearchInfo","false"),
+        std::make_pair("logMoves","false"),
+        std::make_pair("komiAuto","true"),
+        std::make_pair("komiStdev","2.0"),
+        std::make_pair("handicapProb","0.0"),
+        std::make_pair("handicapCompensateKomiProb","1.0"),
+        std::make_pair("forkCompensateKomiProb","1.0"),
+        std::make_pair("komiBigStdevProb","0.0"),
+        std::make_pair("komiBigStdev","20.0"),
+        std::make_pair("drawRandRadius","0.5"),
+        std::make_pair("noResultStdev","0.16"),
 
-        make_pair("bSizes","19"),
-        make_pair("bSizeRelProbs","1"),
-        make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
-        make_pair("scoringRules","AREA"),
-        make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
-        make_pair("multiStoneSuicideLegals","false,true"),
-        make_pair("hasButtons","false,false,true"),
-        make_pair("allowRectangleProb","0.0"),
+        std::make_pair("bSizes","19"),
+        std::make_pair("bSizeRelProbs","1"),
+        std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
+        std::make_pair("scoringRules","AREA"),
+        std::make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
+        std::make_pair("multiStoneSuicideLegals","false,true"),
+        std::make_pair("hasButtons","false,false,true"),
+        std::make_pair("allowRectangleProb","0.0"),
     });
     runStatTest(cfgParams,playSettings,NULL,name);
   }
@@ -1325,28 +1325,28 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     playSettings.earlyForkGameMaxChoices = 3;
     playSettings.forSelfPlay = true;
 
-    map<string,string> cfgParams({
-        make_pair("maxMovesPerGame","0"),
-        make_pair("logSearchInfo","false"),
-        make_pair("logMoves","false"),
-        make_pair("komiAuto","true"),
-        make_pair("komiStdev","0.5"),
-        make_pair("handicapProb","0.0"),
-        make_pair("handicapCompensateKomiProb","1.0"),
-        make_pair("forkCompensateKomiProb","1.0"),
-        make_pair("komiBigStdevProb","0.0"),
-        make_pair("komiBigStdev","20.0"),
-        make_pair("drawRandRadius","0.5"),
-        make_pair("noResultStdev","0.16"),
+    std::map<string,string> cfgParams({
+        std::make_pair("maxMovesPerGame","0"),
+        std::make_pair("logSearchInfo","false"),
+        std::make_pair("logMoves","false"),
+        std::make_pair("komiAuto","true"),
+        std::make_pair("komiStdev","0.5"),
+        std::make_pair("handicapProb","0.0"),
+        std::make_pair("handicapCompensateKomiProb","1.0"),
+        std::make_pair("forkCompensateKomiProb","1.0"),
+        std::make_pair("komiBigStdevProb","0.0"),
+        std::make_pair("komiBigStdev","20.0"),
+        std::make_pair("drawRandRadius","0.5"),
+        std::make_pair("noResultStdev","0.16"),
 
-        make_pair("bSizes","19"),
-        make_pair("bSizeRelProbs","1"),
-        make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
-        make_pair("scoringRules","AREA"),
-        make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
-        make_pair("multiStoneSuicideLegals","false,true"),
-        make_pair("hasButtons","false,false,true"),
-        make_pair("allowRectangleProb","0.0"),
+        std::make_pair("bSizes","19"),
+        std::make_pair("bSizeRelProbs","1"),
+        std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
+        std::make_pair("scoringRules","AREA"),
+        std::make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
+        std::make_pair("multiStoneSuicideLegals","false,true"),
+        std::make_pair("hasButtons","false,false,true"),
+        std::make_pair("allowRectangleProb","0.0"),
     });
     runStatTest(cfgParams,playSettings,NULL,name);
   }
@@ -1369,28 +1369,28 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     playSettings.earlyForkGameMaxChoices = 3;
     playSettings.forSelfPlay = true;
 
-    map<string,string> cfgParams({
-        make_pair("maxMovesPerGame","0"),
-        make_pair("logSearchInfo","false"),
-        make_pair("logMoves","false"),
-        make_pair("komiAuto","true"),
-        make_pair("komiStdev","0.5"),
-        make_pair("handicapProb","0.0"),
-        make_pair("handicapCompensateKomiProb","1.0"),
-        make_pair("forkCompensateKomiProb","0.5"),
-        make_pair("komiBigStdevProb","0.0"),
-        make_pair("komiBigStdev","20.0"),
-        make_pair("drawRandRadius","0.5"),
-        make_pair("noResultStdev","0.16"),
+    std::map<string,string> cfgParams({
+        std::make_pair("maxMovesPerGame","0"),
+        std::make_pair("logSearchInfo","false"),
+        std::make_pair("logMoves","false"),
+        std::make_pair("komiAuto","true"),
+        std::make_pair("komiStdev","0.5"),
+        std::make_pair("handicapProb","0.0"),
+        std::make_pair("handicapCompensateKomiProb","1.0"),
+        std::make_pair("forkCompensateKomiProb","0.5"),
+        std::make_pair("komiBigStdevProb","0.0"),
+        std::make_pair("komiBigStdev","20.0"),
+        std::make_pair("drawRandRadius","0.5"),
+        std::make_pair("noResultStdev","0.16"),
 
-        make_pair("bSizes","19"),
-        make_pair("bSizeRelProbs","1"),
-        make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
-        make_pair("scoringRules","AREA"),
-        make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
-        make_pair("multiStoneSuicideLegals","false,true"),
-        make_pair("hasButtons","false,false,true"),
-        make_pair("allowRectangleProb","0.0"),
+        std::make_pair("bSizes","19"),
+        std::make_pair("bSizeRelProbs","1"),
+        std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
+        std::make_pair("scoringRules","AREA"),
+        std::make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
+        std::make_pair("multiStoneSuicideLegals","false,true"),
+        std::make_pair("hasButtons","false,false,true"),
+        std::make_pair("allowRectangleProb","0.0"),
     });
     runStatTest(cfgParams,playSettings,NULL,name);
   }
@@ -1413,28 +1413,28 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     playSettings.earlyForkGameMaxChoices = 20;
     playSettings.forSelfPlay = true;
 
-    map<string,string> cfgParams({
-        make_pair("maxMovesPerGame","0"),
-        make_pair("logSearchInfo","false"),
-        make_pair("logMoves","false"),
-        make_pair("komiAuto","true"),
-        make_pair("komiStdev","0.5"),
-        make_pair("handicapProb","0.0"),
-        make_pair("handicapCompensateKomiProb","1.0"),
-        make_pair("forkCompensateKomiProb","0.5"),
-        make_pair("komiBigStdevProb","0.0"),
-        make_pair("komiBigStdev","20.0"),
-        make_pair("drawRandRadius","0.5"),
-        make_pair("noResultStdev","0.16"),
+    std::map<string,string> cfgParams({
+        std::make_pair("maxMovesPerGame","0"),
+        std::make_pair("logSearchInfo","false"),
+        std::make_pair("logMoves","false"),
+        std::make_pair("komiAuto","true"),
+        std::make_pair("komiStdev","0.5"),
+        std::make_pair("handicapProb","0.0"),
+        std::make_pair("handicapCompensateKomiProb","1.0"),
+        std::make_pair("forkCompensateKomiProb","0.5"),
+        std::make_pair("komiBigStdevProb","0.0"),
+        std::make_pair("komiBigStdev","20.0"),
+        std::make_pair("drawRandRadius","0.5"),
+        std::make_pair("noResultStdev","0.16"),
 
-        make_pair("bSizes","19"),
-        make_pair("bSizeRelProbs","1"),
-        make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
-        make_pair("scoringRules","AREA"),
-        make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
-        make_pair("multiStoneSuicideLegals","false,true"),
-        make_pair("hasButtons","false,false,true"),
-        make_pair("allowRectangleProb","0.0"),
+        std::make_pair("bSizes","19"),
+        std::make_pair("bSizeRelProbs","1"),
+        std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
+        std::make_pair("scoringRules","AREA"),
+        std::make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
+        std::make_pair("multiStoneSuicideLegals","false,true"),
+        std::make_pair("hasButtons","false,false,true"),
+        std::make_pair("allowRectangleProb","0.0"),
     });
     runStatTest(cfgParams,playSettings,NULL,name);
   }
@@ -1457,28 +1457,28 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     playSettings.earlyForkGameMaxChoices = 20;
     playSettings.forSelfPlay = true;
 
-    map<string,string> cfgParams({
-        make_pair("maxMovesPerGame","0"),
-        make_pair("logSearchInfo","false"),
-        make_pair("logMoves","false"),
-        make_pair("komiAuto","true"),
-        make_pair("komiStdev","0.5"),
-        make_pair("handicapProb","0.0"),
-        make_pair("handicapCompensateKomiProb","1.0"),
-        make_pair("forkCompensateKomiProb","0.5"),
-        make_pair("komiBigStdevProb","0.0"),
-        make_pair("komiBigStdev","20.0"),
-        make_pair("drawRandRadius","0.5"),
-        make_pair("noResultStdev","0.16"),
+    std::map<string,string> cfgParams({
+        std::make_pair("maxMovesPerGame","0"),
+        std::make_pair("logSearchInfo","false"),
+        std::make_pair("logMoves","false"),
+        std::make_pair("komiAuto","true"),
+        std::make_pair("komiStdev","0.5"),
+        std::make_pair("handicapProb","0.0"),
+        std::make_pair("handicapCompensateKomiProb","1.0"),
+        std::make_pair("forkCompensateKomiProb","0.5"),
+        std::make_pair("komiBigStdevProb","0.0"),
+        std::make_pair("komiBigStdev","20.0"),
+        std::make_pair("drawRandRadius","0.5"),
+        std::make_pair("noResultStdev","0.16"),
 
-        make_pair("bSizes","19"),
-        make_pair("bSizeRelProbs","1"),
-        make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
-        make_pair("scoringRules","AREA"),
-        make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
-        make_pair("multiStoneSuicideLegals","false,true"),
-        make_pair("hasButtons","false,false,true"),
-        make_pair("allowRectangleProb","0.0"),
+        std::make_pair("bSizes","19"),
+        std::make_pair("bSizeRelProbs","1"),
+        std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
+        std::make_pair("scoringRules","AREA"),
+        std::make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
+        std::make_pair("multiStoneSuicideLegals","false,true"),
+        std::make_pair("hasButtons","false,false,true"),
+        std::make_pair("allowRectangleProb","0.0"),
     });
     runStatTest(cfgParams,playSettings,NULL,name);
   }
@@ -1500,28 +1500,28 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     playSettings.earlyForkGameMaxChoices = 3;
     playSettings.forSelfPlay = true;
 
-    map<string,string> cfgParams({
-        make_pair("maxMovesPerGame","0"),
-        make_pair("logSearchInfo","false"),
-        make_pair("logMoves","false"),
-        make_pair("komiAuto","true"),
-        make_pair("komiStdev","0.5"),
-        make_pair("handicapProb","1.0"),
-        make_pair("handicapCompensateKomiProb","0.5"),
-        make_pair("forkCompensateKomiProb","1.0"),
-        make_pair("komiBigStdevProb","0.0"),
-        make_pair("komiBigStdev","20.0"),
-        make_pair("drawRandRadius","0.5"),
-        make_pair("noResultStdev","0.16"),
+    std::map<string,string> cfgParams({
+        std::make_pair("maxMovesPerGame","0"),
+        std::make_pair("logSearchInfo","false"),
+        std::make_pair("logMoves","false"),
+        std::make_pair("komiAuto","true"),
+        std::make_pair("komiStdev","0.5"),
+        std::make_pair("handicapProb","1.0"),
+        std::make_pair("handicapCompensateKomiProb","0.5"),
+        std::make_pair("forkCompensateKomiProb","1.0"),
+        std::make_pair("komiBigStdevProb","0.0"),
+        std::make_pair("komiBigStdev","20.0"),
+        std::make_pair("drawRandRadius","0.5"),
+        std::make_pair("noResultStdev","0.16"),
 
-        make_pair("bSizes","19"),
-        make_pair("bSizeRelProbs","1"),
-        make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
-        make_pair("scoringRules","AREA"),
-        make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
-        make_pair("multiStoneSuicideLegals","false,true"),
-        make_pair("hasButtons","false,false,true"),
-        make_pair("allowRectangleProb","0.0"),
+        std::make_pair("bSizes","19"),
+        std::make_pair("bSizeRelProbs","1"),
+        std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
+        std::make_pair("scoringRules","AREA"),
+        std::make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
+        std::make_pair("multiStoneSuicideLegals","false,true"),
+        std::make_pair("hasButtons","false,false,true"),
+        std::make_pair("allowRectangleProb","0.0"),
     });
     runStatTest(cfgParams,playSettings,NULL,name);
   }
@@ -1544,28 +1544,28 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     playSettings.earlyForkGameMaxChoices = 3;
     playSettings.forSelfPlay = true;
 
-    map<string,string> cfgParams({
-        make_pair("maxMovesPerGame","0"),
-        make_pair("logSearchInfo","false"),
-        make_pair("logMoves","false"),
-        make_pair("komiAuto","true"),
-        make_pair("komiStdev","0.5"),
-        make_pair("handicapProb","1.0"),
-        make_pair("handicapCompensateKomiProb","0.5"),
-        make_pair("forkCompensateKomiProb","1.0"),
-        make_pair("komiBigStdevProb","0.0"),
-        make_pair("komiBigStdev","20.0"),
-        make_pair("drawRandRadius","0.5"),
-        make_pair("noResultStdev","0.16"),
+    std::map<string,string> cfgParams({
+        std::make_pair("maxMovesPerGame","0"),
+        std::make_pair("logSearchInfo","false"),
+        std::make_pair("logMoves","false"),
+        std::make_pair("komiAuto","true"),
+        std::make_pair("komiStdev","0.5"),
+        std::make_pair("handicapProb","1.0"),
+        std::make_pair("handicapCompensateKomiProb","0.5"),
+        std::make_pair("forkCompensateKomiProb","1.0"),
+        std::make_pair("komiBigStdevProb","0.0"),
+        std::make_pair("komiBigStdev","20.0"),
+        std::make_pair("drawRandRadius","0.5"),
+        std::make_pair("noResultStdev","0.16"),
 
-        make_pair("bSizes","19"),
-        make_pair("bSizeRelProbs","1"),
-        make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
-        make_pair("scoringRules","AREA"),
-        make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
-        make_pair("multiStoneSuicideLegals","false,true"),
-        make_pair("hasButtons","false,false,true"),
-        make_pair("allowRectangleProb","0.0"),
+        std::make_pair("bSizes","19"),
+        std::make_pair("bSizeRelProbs","1"),
+        std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
+        std::make_pair("scoringRules","AREA"),
+        std::make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
+        std::make_pair("multiStoneSuicideLegals","false,true"),
+        std::make_pair("hasButtons","false,false,true"),
+        std::make_pair("allowRectangleProb","0.0"),
     });
     runStatTest(cfgParams,playSettings,NULL,name);
   }
@@ -1588,28 +1588,28 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     playSettings.earlyForkGameMaxChoices = 3;
     playSettings.forSelfPlay = true;
 
-    map<string,string> cfgParams({
-        make_pair("maxMovesPerGame","0"),
-        make_pair("logSearchInfo","false"),
-        make_pair("logMoves","false"),
-        make_pair("komiAuto","true"),
-        make_pair("komiStdev","0.5"),
-        make_pair("handicapProb","1.0"),
-        make_pair("handicapCompensateKomiProb","0.5"),
-        make_pair("forkCompensateKomiProb","1.0"),
-        make_pair("komiBigStdevProb","0.0"),
-        make_pair("komiBigStdev","20.0"),
-        make_pair("drawRandRadius","0.5"),
-        make_pair("noResultStdev","0.16"),
+    std::map<string,string> cfgParams({
+        std::make_pair("maxMovesPerGame","0"),
+        std::make_pair("logSearchInfo","false"),
+        std::make_pair("logMoves","false"),
+        std::make_pair("komiAuto","true"),
+        std::make_pair("komiStdev","0.5"),
+        std::make_pair("handicapProb","1.0"),
+        std::make_pair("handicapCompensateKomiProb","0.5"),
+        std::make_pair("forkCompensateKomiProb","1.0"),
+        std::make_pair("komiBigStdevProb","0.0"),
+        std::make_pair("komiBigStdev","20.0"),
+        std::make_pair("drawRandRadius","0.5"),
+        std::make_pair("noResultStdev","0.16"),
 
-        make_pair("bSizes","19"),
-        make_pair("bSizeRelProbs","1"),
-        make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
-        make_pair("scoringRules","AREA"),
-        make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
-        make_pair("multiStoneSuicideLegals","false,true"),
-        make_pair("hasButtons","false,false,true"),
-        make_pair("allowRectangleProb","0.0"),
+        std::make_pair("bSizes","19"),
+        std::make_pair("bSizeRelProbs","1"),
+        std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
+        std::make_pair("scoringRules","AREA"),
+        std::make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
+        std::make_pair("multiStoneSuicideLegals","false,true"),
+        std::make_pair("hasButtons","false,false,true"),
+        std::make_pair("allowRectangleProb","0.0"),
     });
     runStatTest(cfgParams,playSettings,NULL,name);
   }
@@ -1634,35 +1634,35 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     Sgf::PositionSample startPosSample;
     startPosSample.board = Board(19,19);
     startPosSample.nextPla = P_BLACK;
-    startPosSample.moves = vector<Move>();
+    startPosSample.moves = std::vector<Move>();
     startPosSample.initialTurnNumber = 0;
     /*
     startPosSample.hintMove = Board::NULL_LOC;
     */
     startPosSample.weight = 1.0;
 
-    map<string,string> cfgParams({
-        make_pair("maxMovesPerGame","0"),
-        make_pair("logSearchInfo","false"),
-        make_pair("logMoves","false"),
-        make_pair("komiAuto","true"),
-        make_pair("komiStdev","2.0"),
-        make_pair("handicapProb","0.0"),
-        make_pair("handicapCompensateKomiProb","1.0"),
-        make_pair("forkCompensateKomiProb","1.0"),
-        make_pair("komiBigStdevProb","0.0"),
-        make_pair("komiBigStdev","20.0"),
-        make_pair("drawRandRadius","0.5"),
-        make_pair("noResultStdev","0.16"),
+    std::map<string,string> cfgParams({
+        std::make_pair("maxMovesPerGame","0"),
+        std::make_pair("logSearchInfo","false"),
+        std::make_pair("logMoves","false"),
+        std::make_pair("komiAuto","true"),
+        std::make_pair("komiStdev","2.0"),
+        std::make_pair("handicapProb","0.0"),
+        std::make_pair("handicapCompensateKomiProb","1.0"),
+        std::make_pair("forkCompensateKomiProb","1.0"),
+        std::make_pair("komiBigStdevProb","0.0"),
+        std::make_pair("komiBigStdev","20.0"),
+        std::make_pair("drawRandRadius","0.5"),
+        std::make_pair("noResultStdev","0.16"),
 
-        make_pair("bSizes","19"),
-        make_pair("bSizeRelProbs","1"),
-        make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
-        make_pair("scoringRules","AREA"),
-        make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
-        make_pair("multiStoneSuicideLegals","false,true"),
-        make_pair("hasButtons","false,false,true"),
-        make_pair("allowRectangleProb","0.0"),
+        std::make_pair("bSizes","19"),
+        std::make_pair("bSizeRelProbs","1"),
+        std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
+        std::make_pair("scoringRules","AREA"),
+        std::make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
+        std::make_pair("multiStoneSuicideLegals","false,true"),
+        std::make_pair("hasButtons","false,false,true"),
+        std::make_pair("allowRectangleProb","0.0"),
     });
     runStatTest(cfgParams,playSettings,&startPosSample,name);
   }
@@ -1688,35 +1688,35 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     Sgf::PositionSample startPosSample;
     startPosSample.board = Board(19,19);
     startPosSample.nextPla = P_BLACK;
-    startPosSample.moves = vector<Move>();
+    startPosSample.moves = std::vector<Move>();
     startPosSample.initialTurnNumber = 0;
     /*
     startPosSample.hintMove = Board::NULL_LOC;
     */
     startPosSample.weight = 1.0;
 
-    map<string,string> cfgParams({
-        make_pair("maxMovesPerGame","0"),
-        make_pair("logSearchInfo","false"),
-        make_pair("logMoves","false"),
-        make_pair("komiAuto","true"),
-        make_pair("komiStdev","2.0"),
-        make_pair("handicapProb","0.0"),
-        make_pair("handicapCompensateKomiProb","1.0"),
-        make_pair("forkCompensateKomiProb","1.0"),
-        make_pair("komiBigStdevProb","0.0"),
-        make_pair("komiBigStdev","20.0"),
-        make_pair("drawRandRadius","0.5"),
-        make_pair("noResultStdev","0.16"),
+    std::map<string,string> cfgParams({
+        std::make_pair("maxMovesPerGame","0"),
+        std::make_pair("logSearchInfo","false"),
+        std::make_pair("logMoves","false"),
+        std::make_pair("komiAuto","true"),
+        std::make_pair("komiStdev","2.0"),
+        std::make_pair("handicapProb","0.0"),
+        std::make_pair("handicapCompensateKomiProb","1.0"),
+        std::make_pair("forkCompensateKomiProb","1.0"),
+        std::make_pair("komiBigStdevProb","0.0"),
+        std::make_pair("komiBigStdev","20.0"),
+        std::make_pair("drawRandRadius","0.5"),
+        std::make_pair("noResultStdev","0.16"),
 
-        make_pair("bSizes","19"),
-        make_pair("bSizeRelProbs","1"),
-        make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
-        make_pair("scoringRules","AREA"),
-        make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
-        make_pair("multiStoneSuicideLegals","false,true"),
-        make_pair("hasButtons","false,false,true"),
-        make_pair("allowRectangleProb","0.0"),
+        std::make_pair("bSizes","19"),
+        std::make_pair("bSizeRelProbs","1"),
+        std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
+        std::make_pair("scoringRules","AREA"),
+        std::make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
+        std::make_pair("multiStoneSuicideLegals","false,true"),
+        std::make_pair("hasButtons","false,false,true"),
+        std::make_pair("allowRectangleProb","0.0"),
     });
     runStatTest(cfgParams,playSettings,&startPosSample,name);
   }
@@ -1738,28 +1738,28 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     playSettings.earlyForkGameMaxChoices = 3;
     playSettings.forSelfPlay = true;
 
-    map<string,string> cfgParams({
-        make_pair("maxMovesPerGame","0"),
-        make_pair("logSearchInfo","false"),
-        make_pair("logMoves","false"),
-        make_pair("komiAuto","true"),
-        make_pair("komiStdev","2.0"),
-        make_pair("handicapProb","0.0"),
-        make_pair("handicapCompensateKomiProb","1.0"),
-        make_pair("forkCompensateKomiProb","1.0"),
-        make_pair("komiBigStdevProb","0.0"),
-        make_pair("komiBigStdev","20.0"),
-        make_pair("drawRandRadius","0.5"),
-        make_pair("noResultStdev","0.16"),
+    std::map<string,string> cfgParams({
+        std::make_pair("maxMovesPerGame","0"),
+        std::make_pair("logSearchInfo","false"),
+        std::make_pair("logMoves","false"),
+        std::make_pair("komiAuto","true"),
+        std::make_pair("komiStdev","2.0"),
+        std::make_pair("handicapProb","0.0"),
+        std::make_pair("handicapCompensateKomiProb","1.0"),
+        std::make_pair("forkCompensateKomiProb","1.0"),
+        std::make_pair("komiBigStdevProb","0.0"),
+        std::make_pair("komiBigStdev","20.0"),
+        std::make_pair("drawRandRadius","0.5"),
+        std::make_pair("noResultStdev","0.16"),
 
-        make_pair("bSizes","9,13,19"),
-        make_pair("bSizeRelProbs","1,1,1"),
-        make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
-        make_pair("scoringRules","AREA"),
-        make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
-        make_pair("multiStoneSuicideLegals","false,true"),
-        make_pair("hasButtons","false,false,true"),
-        make_pair("allowRectangleProb","0.1"),
+        std::make_pair("bSizes","9,13,19"),
+        std::make_pair("bSizeRelProbs","1,1,1"),
+        std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
+        std::make_pair("scoringRules","AREA"),
+        std::make_pair("taxRules","NONE,NONE,SEKI,SEKI,ALL"),
+        std::make_pair("multiStoneSuicideLegals","false,true"),
+        std::make_pair("hasButtons","false,false,true"),
+        std::make_pair("allowRectangleProb","0.1"),
     });
     runStatTest(cfgParams,playSettings,NULL,name);
   }
@@ -1863,7 +1863,7 @@ void Tests::runSekiTrainWriteTests(const string& modelFile) {
     cout << endl;
   };
 
-  vector<Rules> ruless = {
+  std::vector<Rules> ruless = {
     Rules(Rules::KO_SIMPLE, Rules::SCORING_AREA, Rules::TAX_NONE, false, false, Rules::WHB_ZERO, false, 0.0f),
     Rules(Rules::KO_SIMPLE, Rules::SCORING_TERRITORY, Rules::TAX_NONE, false, false, Rules::WHB_ZERO, false, 0.0f),
     Rules(Rules::KO_SIMPLE, Rules::SCORING_AREA, Rules::TAX_SEKI, false, false, Rules::WHB_ZERO, false, 0.0f),
@@ -1893,9 +1893,9 @@ void Tests::runSekiTrainWriteTests(const string& modelFile) {
 
     auto testStatuses = [&nnEval,&bot,&logger](const Board& board, const BoardHistory& hist, Player pla) {
       int numVisits = 50;
-      vector<double> ownership = PlayUtils::computeOwnership(bot,board,hist,pla,numVisits,logger);
-      vector<double> buf;
-      vector<bool> isAlive = PlayUtils::computeAnticipatedStatusesWithOwnership(bot,board,hist,pla,numVisits,logger,buf);
+      std::vector<double> ownership = PlayUtils::computeOwnership(bot,board,hist,pla,numVisits,logger);
+      std::vector<double> buf;
+      std::vector<bool> isAlive = PlayUtils::computeAnticipatedStatusesWithOwnership(bot,board,hist,pla,numVisits,logger,buf);
       testAssert(bot->alwaysIncludeOwnerMap == false);
       cout << "Search assumes " << PlayerIO::playerToString(pla) << " first" << endl;
       cout << "Rules " << hist.rules << endl;

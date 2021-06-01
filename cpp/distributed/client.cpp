@@ -208,15 +208,15 @@ static httplib::Result oneShotDownload(
   const Url& proxyUrl,
   size_t startByte, //inclusive
   size_t endByte, //inclusive
-  function<bool(const char *data, size_t data_length)> f
+  std::function<bool(const char *data, size_t data_length)> f
 ) {
   httplib::Headers headers;
   if(startByte > 0) {
-    headers.insert(make_pair("Range", Global::uint64ToString(startByte) + "-" + Global::uint64ToString(endByte)));
+    headers.insert(std::make_pair("Range", Global::uint64ToString(startByte) + "-" + Global::uint64ToString(endByte)));
   }
 
   if(!url.isSSL) {
-    unique_ptr<httplib::Client> httpClient = make_unique<httplib::Client>(url.host, url.port);
+    std::unique_ptr<httplib::Client> httpClient = std::make_unique<httplib::Client>(url.host, url.port);
     httpClient->set_socket_options(configureSocketOptions);
     if(proxyUrl.host != "") {
       httpClient->set_proxy(proxyUrl.host.c_str(), proxyUrl.port);
@@ -228,7 +228,7 @@ static httplib::Result oneShotDownload(
     return httpClient->Get(url.path.c_str(),headers,f);
   }
   else {
-    unique_ptr<httplib::SSLClient> httpsClient = make_unique<httplib::SSLClient>(url.host, url.port);
+    std::unique_ptr<httplib::SSLClient> httpsClient = std::make_unique<httplib::SSLClient>(url.host, url.port);
     httpsClient->set_socket_options(configureSocketOptions);
     if(proxyUrl.host != "") {
       httpsClient->set_proxy(proxyUrl.host.c_str(), proxyUrl.port);
@@ -313,13 +313,13 @@ Connection::Connection(
   logger->write("baseResourcePath: " + baseResourcePath);
   if(proxyUrl.host != "") {
     logger->write("proxyHost: " + proxyUrl.host);
-    logger->write("proxyPort: "+ to_string(proxyUrl.port));
+    logger->write("proxyPort: "+ std::to_string(proxyUrl.port));
     if(proxyUrl.username != "")
       logger->write("proxyUsername: "+ proxyUrl.username);
   }
 
   if(!isSSL) {
-    httpClient = make_unique<httplib::Client>(url.host, url.port);
+    httpClient = std::make_unique<httplib::Client>(url.host, url.port);
     httpClient->set_socket_options(configureSocketOptions);
     if(proxyUrl.host != "") {
       httpClient->set_proxy(proxyUrl.host.c_str(), proxyUrl.port);
@@ -335,7 +335,7 @@ Connection::Connection(
       }
     }
 
-    httpsClient = make_unique<httplib::SSLClient>(url.host, url.port);
+    httpsClient = std::make_unique<httplib::SSLClient>(url.host, url.port);
     httpsClient->set_socket_options(configureSocketOptions);
     if(proxyUrl.host != "") {
       httpsClient->set_proxy(proxyUrl.host.c_str(), proxyUrl.port);
@@ -367,14 +367,14 @@ Connection::Connection(
 }
 
 void Connection::recreateClients() {
-  lock_guard<mutex> lock(mutex);
+  std::lock_guard<std::mutex> lock(mutex);
   httpClient = nullptr;
   httpsClient = nullptr;
 
   Url url = Url::parse(serverUrl,false);
 
   if(!isSSL) {
-    httpClient = make_unique<httplib::Client>(url.host, url.port);
+    httpClient = std::make_unique<httplib::Client>(url.host, url.port);
     httpClient->set_socket_options(configureSocketOptions);
     if(proxyUrl.host != "") {
       httpClient->set_proxy(proxyUrl.host.c_str(), proxyUrl.port);
@@ -384,7 +384,7 @@ void Connection::recreateClients() {
     httpClient->set_basic_auth(username.c_str(), password.c_str());
   }
   else {
-    httpsClient = make_unique<httplib::SSLClient>(url.host, url.port);
+    httpsClient = std::make_unique<httplib::SSLClient>(url.host, url.port);
     httpsClient->set_socket_options(configureSocketOptions);
     if(proxyUrl.host != "") {
       httpsClient->set_proxy(proxyUrl.host.c_str(), proxyUrl.port);
@@ -415,7 +415,7 @@ static string concatPaths(const string& baseResourcePath, const string& subPath)
 httplib::Result Connection::get(const string& subPath) {
   string queryPath = concatPaths(baseResourcePath,subPath);
 
-  lock_guard<mutex> lock(mutex);
+  std::lock_guard<std::mutex> lock(mutex);
   if(isSSL) {
     httplib::Result response = httpsClient->Get(queryPath.c_str());
     if(response == nullptr) {
@@ -435,7 +435,7 @@ httplib::Result Connection::get(const string& subPath) {
 httplib::Result Connection::post(const string& subPath, const string& data, const string& dtype) {
   string queryPath = concatPaths(baseResourcePath,subPath);
 
-  lock_guard<mutex> lock(mutex);
+  std::lock_guard<std::mutex> lock(mutex);
   if(isSSL) {
     httplib::Result response = httpsClient->Post(queryPath.c_str(),data.c_str(),dtype.c_str());
     if(response == nullptr) {
@@ -456,11 +456,11 @@ httplib::Result Connection::postMulti(const string& subPath, const httplib::Mult
   string queryPath = concatPaths(baseResourcePath,subPath);
   string boundary;
   {
-    lock_guard<mutex> lock(randMutex);
+    std::lock_guard<std::mutex> lock(randMutex);
     boundary = "___" + Global::uint64ToHexString(rand.nextUInt64()) + Global::uint64ToHexString(rand.nextUInt64()) + Global::uint64ToHexString(rand.nextUInt64());
   }
 
-  lock_guard<mutex> lock(mutex);
+  std::lock_guard<std::mutex> lock(mutex);
   if(isSSL) {
     httplib::Result response = httpsClient->Post(queryPath.c_str(),httplib::Headers(),data,boundary);
     if(response == nullptr) {
@@ -597,7 +597,7 @@ static constexpr int LOOP_RETRYABLE_FAIL = 1;
 static constexpr int LOOP_PARTIAL_SUCCESS = 2;
 static constexpr int LOOP_PARTIAL_SUCCESS_NO_LOG = 3;
 
-bool Connection::retryLoop(const char* errorLabel, int maxTries, function<bool()> shouldStop, function<void(int&)> f) {
+bool Connection::retryLoop(const char* errorLabel, int maxTries, std::function<bool()> shouldStop, std::function<void(int&)> f) {
   if(shouldStop())
     return false;
   double stopPollFrequency = 2.0;
@@ -634,14 +634,14 @@ bool Connection::retryLoop(const char* errorLabel, int maxTries, function<bool()
 
       double intervalRemaining;
       {
-        lock_guard<mutex> lock(randMutex);
+        std::lock_guard<std::mutex> lock(randMutex);
         intervalRemaining = failureInterval * (0.95 + rand.nextDouble(0.1));
       }
       while(intervalRemaining > 0.0) {
-        double sleepTime = min(intervalRemaining, stopPollFrequency);
+        double sleepTime = std::min(intervalRemaining, stopPollFrequency);
         if(shouldStop())
           return false;
-        this_thread::sleep_for(chrono::duration<double>(sleepTime));
+        std::this_thread::sleep_for(std::chrono::duration<double>(sleepTime));
         intervalRemaining -= stopPollFrequency;
       }
       failureInterval = round(failureInterval * 1.3 + 1.0);
@@ -675,7 +675,7 @@ bool Connection::getNextTask(
   bool allowSelfplayTask,
   bool allowRatingTask,
   int taskRepFactor,
-  function<bool()> shouldStop
+  std::function<bool()> shouldStop
 ) {
   (void)baseDir;
 
@@ -695,19 +695,19 @@ bool Connection::getNextTask(
       if(!allowRatingTask && postResult && postResult->status == 400 && postResult->body.find("server is only serving rating games right now") != string::npos) {
         logger->write("Server is only serving rating games right now but we're full on how many we can accept, so we will sleep a while and then retry.");
         loopFailMode = LOOP_PARTIAL_SUCCESS_NO_LOG;
-        this_thread::sleep_for(chrono::duration<double>(30.0));
+        std::this_thread::sleep_for(std::chrono::duration<double>(30.0));
         throw StringError("Contacted server but rating games were full");
       }
       response = parseJson(postResult);
       string kind = parseString(response,"kind",32);
       if(kind == "rating" && !allowRatingTask) {
-        this_thread::sleep_for(chrono::duration<double>(1.0));
+        std::this_thread::sleep_for(std::chrono::duration<double>(1.0));
         continue;
       }
       break;
     }
 
-    vector<Sgf::PositionSample> startPosesList;
+    std::vector<Sgf::PositionSample> startPosesList;
     if(response.find("start_poses") != response.end()) {
       json startPoses = parse<json>(response,"start_poses");
       if(!startPoses.is_array())
@@ -743,7 +743,7 @@ bool Connection::getNextTask(
       //A bit hacky - we rely on the fact that the server reports these in ISO 8601 and therefore
       //lexicographic compare is correct to determine recency
       string mostRecentName;
-      if(lexicographical_compare(blackCreatedAt.begin(),blackCreatedAt.end(),whiteCreatedAt.begin(),whiteCreatedAt.end()))
+      if(std::lexicographical_compare(blackCreatedAt.begin(),blackCreatedAt.end(),whiteCreatedAt.begin(),whiteCreatedAt.end()))
         mostRecentName = parseString(whiteNetworkProperties,"name",MAX_NETWORK_NAME_LEN);
       else
         mostRecentName = parseString(blackNetworkProperties,"name",MAX_NETWORK_NAME_LEN);
@@ -796,10 +796,10 @@ string Connection::getTmpModelPath(const Client::ModelInfo& modelInfo, const str
   if(modelInfo.isRandom)
     return "/dev/null";
   static const char* chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  uint32_t len = (uint32_t)strlen(chars);
+  uint32_t len = (uint32_t)std::strlen(chars);
   string randStr;
   {
-    lock_guard<mutex> lock(randMutex);
+    std::lock_guard<std::mutex> lock(randMutex);
     for(int i = 0; i<10; i++)
       randStr += chars[rand.nextUInt(len)];
   }
@@ -821,7 +821,7 @@ void Client::ModelInfo::failIfSha256Mismatch(const string& modelPath) const {
 }
 
 bool Connection::maybeDownloadNewestModel(
-  const string& modelDir, function<bool()> shouldStop
+  const string& modelDir, std::function<bool()> shouldStop
 ) {
   try {
     json networkJson = parseJson(get("/api/networks/newest_training/"));
@@ -856,14 +856,14 @@ bool Connection::isModelPresent(
 
 bool Connection::downloadModelIfNotPresent(
   const Client::ModelInfo& modelInfo, const string& modelDir,
-  function<bool()> shouldStop
+  std::function<bool()> shouldStop
 ) {
   if(modelInfo.isRandom)
     return true;
 
   const string path = getModelPath(modelInfo,modelDir);
 
-  unique_lock<mutex> lock(downloadStateMutex);
+  std::unique_lock<std::mutex> lock(downloadStateMutex);
   while(true) {
     //Model already exists
     if(gfs::exists(gfs::path(path)))
@@ -876,28 +876,28 @@ bool Connection::downloadModelIfNotPresent(
       auto iter = downloadStateByUrl.find(modelInfo.downloadUrl);
       if(iter != downloadStateByUrl.end()) {
         logger->write("Other thread is downloading model already, sleeping");
-        shared_ptr<DownloadState> downloadState = iter->second;
+        std::shared_ptr<DownloadState> downloadState = iter->second;
         //Wait until that thread is done
         while(downloadState->downloadingInProgress) {
           downloadState->downloadingInProgressVar.wait(lock);
         }
         logger->write("Woke up, other thread finished downloading model");
         //Sleep a little while and then try again to see if we still need to download the model.
-        this_thread::sleep_for(chrono::duration<double>(2.0));
+        std::this_thread::sleep_for(std::chrono::duration<double>(2.0));
         continue;
       }
     }
 
     //No other thread is downloading it, so mark that we're downloading it.
     logger->write("Beginning download of model " + modelInfo.name);
-    shared_ptr<DownloadState> downloadState = make_shared<DownloadState>();
+    std::shared_ptr<DownloadState> downloadState = std::make_shared<DownloadState>();
     downloadState->downloadingInProgress = true;
     downloadStateByUrl[modelInfo.downloadUrl] = downloadState;
     lock.unlock();
 
     //Make absolutely sure we don't deadlock - mark that we're done after we're done.
     //And make sure mutexes, unlocks, etc. happen
-    function<void()> cleanup = [&]() {
+    std::function<void()> cleanup = [&]() {
       lock.lock();
       downloadState->downloadingInProgress = false;
       downloadState->downloadingInProgressVar.notify_all();
@@ -905,7 +905,7 @@ bool Connection::downloadModelIfNotPresent(
       // logger->write("DEBUG: Releasing download lock of model " + modelInfo.name);
       lock.unlock();
     };
-    Global::CustomScopeGuard<function<void()>> guard(move(cleanup));
+    Global::CustomScopeGuard<std::function<void()>> guard(std::move(cleanup));
 
     ThrottleLockGuard throttleLock(downloadThrottle);
     actuallyDownloadModel(modelInfo, modelDir, shouldStop);
@@ -914,7 +914,7 @@ bool Connection::downloadModelIfNotPresent(
 
 bool Connection::actuallyDownloadModel(
   const Client::ModelInfo& modelInfo, const string& modelDir,
-  function<bool()> shouldStop
+  std::function<bool()> shouldStop
 ) {
   if(modelInfo.isRandom)
     return true;
@@ -1019,7 +1019,7 @@ bool Connection::actuallyDownloadModel(
     }
 
     //Done! Rename the file into the right place
-    rename(tmpPath.c_str(),path.c_str());
+    std::rename(tmpPath.c_str(),path.c_str());
 
     logger->write(string("Done downloading ") + Global::uint64ToString(totalDataSize) + " bytes for model: " + urlToActuallyUse.originalString);
   };
@@ -1045,7 +1045,7 @@ static string getGameTypeStr(const FinishedGameData* gameData) {
 
 bool Connection::uploadTrainingGameAndData(
   const Task& task, const FinishedGameData* gameData, const string& sgfFilePath, const string& npzFilePath, const int64_t numDataRows,
-  bool retryOnFailure, function<bool()> shouldStop
+  bool retryOnFailure, std::function<bool()> shouldStop
 ) {
   ifstream sgfIn(sgfFilePath);
   if(!sgfIn.good())
@@ -1132,7 +1132,7 @@ bool Connection::uploadTrainingGameAndData(
 
 bool Connection::uploadRatingGame(
   const Task& task, const FinishedGameData* gameData, const string& sgfFilePath,
-  bool retryOnFailure, function<bool()> shouldStop
+  bool retryOnFailure, std::function<bool()> shouldStop
 ) {
   ifstream sgfIn(sgfFilePath);
   if(!sgfIn.good())

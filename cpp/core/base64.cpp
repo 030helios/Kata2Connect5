@@ -97,7 +97,7 @@ void Base64::runTests() {
 
     auto safePrint = [&](const string& s) {
       for(size_t i = 0; i<s.size(); i++) {
-        if(isprint(s[i]))
+        if(std::isprint(s[i]))
           out << s[i];
         else
           out << "(" << (int)s[i] << ")";

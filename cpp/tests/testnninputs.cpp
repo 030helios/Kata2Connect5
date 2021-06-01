@@ -130,7 +130,7 @@ void Tests::runNNInputsV3V4Tests()
 {
   cout << "Running NN inputs V3V4V5V6 tests" << endl;
   ostringstream out;
-  out << setprecision(5);
+  out << std::setprecision(5);
 
   auto allocateRows = [](int version, int nnXLen, int nnYLen, int &numFeaturesBin, int &numFeaturesGlobal, float *&rowBin, float *&rowGlobal)
   {
@@ -221,7 +221,7 @@ void Tests::runNNInputsV3V4Tests()
       Rules initialRules = Rules::getTrompTaylorish();
       initialRules = sgf->getRulesOrFailAllowUnspecified(initialRules);
       sgf->setupInitialBoardAndHist(initialRules, board, nextPla, hist);
-      vector<Move> &moves = sgf->moves;
+      std::vector<Move> &moves = sgf->moves;
 
       for (size_t i = 0; i < moves.size(); i++)
       {
@@ -283,7 +283,7 @@ void Tests::runNNInputsV3V4Tests()
       Rules initialRules = Rules::getTrompTaylorish();
       initialRules = sgf->getRulesOrFailAllowUnspecified(initialRules);
       sgf->setupInitialBoardAndHist(initialRules, board, nextPla, hist);
-      vector<Move> &moves = sgf->moves;
+      std::vector<Move> &moves = sgf->moves;
 
       for (size_t i = 0; i < moves.size(); i++)
       {
@@ -345,7 +345,7 @@ void Tests::runNNInputsV3V4Tests()
       Rules initialRules = Rules::getTrompTaylorish();
       initialRules = sgf->getRulesOrFailAllowUnspecified(initialRules);
       sgf->setupInitialBoardAndHist(initialRules, board, nextPla, hist);
-      vector<Move> &moves = sgf->moves;
+      std::vector<Move> &moves = sgf->moves;
 
       for (size_t i = 0; i < moves.size(); i++)
       {
@@ -407,7 +407,7 @@ void Tests::runNNInputsV3V4Tests()
       Rules initialRules = Rules::getTrompTaylorish();
       initialRules = sgf->getRulesOrFailAllowUnspecified(initialRules);
       sgf->setupInitialBoardAndHist(initialRules, board, nextPla, hist);
-      vector<Move> &moves = sgf->moves;
+      std::vector<Move> &moves = sgf->moves;
 
       for (size_t i = 0; i < moves.size(); i++)
       {
@@ -528,7 +528,7 @@ xxx..xx
       Board board = Board(size, size);
       Player nextPla = P_BLACK;
 
-      vector<Rules> rules = {
+      std::vector<Rules> rules = {
           Rules(Rules::KO_SIMPLE, Rules::SCORING_AREA, Rules::TAX_NONE, false, false, Rules::WHB_ZERO, false, 1.0f),
           Rules(Rules::KO_SIMPLE, Rules::SCORING_AREA, Rules::TAX_NONE, true, false, Rules::WHB_ZERO, false, 1.5f),
           Rules(Rules::KO_SIMPLE, Rules::SCORING_AREA, Rules::TAX_NONE, false, true, Rules::WHB_ZERO, false, 2.0f),
@@ -658,7 +658,7 @@ xxx..xx
     const string sgfStr = "(;GM[1]FF[4]SZ[6]KM[0.00];B[];W[];B[ab];W[bb];B[ba];W[ca];B[ec];W[ed];B[fd];W[fe];B[fb];W[dc];B[db];W[ae];B[ea];W[bf];B[be];W[ad];B[cf];W[dd];B[af];W[aa];B[];W[fc];B[bd];W[eb];B[];W[];B[ec];W[bf];B[ac];W[eb];B[af];W[eb])";
 
     CompactSgf *sgf = CompactSgf::parse(sgfStr);
-    vector<Move> &moves = sgf->moves;
+    std::vector<Move> &moves = sgf->moves;
 
     for (int version = minVersion; version <= maxVersion; version++)
     {
@@ -762,7 +762,7 @@ xxx..xx
       Rules initialRules;
       initialRules = sgf->getRulesOrFailAllowUnspecified(initialRules);
       sgf->setupInitialBoardAndHist(initialRules, board, nextPla, hist);
-      vector<Move> &moves = sgf->moves;
+      std::vector<Move> &moves = sgf->moves;
 
       int nnXLen = 13;
       int nnYLen = 13;
@@ -969,7 +969,7 @@ o.xoo.x
         cout << "-----" << endl;
       };
       /*
-      vector<Loc> locs = Location::parseSequence("pass A1 D1 F1 H1 E1 G1 B1 J1 F1 J1 G1 C1 E1 B1 pass pass H1 J1 E1 G1 pass pass A1 pass D1 C1 B1", board);
+      std::vector<Loc> locs = Location::parseSequence("pass A1 D1 F1 H1 E1 G1 B1 J1 F1 J1 G1 C1 E1 B1 pass pass H1 J1 E1 G1 pass pass A1 pass D1 C1 B1", board);
 
       for (int i = 0; i < locs.size(); i++)
       {
@@ -991,7 +991,7 @@ o.xoo.x
 
     int size = 7;
 
-    vector<Rules> rules = {
+    std::vector<Rules> rules = {
         Rules(Rules::KO_POSITIONAL, Rules::SCORING_AREA, Rules::TAX_NONE, false, false, Rules::WHB_ZERO, false, 3.0f),
         Rules(Rules::KO_POSITIONAL, Rules::SCORING_AREA, Rules::TAX_NONE, true, false, Rules::WHB_N_MINUS_ONE, false, 3.0f),
         Rules(Rules::KO_POSITIONAL, Rules::SCORING_AREA, Rules::TAX_NONE, false, true, Rules::WHB_N, false, 3.0f),

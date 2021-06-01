@@ -23,7 +23,7 @@ NNEvaluator* Setup::initializeNNEvaluator(
   int defaultMaxBatchSize,
   setup_for_t setupFor
 ) {
-  vector<NNEvaluator*> nnEvals =
+  std::vector<NNEvaluator*> nnEvals =
     initializeNNEvaluators(
       {nnModelName},{nnModelFile},{expectedSha256},
       cfg,logger,seedRand,maxConcurrentEvals,expectedConcurrentEvals,defaultNNXLen,defaultNNYLen,defaultMaxBatchSize,setupFor
@@ -33,9 +33,9 @@ NNEvaluator* Setup::initializeNNEvaluator(
 }
 
 vector<NNEvaluator*> Setup::initializeNNEvaluators(
-  const vector<string>& nnModelNames,
-  const vector<string>& nnModelFiles,
-  const vector<string>& expectedSha256s,
+  const std::vector<string>& nnModelNames,
+  const std::vector<string>& nnModelFiles,
+  const std::vector<string>& expectedSha256s,
   ConfigParser& cfg,
   Logger& logger,
   Rand& seedRand,
@@ -46,7 +46,7 @@ vector<NNEvaluator*> Setup::initializeNNEvaluators(
   int defaultMaxBatchSize,
   setup_for_t setupFor
 ) {
-  vector<NNEvaluator*> nnEvals;
+  std::vector<NNEvaluator*> nnEvals;
   assert(nnModelNames.size() == nnModelFiles.size());
   assert(expectedSha256s.size() == 0 || expectedSha256s.size() == nnModelFiles.size());
 
@@ -83,8 +83,8 @@ vector<NNEvaluator*> Setup::initializeNNEvaluators(
       cfg.contains("debugSkipNeuralNet") ? cfg.getBool("debugSkipNeuralNet") :
       debugSkipNeuralNetDefault;
 
-    int nnXLen = max(defaultNNXLen,7);
-    int nnYLen = max(defaultNNYLen,7);
+    int nnXLen = std::max(defaultNNXLen,7);
+    int nnYLen = std::max(defaultNNYLen,7);
     if(setupFor != SETUP_FOR_DISTRIBUTED) {
       if(cfg.contains("maxBoardXSizeForNNBuffer" + idxStr))
         nnXLen = cfg.getInt("maxBoardXSizeForNNBuffer" + idxStr, 7, NNPos::MAX_BOARD_LEN);
@@ -147,7 +147,7 @@ vector<NNEvaluator*> Setup::initializeNNEvaluators(
 #else
     cfg.markAllKeysUsedWithPrefix("numNNServerThreadsPerModel");
     auto getNumCores = [&logger]() {
-      int numCores = (int)thread::hardware_concurrency();
+      int numCores = (int)std::thread::hardware_concurrency();
       if(numCores <= 0) {
         logger.write("Could not determine number of cores on this machine, choosing default parameters as if it were 8");
         numCores = 8;
@@ -156,15 +156,15 @@ vector<NNEvaluator*> Setup::initializeNNEvaluators(
     };
     int numNNServerThreadsPerModel =
       cfg.contains("numEigenThreadsPerModel") ? cfg.getInt("numEigenThreadsPerModel",1,1024) :
-      setupFor == SETUP_FOR_DISTRIBUTED ? min(expectedConcurrentEvals,getNumCores()) :
-      setupFor == SETUP_FOR_MATCH ? min(expectedConcurrentEvals,getNumCores()) :
-      setupFor == SETUP_FOR_ANALYSIS ? min(expectedConcurrentEvals,getNumCores()) :
+      setupFor == SETUP_FOR_DISTRIBUTED ? std::min(expectedConcurrentEvals,getNumCores()) :
+      setupFor == SETUP_FOR_MATCH ? std::min(expectedConcurrentEvals,getNumCores()) :
+      setupFor == SETUP_FOR_ANALYSIS ? std::min(expectedConcurrentEvals,getNumCores()) :
       setupFor == SETUP_FOR_GTP ? expectedConcurrentEvals :
       setupFor == SETUP_FOR_BENCHMARK ? expectedConcurrentEvals :
       cfg.getInt("numEigenThreadsPerModel",1,1024);
 #endif
 
-    vector<int> gpuIdxByServerThread;
+    std::vector<int> gpuIdxByServerThread;
     for(int j = 0; j<numNNServerThreadsPerModel; j++) {
       string threadIdxStr = Global::intToString(j);
       if(cfg.contains(backendPrefix+"DeviceToUseModel"+idxStr+"Thread"+threadIdxStr))
@@ -332,7 +332,7 @@ SearchParams Setup::loadSingleParams(
   ConfigParser& cfg,
   setup_for_t setupFor
 ) {
-  vector<SearchParams> paramss = loadParams(cfg, setupFor);
+  std::vector<SearchParams> paramss = loadParams(cfg, setupFor);
   if(paramss.size() != 1)
     throw StringError("Config contains parameters for multiple bot configurations, but this KataGo command only supports a single configuration");
   return paramss[0];
@@ -351,7 +351,7 @@ vector<SearchParams> Setup::loadParams(
   setup_for_t setupFor
 ) {
 
-  vector<SearchParams> paramss;
+  std::vector<SearchParams> paramss;
   int numBots = 1;
   if(cfg.contains("numBots"))
     numBots = cfg.getInt("numBots",1,MAX_BOT_PARAMS_FROM_CFG);
@@ -663,8 +663,8 @@ Rules Setup::loadSingleRulesExceptForKomi(
 }
 
 vector<pair<set<string>,set<string>>> Setup::getMutexKeySets() {
-  vector<pair<set<string>,set<string>>> mutexKeySets = {
-    make_pair<set<string>,set<string>>(
+  std::vector<pair<set<string>,set<string>>> mutexKeySets = {
+    std::make_pair<set<string>,set<string>>(
     {"rules"},{"koRule","scoringRule","multiStoneSuicideLegal","taxRule","hasButton","whiteBonusPerHandicapStone","friendlyPassOk","whiteHandicapBonus"}
     ),
   };

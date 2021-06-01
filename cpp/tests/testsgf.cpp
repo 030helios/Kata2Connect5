@@ -630,8 +630,8 @@ Last moves
     parseAndPrintSgf(sgfStr);
     {
       Sgf* sgf = Sgf::parse(sgfStr);
-      set<Hash128> uniqueHashes;
-      vector<Sgf::PositionSample> samples;
+      std::set<Hash128> uniqueHashes;
+      std::vector<Sgf::PositionSample> samples;
       sgf->loadAllUniquePositions(uniqueHashes, false, false, false, NULL, samples);
       for(int i = 0; i<samples.size(); i++) {
         out << Sgf::PositionSample::toJsonLine(samples[i]) << endl;
@@ -721,8 +721,8 @@ Last moves C3 C4 B4 D3 D4 C2 B3
     parseAndPrintSgf(sgfStr);
     {
       Sgf* sgf = Sgf::parse(sgfStr);
-      set<Hash128> uniqueHashes;
-      vector<Sgf::PositionSample> samples;
+      std::set<Hash128> uniqueHashes;
+      std::vector<Sgf::PositionSample> samples;
       sgf->loadAllUniquePositions(uniqueHashes, false, false, false, NULL, samples);
       for(int i = 0; i<samples.size(); i++) {
         out << Sgf::PositionSample::toJsonLine(samples[i]) << endl;
@@ -953,8 +953,8 @@ Last moves D34 AJ34 AJ4 D4 D5 E5 E6 AH34 AH33 AJ33 E33 AH5 T19
     string sgfStr = "(;FF[4]GM[1]SZ[9:17]HA[0]KM[7.5]RU[koSIMPLEscoreAREAtaxSEKIsui0]RE[W+32.5];B[fo];W[dd];B[fc];W[fd];B[ec];W[ed];B[dc];W[cd];B[gd];W[ge];B[hd];W[dn];B[fm];W[eo];B[fp];W[el];B[ck];W[di];B[bn];W[fl];B[gm];W[gl];B[ci];W[ch];B[dh];W[ei];B[em];W[dm];B[dl];W[bm];B[ek];W[hm];B[hn];W[cj];B[bk];W[hl];B[cm];W[cn];B[bo];W[cl];B[dk];W[ep];B[hp];W[cp];B[fj];W[gi];B[am];W[al];B[fi];W[gh];B[bl];W[an];B[cm];W[in];B[ho];W[cl];B[gj];W[hj];B[cm];W[gc];B[fh];W[gg];B[gb];W[cl];B[hk];W[gk];B[cm];W[fn];B[gn];W[cl];B[ik];W[ij];B[cm];W[hc];B[hb];W[cl];B[hi];W[il];B[cm];W[bp];B[bi];W[eh];B[am];W[bh];B[dg];W[bm];B[fg];W[he];B[am];W[ap];B[cf];W[bj];B[eg];W[id];B[cc];W[bm];B[bc];W[bd];B[bf];W[cl];B[ak];W[cm];B[ff];W[gf];B[ac];W[ae];B[af];W[ai];B[ib];W[df];B[ef];W[cg];B[de];W[ee];B[df];W[be];B[aj];W[fe];B[ej];W[ci];B[ah];W[ag];B[bg];W[ce];B[am];W[fk];B[ah];W[fq];B[bi];W[gp];B[go];W[ai];B[en];W[ag];B[co];W[al];B[ah];W[am];B[bi];W[hq];B[gq];W[ai];B[do];W[ao];B[bi];W[gp];B[ii];W[gq];B[ic];W[ad];B[dj];W[hh];B[bh];W[dp];B[fb];W[ih];B[];W[hd];B[];W[ip];B[];W[io];B[];W[fn];B[];W[])";
     {
       Sgf* sgf = Sgf::parse(sgfStr);
-      set<Hash128> uniqueHashes;
-      vector<Sgf::PositionSample> samples;
+      std::set<Hash128> uniqueHashes;
+      std::vector<Sgf::PositionSample> samples;
       sgf->loadAllUniquePositions(uniqueHashes, false, false, false, NULL, samples);
       for(int i = 0; i<samples.size(); i++) {
         samples[i].weight = i * 0.5;
@@ -974,8 +974,8 @@ Last moves D34 AJ34 AJ4 D4 D5 E5 E6 AH34 AH33 AJ33 E33 AH5 T19
     string sgfStr = "(;GM[1]FF[4]SZ[5]KM[24];W[cc];B[cb];W[bb];B[dc];W[db];B[cd];W[bc];B[dd];W[bd])";
     {
       Sgf* sgf = Sgf::parse(sgfStr);
-      set<Hash128> uniqueHashes;
-      vector<Sgf::PositionSample> samples;
+      std::set<Hash128> uniqueHashes;
+      std::vector<Sgf::PositionSample> samples;
       sgf->loadAllUniquePositions(uniqueHashes, false, false, true, NULL, samples);
       for(int i = 0; i<samples.size(); i++) {
         out << Sgf::PositionSample::toJsonLine(samples[i]) << endl;
@@ -1007,8 +1007,8 @@ Last moves D34 AJ34 AJ4 D4 D5 E5 E6 AH34 AH33 AJ33 E33 AH5 T19
     string sgfStr = "(;GM[1]FF[4]SZ[5]KM[24];B[cb];W[cc];B[];W[bb];B[dc];W[db];B[cd];W[bc];B[dd];W[bd];B[])";
     {
       Sgf* sgf = Sgf::parse(sgfStr);
-      set<Hash128> uniqueHashes;
-      vector<Sgf::PositionSample> samples;
+      std::set<Hash128> uniqueHashes;
+      std::vector<Sgf::PositionSample> samples;
       sgf->loadAllUniquePositions(uniqueHashes, false, false, true, NULL, samples);
       for(int i = 0; i<samples.size(); i++) {
         out << Sgf::PositionSample::toJsonLine(samples[i]) << endl;
@@ -1042,8 +1042,8 @@ Last moves D34 AJ34 AJ4 D4 D5 E5 E6 AH34 AH33 AJ33 E33 AH5 T19
     string sgfStr = "(;GM[1]FF[4]SZ[5]KM[24];B[cb];W[cc];W[bb];B[dc];W[db];B[cd];W[bc];B[dd];W[bd];B[])";
     {
       Sgf* sgf = Sgf::parse(sgfStr);
-      set<Hash128> uniqueHashes;
-      vector<Sgf::PositionSample> samples;
+      std::set<Hash128> uniqueHashes;
+      std::vector<Sgf::PositionSample> samples;
       sgf->loadAllUniquePositions(uniqueHashes, false, false, true, NULL, samples);
       for(int i = 0; i<samples.size(); i++) {
         out << Sgf::PositionSample::toJsonLine(samples[i]) << endl;

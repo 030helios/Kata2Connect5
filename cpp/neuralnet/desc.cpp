@@ -34,7 +34,7 @@ static float readFloatFast(istream& in, string& tmp) {
   return x;
 }
 
-static void readFloats(istream& in, size_t numFloats, bool binaryFloats, const string& name, vector<float>& buf) {
+static void readFloats(istream& in, size_t numFloats, bool binaryFloats, const string& name, std::vector<float>& buf) {
   buf.resize(numFloats);
   if(!binaryFloats) {
     string tmp;
@@ -76,8 +76,8 @@ static void readFloats(istream& in, size_t numFloats, bool binaryFloats, const s
 #if BYTE_ORDER == BIG_ENDIAN
     for(size_t i = 0; i<numFloats; i++) {
       //Reverse byte order for big endian
-      swap(bytes[i*4 + 0], bytes[i*4 + 3]);
-      swap(bytes[i*4 + 1], bytes[i*4 + 2]);
+      std::swap(bytes[i*4 + 0], bytes[i*4 + 3]);
+      std::swap(bytes[i*4 + 1], bytes[i*4 + 2]);
     }
 #endif
     for(size_t i = 0; i<numFloats; i++) {
@@ -119,7 +119,7 @@ ConvLayerDesc::ConvLayerDesc(istream& in, bool binaryFloats) {
   int yStride = convXSize;
   int xStride = 1;
 
-  vector<float> floats;
+  std::vector<float> floats;
   readFloats(in, (size_t)convYSize * convXSize * inChannels * outChannels, binaryFloats, name, floats);
   size_t idx = 0;
   for(int y = 0; y < convYSize; y++) {
@@ -137,18 +137,18 @@ ConvLayerDesc::ConvLayerDesc(istream& in, bool binaryFloats) {
 }
 
 ConvLayerDesc::ConvLayerDesc(ConvLayerDesc&& other) {
-  *this = move(other);
+  *this = std::move(other);
 }
 
 ConvLayerDesc& ConvLayerDesc::operator=(ConvLayerDesc&& other) {
-  name = move(other.name);
+  name = std::move(other.name);
   convYSize = other.convYSize;
   convXSize = other.convXSize;
   inChannels = other.inChannels;
   outChannels = other.outChannels;
   dilationY = other.dilationY;
   dilationX = other.dilationX;
-  weights = move(other.weights);
+  weights = std::move(other.weights);
   return *this;
 }
 
@@ -171,7 +171,7 @@ BatchNormLayerDesc::BatchNormLayerDesc(istream& in, bool binaryFloats) {
   if(epsilon <= 0)
     throw StringError(name + ": epsilon (" + Global::floatToString(epsilon) + ") <= 0");
 
-  vector<float> floats;
+  std::vector<float> floats;
   readFloats(in, (size_t)numChannels, binaryFloats, name, floats);
   mean = floats;
   readFloats(in, (size_t)numChannels, binaryFloats, name, floats);
@@ -203,19 +203,19 @@ BatchNormLayerDesc::BatchNormLayerDesc(istream& in, bool binaryFloats) {
 }
 
 BatchNormLayerDesc::BatchNormLayerDesc(BatchNormLayerDesc&& other) {
-  *this = move(other);
+  *this = std::move(other);
 }
 
 BatchNormLayerDesc& BatchNormLayerDesc::operator=(BatchNormLayerDesc&& other) {
-  name = move(other.name);
+  name = std::move(other.name);
   numChannels = other.numChannels;
   epsilon = other.epsilon;
   hasScale = other.hasScale;
   hasBias = other.hasBias;
-  mean = move(other.mean);
-  variance = move(other.variance);
-  scale = move(other.scale);
-  bias = move(other.bias);
+  mean = std::move(other.mean);
+  variance = std::move(other.variance);
+  scale = std::move(other.scale);
+  bias = std::move(other.bias);
   return *this;
 }
 
@@ -228,11 +228,11 @@ ActivationLayerDesc::ActivationLayerDesc(istream& in) {
 }
 
 ActivationLayerDesc::ActivationLayerDesc(ActivationLayerDesc&& other) {
-  *this = move(other);
+  *this = std::move(other);
 }
 
 ActivationLayerDesc& ActivationLayerDesc::operator=(ActivationLayerDesc&& other) {
-  name = move(other.name);
+  name = std::move(other.name);
   return *this;
 }
 
@@ -257,7 +257,7 @@ MatMulLayerDesc::MatMulLayerDesc(istream& in, bool binaryFloats) {
   int icStride = outChannels;
   int ocStride = 1;
 
-  vector<float> floats;
+  std::vector<float> floats;
   readFloats(in, (size_t)inChannels * outChannels, binaryFloats, name, floats);
   size_t idx = 0;
   for(int ic = 0; ic < inChannels; ic++) {
@@ -271,14 +271,14 @@ MatMulLayerDesc::MatMulLayerDesc(istream& in, bool binaryFloats) {
 }
 
 MatMulLayerDesc::MatMulLayerDesc(MatMulLayerDesc&& other) {
-  *this = move(other);
+  *this = std::move(other);
 }
 
 MatMulLayerDesc& MatMulLayerDesc::operator=(MatMulLayerDesc&& other) {
-  name = move(other.name);
+  name = std::move(other.name);
   inChannels = other.inChannels;
   outChannels = other.outChannels;
-  weights = move(other.weights);
+  weights = std::move(other.weights);
   return *this;
 }
 
@@ -297,7 +297,7 @@ MatBiasLayerDesc::MatBiasLayerDesc(istream& in, bool binaryFloats) {
 
   weights.resize(numChannels);
 
-  vector<float> floats;
+  std::vector<float> floats;
   readFloats(in, (size_t)numChannels, binaryFloats, name, floats);
   weights = floats;
 
@@ -306,13 +306,13 @@ MatBiasLayerDesc::MatBiasLayerDesc(istream& in, bool binaryFloats) {
 }
 
 MatBiasLayerDesc::MatBiasLayerDesc(MatBiasLayerDesc&& other) {
-  *this = move(other);
+  *this = std::move(other);
 }
 
 MatBiasLayerDesc& MatBiasLayerDesc::operator=(MatBiasLayerDesc&& other) {
-  name = move(other.name);
+  name = std::move(other.name);
   numChannels = other.numChannels;
-  weights = move(other.weights);
+  weights = std::move(other.weights);
   return *this;
 }
 
@@ -350,21 +350,21 @@ ResidualBlockDesc::ResidualBlockDesc(istream& in, bool binaryFloats) {
 }
 
 ResidualBlockDesc::ResidualBlockDesc(ResidualBlockDesc&& other) {
-  *this = move(other);
+  *this = std::move(other);
 }
 
 ResidualBlockDesc& ResidualBlockDesc::operator=(ResidualBlockDesc&& other) {
-  name = move(other.name);
-  preBN = move(other.preBN);
-  preActivation = move(other.preActivation);
-  regularConv = move(other.regularConv);
-  midBN = move(other.midBN);
-  midActivation = move(other.midActivation);
-  finalConv = move(other.finalConv);
+  name = std::move(other.name);
+  preBN = std::move(other.preBN);
+  preActivation = std::move(other.preActivation);
+  regularConv = std::move(other.regularConv);
+  midBN = std::move(other.midBN);
+  midActivation = std::move(other.midActivation);
+  finalConv = std::move(other.finalConv);
   return *this;
 }
 
-void ResidualBlockDesc::iterConvLayers(function<void(const ConvLayerDesc& desc)> f) const {
+void ResidualBlockDesc::iterConvLayers(std::function<void(const ConvLayerDesc& desc)> f) const {
   f(regularConv);
   f(finalConv);
 }
@@ -411,22 +411,22 @@ DilatedResidualBlockDesc::DilatedResidualBlockDesc(istream& in, bool binaryFloat
 }
 
 DilatedResidualBlockDesc::DilatedResidualBlockDesc(DilatedResidualBlockDesc&& other) {
-  *this = move(other);
+  *this = std::move(other);
 }
 
 DilatedResidualBlockDesc& DilatedResidualBlockDesc::operator=(DilatedResidualBlockDesc&& other) {
-  name = move(other.name);
-  preBN = move(other.preBN);
-  preActivation = move(other.preActivation);
-  regularConv = move(other.regularConv);
-  dilatedConv = move(other.dilatedConv);
-  midBN = move(other.midBN);
-  midActivation = move(other.midActivation);
-  finalConv = move(other.finalConv);
+  name = std::move(other.name);
+  preBN = std::move(other.preBN);
+  preActivation = std::move(other.preActivation);
+  regularConv = std::move(other.regularConv);
+  dilatedConv = std::move(other.dilatedConv);
+  midBN = std::move(other.midBN);
+  midActivation = std::move(other.midActivation);
+  finalConv = std::move(other.finalConv);
   return *this;
 }
 
-void DilatedResidualBlockDesc::iterConvLayers(function<void(const ConvLayerDesc& desc)> f) const {
+void DilatedResidualBlockDesc::iterConvLayers(std::function<void(const ConvLayerDesc& desc)> f) const {
   f(regularConv);
   f(dilatedConv);
   f(finalConv);
@@ -489,25 +489,25 @@ GlobalPoolingResidualBlockDesc::GlobalPoolingResidualBlockDesc(istream& in, int 
 }
 
 GlobalPoolingResidualBlockDesc::GlobalPoolingResidualBlockDesc(GlobalPoolingResidualBlockDesc&& other) {
-  *this = move(other);
+  *this = std::move(other);
 }
 
 GlobalPoolingResidualBlockDesc& GlobalPoolingResidualBlockDesc::operator=(GlobalPoolingResidualBlockDesc&& other) {
-  name = move(other.name);
-  preBN = move(other.preBN);
-  preActivation = move(other.preActivation);
-  regularConv = move(other.regularConv);
-  gpoolConv = move(other.gpoolConv);
-  gpoolBN = move(other.gpoolBN);
-  gpoolActivation = move(other.gpoolActivation);
-  gpoolToBiasMul = move(other.gpoolToBiasMul);
-  midBN = move(other.midBN);
-  midActivation = move(other.midActivation);
-  finalConv = move(other.finalConv);
+  name = std::move(other.name);
+  preBN = std::move(other.preBN);
+  preActivation = std::move(other.preActivation);
+  regularConv = std::move(other.regularConv);
+  gpoolConv = std::move(other.gpoolConv);
+  gpoolBN = std::move(other.gpoolBN);
+  gpoolActivation = std::move(other.gpoolActivation);
+  gpoolToBiasMul = std::move(other.gpoolToBiasMul);
+  midBN = std::move(other.midBN);
+  midActivation = std::move(other.midActivation);
+  finalConv = std::move(other.finalConv);
   return *this;
 }
 
-void GlobalPoolingResidualBlockDesc::iterConvLayers(function<void(const ConvLayerDesc& desc)> f) const {
+void GlobalPoolingResidualBlockDesc::iterConvLayers(std::function<void(const ConvLayerDesc& desc)> f) const {
   f(regularConv);
   f(gpoolConv);
   f(finalConv);
@@ -601,7 +601,7 @@ TrunkDesc::TrunkDesc(istream& in, int vrsn, bool binaryFloats) {
                    desc.finalConv.outChannels,
                    trunkNumChannels));
 
-      blocks.push_back(make_pair(ORDINARY_BLOCK_KIND, move(descPtr)));
+      blocks.push_back(make_pair(ORDINARY_BLOCK_KIND, std::move(descPtr)));
     } else if(kind == "dilated_block") {
       unique_ptr_void descPtr = make_unique_void(new DilatedResidualBlockDesc(in,binaryFloats));
       DilatedResidualBlockDesc& desc = *((DilatedResidualBlockDesc*)descPtr.get());
@@ -635,7 +635,7 @@ TrunkDesc::TrunkDesc(istream& in, int vrsn, bool binaryFloats) {
                    desc.finalConv.outChannels,
                    trunkNumChannels));
 
-      blocks.push_back(make_pair(DILATED_BLOCK_KIND, move(descPtr)));
+      blocks.push_back(make_pair(DILATED_BLOCK_KIND, std::move(descPtr)));
     } else if(kind == "gpool_block") {
       unique_ptr_void descPtr = make_unique_void(new GlobalPoolingResidualBlockDesc(in, version, binaryFloats));
       GlobalPoolingResidualBlockDesc& desc = *((GlobalPoolingResidualBlockDesc*)descPtr.get());
@@ -669,7 +669,7 @@ TrunkDesc::TrunkDesc(istream& in, int vrsn, bool binaryFloats) {
                    desc.finalConv.outChannels,
                    trunkNumChannels));
 
-      blocks.push_back(make_pair(GLOBAL_POOLING_BLOCK_KIND, move(descPtr)));
+      blocks.push_back(make_pair(GLOBAL_POOLING_BLOCK_KIND, std::move(descPtr)));
     } else
       throw StringError(name + ": found unknown block kind: " + kind);
 
@@ -693,7 +693,7 @@ TrunkDesc::~TrunkDesc() {
 }
 
 TrunkDesc::TrunkDesc(TrunkDesc&& other) {
-  name = move(other.name);
+  name = std::move(other.name);
   version = other.version;
   numBlocks = other.numBlocks;
   trunkNumChannels = other.trunkNumChannels;
@@ -701,15 +701,15 @@ TrunkDesc::TrunkDesc(TrunkDesc&& other) {
   regularNumChannels = other.regularNumChannels;
   dilatedNumChannels = other.dilatedNumChannels;
   gpoolNumChannels = other.gpoolNumChannels;
-  initialConv = move(other.initialConv);
-  initialMatMul = move(other.initialMatMul);
-  blocks = move(other.blocks);
-  trunkTipBN = move(other.trunkTipBN);
-  trunkTipActivation = move(other.trunkTipActivation);
+  initialConv = std::move(other.initialConv);
+  initialMatMul = std::move(other.initialMatMul);
+  blocks = std::move(other.blocks);
+  trunkTipBN = std::move(other.trunkTipBN);
+  trunkTipActivation = std::move(other.trunkTipActivation);
 }
 
 TrunkDesc& TrunkDesc::operator=(TrunkDesc&& other) {
-  name = move(other.name);
+  name = std::move(other.name);
   version = other.version;
   numBlocks = other.numBlocks;
   trunkNumChannels = other.trunkNumChannels;
@@ -717,15 +717,15 @@ TrunkDesc& TrunkDesc::operator=(TrunkDesc&& other) {
   regularNumChannels = other.regularNumChannels;
   dilatedNumChannels = other.dilatedNumChannels;
   gpoolNumChannels = other.gpoolNumChannels;
-  initialConv = move(other.initialConv);
-  initialMatMul = move(other.initialMatMul);
-  blocks = move(other.blocks);
-  trunkTipBN = move(other.trunkTipBN);
-  trunkTipActivation = move(other.trunkTipActivation);
+  initialConv = std::move(other.initialConv);
+  initialMatMul = std::move(other.initialMatMul);
+  blocks = std::move(other.blocks);
+  trunkTipBN = std::move(other.trunkTipBN);
+  trunkTipActivation = std::move(other.trunkTipActivation);
   return *this;
 }
 
-void TrunkDesc::iterConvLayers(function<void(const ConvLayerDesc& desc)> f) const {
+void TrunkDesc::iterConvLayers(std::function<void(const ConvLayerDesc& desc)> f) const {
   f(initialConv);
   for(int i = 0; i < blocks.size(); i++) {
     if(blocks[i].first == ORDINARY_BLOCK_KIND) {
@@ -803,25 +803,25 @@ PolicyHeadDesc::PolicyHeadDesc(istream& in, int vrsn, bool binaryFloats) {
 PolicyHeadDesc::~PolicyHeadDesc() {}
 
 PolicyHeadDesc::PolicyHeadDesc(PolicyHeadDesc&& other) {
-  *this = move(other);
+  *this = std::move(other);
 }
 
 PolicyHeadDesc& PolicyHeadDesc::operator=(PolicyHeadDesc&& other) {
-  name = move(other.name);
+  name = std::move(other.name);
   version = other.version;
-  p1Conv = move(other.p1Conv);
-  g1Conv = move(other.g1Conv);
-  g1BN = move(other.g1BN);
-  g1Activation = move(other.g1Activation);
-  gpoolToBiasMul = move(other.gpoolToBiasMul);
-  p1BN = move(other.p1BN);
-  p1Activation = move(other.p1Activation);
-  p2Conv = move(other.p2Conv);
-  gpoolToPassMul = move(other.gpoolToPassMul);
+  p1Conv = std::move(other.p1Conv);
+  g1Conv = std::move(other.g1Conv);
+  g1BN = std::move(other.g1BN);
+  g1Activation = std::move(other.g1Activation);
+  gpoolToBiasMul = std::move(other.gpoolToBiasMul);
+  p1BN = std::move(other.p1BN);
+  p1Activation = std::move(other.p1Activation);
+  p2Conv = std::move(other.p2Conv);
+  gpoolToPassMul = std::move(other.gpoolToPassMul);
   return *this;
 }
 
-void PolicyHeadDesc::iterConvLayers(function<void(const ConvLayerDesc& desc)> f) const {
+void PolicyHeadDesc::iterConvLayers(std::function<void(const ConvLayerDesc& desc)> f) const {
   f(p1Conv);
   f(g1Conv);
   f(p2Conv);
@@ -920,27 +920,27 @@ ValueHeadDesc::ValueHeadDesc(istream& in, int vrsn, bool binaryFloats) {
 ValueHeadDesc::~ValueHeadDesc() {}
 
 ValueHeadDesc::ValueHeadDesc(ValueHeadDesc&& other) {
-  *this = move(other);
+  *this = std::move(other);
 }
 
 ValueHeadDesc& ValueHeadDesc::operator=(ValueHeadDesc&& other) {
-  name = move(other.name);
+  name = std::move(other.name);
   version = other.version;
-  v1Conv = move(other.v1Conv);
-  v1BN = move(other.v1BN);
-  v1Activation = move(other.v1Activation);
-  v2Mul = move(other.v2Mul);
-  v2Bias = move(other.v2Bias);
-  v2Activation = move(other.v2Activation);
-  v3Mul = move(other.v3Mul);
-  v3Bias = move(other.v3Bias);
-  sv3Mul = move(other.sv3Mul);
-  sv3Bias = move(other.sv3Bias);
-  vOwnershipConv = move(other.vOwnershipConv);
+  v1Conv = std::move(other.v1Conv);
+  v1BN = std::move(other.v1BN);
+  v1Activation = std::move(other.v1Activation);
+  v2Mul = std::move(other.v2Mul);
+  v2Bias = std::move(other.v2Bias);
+  v2Activation = std::move(other.v2Activation);
+  v3Mul = std::move(other.v3Mul);
+  v3Bias = std::move(other.v3Bias);
+  sv3Mul = std::move(other.sv3Mul);
+  sv3Bias = std::move(other.sv3Bias);
+  vOwnershipConv = std::move(other.vOwnershipConv);
   return *this;
 }
 
-void ValueHeadDesc::iterConvLayers(function<void(const ConvLayerDesc& desc)> f) const {
+void ValueHeadDesc::iterConvLayers(std::function<void(const ConvLayerDesc& desc)> f) const {
   f(v1Conv);
   f(vOwnershipConv);
 }
@@ -1027,24 +1027,24 @@ ModelDesc::ModelDesc(istream& in, bool binaryFloats) {
 ModelDesc::~ModelDesc() {}
 
 ModelDesc::ModelDesc(ModelDesc&& other) {
-  *this = move(other);
+  *this = std::move(other);
 }
 
 ModelDesc& ModelDesc::operator=(ModelDesc&& other) {
-  name = move(other.name);
+  name = std::move(other.name);
   version = other.version;
   numInputChannels = other.numInputChannels;
   numInputGlobalChannels = other.numInputGlobalChannels;
   numValueChannels = other.numValueChannels;
   numScoreValueChannels = other.numScoreValueChannels;
   numOwnershipChannels = other.numOwnershipChannels;
-  trunk = move(other.trunk);
-  policyHead = move(other.policyHead);
-  valueHead = move(other.valueHead);
+  trunk = std::move(other.trunk);
+  policyHead = std::move(other.policyHead);
+  valueHead = std::move(other.valueHead);
   return *this;
 }
 
-void ModelDesc::iterConvLayers(function<void(const ConvLayerDesc& desc)> f) const {
+void ModelDesc::iterConvLayers(std::function<void(const ConvLayerDesc& desc)> f) const {
   trunk.iterConvLayers(f);
   policyHead.iterConvLayers(f);
   valueHead.iterConvLayers(f);
@@ -1064,7 +1064,7 @@ int ModelDesc::maxConvChannels(int convXSize, int convYSize) const {
   return c;
 }
 
-struct NonCopyingStreamBuf : public streambuf
+struct NonCopyingStreamBuf : public std::streambuf
 {
   NonCopyingStreamBuf(string& str) {
     char* s = &str[0];
@@ -1082,16 +1082,16 @@ void ModelDesc::loadFromFileMaybeGZipped(const string& fileName, ModelDesc& desc
       string uncompressed;
       FileUtils::loadFileIntoString(fileName,expectedSha256,uncompressed);
       NonCopyingStreamBuf uncompressedStreamBuf(uncompressed);
-      istream uncompressedIn(&uncompressedStreamBuf);
-      descBuf = move(ModelDesc(uncompressedIn,binaryFloats));
+      std::istream uncompressedIn(&uncompressedStreamBuf);
+      descBuf = std::move(ModelDesc(uncompressedIn,binaryFloats));
     }
     else if(Global::isSuffix(lower,".bin")) {
       bool binaryFloats = true;
       string uncompressed;
       FileUtils::loadFileIntoString(fileName,expectedSha256,uncompressed);
       NonCopyingStreamBuf uncompressedStreamBuf(uncompressed);
-      istream uncompressedIn(&uncompressedStreamBuf);
-      descBuf = move(ModelDesc(uncompressedIn,binaryFloats));
+      std::istream uncompressedIn(&uncompressedStreamBuf);
+      descBuf = std::move(ModelDesc(uncompressedIn,binaryFloats));
     }
     else if(Global::isSuffix(lower,".txt.gz") || Global::isSuffix(lower,".bin.gz") || Global::isSuffix(lower,".gz")) {
       string uncompressed;
@@ -1101,9 +1101,9 @@ void ModelDesc::loadFromFileMaybeGZipped(const string& fileName, ModelDesc& desc
       try {
         //Now, initialize an istream to read from the string
         NonCopyingStreamBuf uncompressedStreamBuf(uncompressed);
-        istream uncompressedIn(&uncompressedStreamBuf);
+        std::istream uncompressedIn(&uncompressedStreamBuf);
         //And read in the model desc
-        descBuf = move(ModelDesc(uncompressedIn,binaryFloats));
+        descBuf = std::move(ModelDesc(uncompressedIn,binaryFloats));
       }
       catch(const StringError& e) {
         //On failure, try again to read as a .txt.gz file if the extension was ambiguous
@@ -1114,8 +1114,8 @@ void ModelDesc::loadFromFileMaybeGZipped(const string& fileName, ModelDesc& desc
           binaryFloats = false;
           try {
             NonCopyingStreamBuf uncompressedStreamBuf(uncompressed);
-            istream uncompressedIn(&uncompressedStreamBuf);
-            descBuf = move(ModelDesc(uncompressedIn,binaryFloats));
+            std::istream uncompressedIn(&uncompressedStreamBuf);
+            descBuf = std::move(ModelDesc(uncompressedIn,binaryFloats));
           }
           catch(const StringError& e2) {
             throw StringError(string("Could neither parse .gz model as .txt.gz model nor as .bin.gz model, errors were:\n") + e2.what() + "\n" + e.what());

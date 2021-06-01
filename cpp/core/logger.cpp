@@ -45,31 +45,31 @@ void Logger::addFile(const string& file) {
 }
 
 void Logger::write(const string& str, bool endLine) {
-  lock_guard<mutex> lock(mutex);
+  lock_guard<std::mutex> lock(mutex);
   time_t time = DateTime::getNow();
   const char* timeFormat = "%F %T%z: ";
 
   if(logToStdout) {
     if(logTime) { DateTime::writeTimeToStream(cout, timeFormat, time); cout << str; }
     else cout << ": " << str;
-    if(endLine) cout << endl; else cout << flush;
+    if(endLine) cout << std::endl; else cout << std::flush;
   }
   if(logToStderr) {
     if(logTime) { DateTime::writeTimeToStream(cerr, timeFormat, time); cerr << str; }
     else cerr << ": " << str;
-    if(endLine) cerr << endl; else cerr << flush;
+    if(endLine) cerr << std::endl; else cerr << std::flush;
   }
   for(size_t i = 0; i<ostreams.size(); i++) {
     ostream& out = *(ostreams[i]);
     if(logTime) { DateTime::writeTimeToStream(out, timeFormat, time); out << str; }
     else out << ": " << str;
-    if(endLine) out << endl; else out << flush;
+    if(endLine) out << std::endl; else out << std::flush;
   }
   for(size_t i = 0; i<files.size(); i++) {
     ofstream& out = *(files[i]);
     if(logTime) { DateTime::writeTimeToStream(out, timeFormat, time); out << str; }
     else out << ": " << str;
-    if(endLine) out << endl; else out << flush;
+    if(endLine) out << std::endl; else out << std::flush;
   }
 }
 
@@ -82,7 +82,7 @@ void Logger::writeNoEndline(const string& str) {
 }
 
 ostream* Logger::createOStream() {
-  unique_lock<mutex> lock(mutex);
+  unique_lock<std::mutex> lock(mutex);
   LogBuf* logBuf = new LogBuf(this);
   logBufs.push_back(logBuf);
   lock.unlock();
@@ -103,7 +103,7 @@ int LogBuf::sync() {
   return 0;
 }
 
-void Logger::logThreadUncaught(const string& name, Logger* logger, function<void()> f) {
+void Logger::logThreadUncaught(const string& name, Logger* logger, std::function<void()> f) {
   try {
     f();
   }
@@ -112,7 +112,7 @@ void Logger::logThreadUncaught(const string& name, Logger* logger, function<void
       logger->write(string("ERROR: " + name + " loop thread failed: ") + e.what());
     else
       cerr << (string("ERROR: " + name + " loop thread failed: " )+ e.what()) << endl;
-    this_thread::sleep_for(chrono::duration<double>(5.0));
+    std::this_thread::sleep_for(std::chrono::duration<double>(5.0));
     throw;
   }
   catch(...) {
@@ -120,7 +120,7 @@ void Logger::logThreadUncaught(const string& name, Logger* logger, function<void
       logger->write("ERROR: " + name + " loop thread failed with unexpected throw");
     else
       cerr << "ERROR: " + name + " loop thread failed with unexpected throw" << endl;
-    this_thread::sleep_for(chrono::duration<double>(5.0));
+    std::this_thread::sleep_for(std::chrono::duration<double>(5.0));
     throw;
   }
 }

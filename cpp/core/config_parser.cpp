@@ -31,7 +31,7 @@ ConfigParser::ConfigParser(const map<string, string>& kvs)
 ConfigParser::ConfigParser(const ConfigParser& source) {
   if(!source.initialized)
     throw StringError("Can only copy a ConfigParser which has been initialized.");
-  lock_guard<mutex> lock(source.usedKeysMutex);
+  std::lock_guard<std::mutex> lock(source.usedKeysMutex);
   initialized = source.initialized;
   fileName = source.fileName;
   contents = source.contents;
@@ -107,7 +107,7 @@ string ConfigParser::getContents() const {
 }
 
 void ConfigParser::unsetUsedKey(const string& key) {
-  lock_guard<mutex> lock(usedKeysMutex);
+  std::lock_guard<std::mutex> lock(usedKeysMutex);
   usedKeys.erase(key);
 }
 
@@ -117,7 +117,7 @@ void ConfigParser::applyAlias(const string& mapThisKey, const string& toThisKey)
   if(contains(mapThisKey)) {
     keyValues[toThisKey] = keyValues[mapThisKey];
     keyValues.erase(mapThisKey);
-    lock_guard<mutex> lock(usedKeysMutex);
+    std::lock_guard<std::mutex> lock(usedKeysMutex);
     if(usedKeys.find(mapThisKey) != usedKeys.end()) {
       usedKeys.insert(toThisKey);
       usedKeys.erase(mapThisKey);
@@ -125,7 +125,7 @@ void ConfigParser::applyAlias(const string& mapThisKey, const string& toThisKey)
   }
 }
 
-void ConfigParser::overrideKey(const string& key, const string& value) {
+void ConfigParser::overrideKey(const std::string& key, const std::string& value) {
   //Assume zero-length values mean to delete a key
   if(value.length() <= 0) {
     if(keyValues.find(key) != keyValues.end())
@@ -149,7 +149,7 @@ void ConfigParser::overrideKeys(const map<string, string>& newkvs) {
 }
 
 
-void ConfigParser::overrideKeys(const map<string, string>& newkvs, const vector<pair<set<string>,set<string>>>& mutexKeySets) {
+void ConfigParser::overrideKeys(const map<string, string>& newkvs, const std::vector<pair<set<string>,set<string>>>& mutexKeySets) {
   for(size_t i = 0; i<mutexKeySets.size(); i++) {
     const set<string>& a = mutexKeySets[i].first;
     const set<string>& b = mutexKeySets[i].second;
@@ -182,7 +182,7 @@ void ConfigParser::overrideKeys(const map<string, string>& newkvs, const vector<
 
 map<string,string> ConfigParser::parseCommaSeparated(const string& commaSeparatedValues) {
   map<string,string> keyValues;
-  vector<string> pieces = Global::split(commaSeparatedValues,',');
+  std::vector<string> pieces = Global::split(commaSeparatedValues,',');
   for(size_t i = 0; i<pieces.size(); i++) {
     string s = Global::trim(pieces[i]);
     if(s.length() <= 0)
@@ -199,7 +199,7 @@ map<string,string> ConfigParser::parseCommaSeparated(const string& commaSeparate
 }
 
 void ConfigParser::markAllKeysUsedWithPrefix(const string& prefix) {
-  lock_guard<mutex> lock(usedKeysMutex);
+  std::lock_guard<std::mutex> lock(usedKeysMutex);
   for(auto iter = keyValues.begin(); iter != keyValues.end(); ++iter) {
     const string& key = iter->first;
     if(Global::isPrefix(key,prefix))
@@ -208,8 +208,8 @@ void ConfigParser::markAllKeysUsedWithPrefix(const string& prefix) {
 }
 
 void ConfigParser::warnUnusedKeys(ostream& out, Logger* logger) const {
-  vector<string> unused = unusedKeys();
-  vector<string> messages;
+  std::vector<string> unused = unusedKeys();
+  std::vector<string> messages;
   if(unused.size() > 0) {
     messages.push_back("--------------");
     messages.push_back("WARNING: Config had unused keys! You may have a typo, an option you specified is being unused from " + fileName);
@@ -230,8 +230,8 @@ void ConfigParser::warnUnusedKeys(ostream& out, Logger* logger) const {
 }
 
 vector<string> ConfigParser::unusedKeys() const {
-  lock_guard<mutex> lock(usedKeysMutex);
-  vector<string> unused;
+  std::lock_guard<std::mutex> lock(usedKeysMutex);
+  std::vector<string> unused;
   for(auto iter = keyValues.begin(); iter != keyValues.end(); ++iter) {
     const string& key = iter->first;
     if(usedKeys.find(key) == usedKeys.end())
@@ -250,7 +250,7 @@ string ConfigParser::getString(const string& key) {
     throw IOError("Could not find key '" + key + "' in config file " + fileName);
 
   {
-    lock_guard<mutex> lock(usedKeysMutex);
+    std::lock_guard<std::mutex> lock(usedKeysMutex);
     usedKeys.insert(key);
   }
 
@@ -269,7 +269,7 @@ vector<string> ConfigParser::getStrings(const string& key) {
 }
 
 vector<string> ConfigParser::getStrings(const string& key, const set<string>& possibles) {
-  vector<string> values = getStrings(key);
+  std::vector<string> values = getStrings(key);
   for(size_t i = 0; i<values.size(); i++) {
     const string& value = values[i];
     if(possibles.find(value) == possibles.end())
@@ -287,8 +287,8 @@ bool ConfigParser::getBool(const string& key) {
   return x;
 }
 vector<bool> ConfigParser::getBools(const string& key) {
-  vector<string> values = getStrings(key);
-  vector<bool> ret;
+  std::vector<string> values = getStrings(key);
+  std::vector<bool> ret;
   for(size_t i = 0; i<values.size(); i++) {
     const string& value = values[i];
     bool x;
@@ -325,8 +325,8 @@ int ConfigParser::getInt(const string& key, int min, int max) {
   return x;
 }
 vector<int> ConfigParser::getInts(const string& key) {
-  vector<string> values = getStrings(key);
-  vector<int> ret;
+  std::vector<string> values = getStrings(key);
+  std::vector<int> ret;
   for(size_t i = 0; i<values.size(); i++) {
     const string& value = values[i];
     int x;
@@ -337,8 +337,8 @@ vector<int> ConfigParser::getInts(const string& key) {
   return ret;
 }
 vector<int> ConfigParser::getInts(const string& key, int min, int max) {
-  vector<string> values = getStrings(key);
-  vector<int> ret;
+  std::vector<string> values = getStrings(key);
+  std::vector<int> ret;
   for(size_t i = 0; i<values.size(); i++) {
     const string& value = values[i];
     int x;
@@ -370,8 +370,8 @@ int64_t ConfigParser::getInt64(const string& key, int64_t min, int64_t max) {
   return x;
 }
 vector<int64_t> ConfigParser::getInt64s(const string& key) {
-  vector<string> values = getStrings(key);
-  vector<int64_t> ret;
+  std::vector<string> values = getStrings(key);
+  std::vector<int64_t> ret;
   for(size_t i = 0; i<values.size(); i++) {
     const string& value = values[i];
     int64_t x;
@@ -382,8 +382,8 @@ vector<int64_t> ConfigParser::getInt64s(const string& key) {
   return ret;
 }
 vector<int64_t> ConfigParser::getInt64s(const string& key, int64_t min, int64_t max) {
-  vector<string> values = getStrings(key);
-  vector<int64_t> ret;
+  std::vector<string> values = getStrings(key);
+  std::vector<int64_t> ret;
   for(size_t i = 0; i<values.size(); i++) {
     const string& value = values[i];
     int64_t x;
@@ -415,8 +415,8 @@ uint64_t ConfigParser::getUInt64(const string& key, uint64_t min, uint64_t max) 
   return x;
 }
 vector<uint64_t> ConfigParser::getUInt64s(const string& key) {
-  vector<string> values = getStrings(key);
-  vector<uint64_t> ret;
+  std::vector<string> values = getStrings(key);
+  std::vector<uint64_t> ret;
   for(size_t i = 0; i<values.size(); i++) {
     const string& value = values[i];
     uint64_t x;
@@ -427,8 +427,8 @@ vector<uint64_t> ConfigParser::getUInt64s(const string& key) {
   return ret;
 }
 vector<uint64_t> ConfigParser::getUInt64s(const string& key, uint64_t min, uint64_t max) {
-  vector<string> values = getStrings(key);
-  vector<uint64_t> ret;
+  std::vector<string> values = getStrings(key);
+  std::vector<uint64_t> ret;
   for(size_t i = 0; i<values.size(); i++) {
     const string& value = values[i];
     uint64_t x;
@@ -462,8 +462,8 @@ float ConfigParser::getFloat(const string& key, float min, float max) {
   return x;
 }
 vector<float> ConfigParser::getFloats(const string& key) {
-  vector<string> values = getStrings(key);
-  vector<float> ret;
+  std::vector<string> values = getStrings(key);
+  std::vector<float> ret;
   for(size_t i = 0; i<values.size(); i++) {
     const string& value = values[i];
     float x;
@@ -474,8 +474,8 @@ vector<float> ConfigParser::getFloats(const string& key) {
   return ret;
 }
 vector<float> ConfigParser::getFloats(const string& key, float min, float max) {
-  vector<string> values = getStrings(key);
-  vector<float> ret;
+  std::vector<string> values = getStrings(key);
+  std::vector<float> ret;
   for(size_t i = 0; i<values.size(); i++) {
     const string& value = values[i];
     float x;
@@ -511,8 +511,8 @@ double ConfigParser::getDouble(const string& key, double min, double max) {
   return x;
 }
 vector<double> ConfigParser::getDoubles(const string& key) {
-  vector<string> values = getStrings(key);
-  vector<double> ret;
+  std::vector<string> values = getStrings(key);
+  std::vector<double> ret;
   for(size_t i = 0; i<values.size(); i++) {
     const string& value = values[i];
     double x;
@@ -523,8 +523,8 @@ vector<double> ConfigParser::getDoubles(const string& key) {
   return ret;
 }
 vector<double> ConfigParser::getDoubles(const string& key, double min, double max) {
-  vector<string> values = getStrings(key);
-  vector<double> ret;
+  std::vector<string> values = getStrings(key);
+  std::vector<double> ret;
   for(size_t i = 0; i<values.size(); i++) {
     const string& value = values[i];
     double x;

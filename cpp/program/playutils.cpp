@@ -197,10 +197,10 @@ Move PlayUtils::getGameInitializationMove(
   MiscNNInputParams nnInputParams;
   nnInputParams.drawEquivalentWinsForWhite = (pla == P_BLACK ? botB : botW)->searchParams.drawEquivalentWinsForWhite;
   nnEval->evaluate(board, hist, pla, nnInputParams, buf, false, false);
-  shared_ptr<NNOutput> nnOutput = move(buf.result);
+  std::shared_ptr<NNOutput> nnOutput = std::move(buf.result);
 
-  vector<Move> moves;
-  vector<double> playSelectionValues;
+  std::vector<Move> moves;
+  std::vector<double> playSelectionValues;
   int nnXLen = nnOutput->nnXLen;
   int nnYLen = nnOutput->nnYLen;
   assert(nnXLen >= board.x_size);
@@ -339,8 +339,8 @@ ReportedSearchValues PlayUtils::getWhiteScoreValues(
   return values;
 }
 
-static pair<double, double> evalKomi(
-    map<float, pair<double, double>> &scoreWLCache,
+static std::pair<double, double> evalKomi(
+    map<float, std::pair<double, double>> &scoreWLCache,
     Search *botB,
     Search *botW,
     const Board &board,
@@ -369,7 +369,7 @@ static pair<double, double> evalKomi(
     lead = 0.5 * (values0.lead + values1.lead);
     winLoss = 0.5 * (values0.winLossValue + values1.winLossValue);
   }
-  pair<double, double> result = make_pair(lead, winLoss);
+  std::pair<double, double> result = std::make_pair(lead, winLoss);
   scoreWLCache[roundedClippedKomi] = result;
 
   hist.rules.komi = (oldKomi);
@@ -377,7 +377,7 @@ static pair<double, double> evalKomi(
 }
 
 static double getNaiveEvenKomiHelper(
-    map<float, pair<double, double>> &scoreWLCache,
+    map<float, std::pair<double, double>> &scoreWLCache,
     Search *botB,
     Search *botW,
     const Board &board,
@@ -396,7 +396,7 @@ static double getNaiveEvenKomiHelper(
   double lastLead = 0.0;
   for (int i = 0; i < 3; i++)
   {
-    pair<double, double> result = evalKomi(scoreWLCache, botB, botW, board, hist, pla, numVisits, logger, otherGameProps, hist.rules.komi);
+    std::pair<double, double> result = evalKomi(scoreWLCache, botB, botW, board, hist, pla, numVisits, logger, otherGameProps, hist.rules.komi);
     double lead = result.first;
     double winLoss = result.second;
 
@@ -539,7 +539,7 @@ void PlayUtils::adjustKomiToEven(
     const OtherGameProperties &otherGameProps,
     Rand &rand)
 {
-  map<float, pair<double, double>> scoreWLCache;
+  map<float, std::pair<double, double>> scoreWLCache;
   bool looseClipping = false;
   double newKomi = getNaiveEvenKomiHelper(scoreWLCache, botB, botW, board, hist, pla, numVisits, logger, otherGameProps, looseClipping);
   double lower = floor(newKomi * 2.0) * 0.5;
@@ -561,7 +561,7 @@ float PlayUtils::computeLead(
     Logger &logger,
     const OtherGameProperties &otherGameProps)
 {
-  map<float, pair<double, double>> scoreWLCache;
+  map<float, std::pair<double, double>> scoreWLCache;
   bool looseClipping = true;
   float oldKomi = hist.rules.komi;
   double naiveKomi = getNaiveEvenKomiHelper(scoreWLCache, botB, botW, board, hist, pla, numVisits, logger, otherGameProps, looseClipping);
@@ -618,7 +618,7 @@ double PlayUtils::getSearchFactor(
     double searchFactorWhenWinningThreshold,
     double searchFactorWhenWinning,
     const SearchParams &params,
-    const vector<double> &recentWinLossValues,
+    const std::vector<double> &recentWinLossValues,
     Player pla)
 {
   double searchFactor = 1.0;
@@ -665,7 +665,7 @@ vector<double> PlayUtils::computeOwnership(
   bot->runWholeSearch(pla, logger);
 
   int64_t minVisitsForOwnership = 2;
-  vector<double> ownerships = bot->getAverageTreeOwnership(minVisitsForOwnership);
+  std::vector<double> ownerships = bot->getAverageTreeOwnership(minVisitsForOwnership);
 
   bot->setParams(oldParams);
   bot->setAlwaysIncludeOwnerMap(oldAlwaysIncludeOwnerMap);
@@ -679,7 +679,7 @@ vector<bool> PlayUtils::computeAnticipatedStatusesSimple(
     const Board &board,
     const BoardHistory &hist)
 {
-  vector<bool> isAlive(Board::MAX_ARR_SIZE, false);
+  std::vector<bool> isAlive(Board::MAX_ARR_SIZE, false);
 
   //Treat all stones as alive under a no result
   if (hist.isGameFinished && hist.isNoResult)
@@ -723,9 +723,9 @@ vector<bool> PlayUtils::computeAnticipatedStatusesWithOwnership(
     Player pla,
     int64_t numVisits,
     Logger &logger,
-    vector<double> &ownershipsBuf)
+    std::vector<double> &ownershipsBuf)
 {
-  vector<bool> isAlive(Board::MAX_ARR_SIZE, false);
+  std::vector<bool> isAlive(Board::MAX_ARR_SIZE, false);
   bool solved[Board::MAX_ARR_SIZE];
   for (int i = 0; i < Board::MAX_ARR_SIZE; i++)
   {
@@ -734,7 +734,7 @@ vector<bool> PlayUtils::computeAnticipatedStatusesWithOwnership(
   }
 
   ownershipsBuf = computeOwnership(bot, board, hist, pla, numVisits, logger);
-  const vector<double> &ownerships = ownershipsBuf;
+  const std::vector<double> &ownerships = ownershipsBuf;
   int nnXLen = bot->nnXLen;
   int nnYLen = bot->nnYLen;
 
@@ -821,7 +821,7 @@ double PlayUtils::BenchmarkResults::computeEloEffect(double secondsPerGameMove) 
   return gain - cost;
 }
 
-void PlayUtils::BenchmarkResults::printEloComparison(const vector<BenchmarkResults> &results, double secondsPerGameMove)
+void PlayUtils::BenchmarkResults::printEloComparison(const std::vector<BenchmarkResults> &results, double secondsPerGameMove)
 {
   int bestIdx = 0;
   for (int i = 1; i < results.size(); i++)
@@ -858,7 +858,7 @@ PlayUtils::BenchmarkResults PlayUtils::benchmarkSearchOnPositionsAndPrint(
     bool printElo)
 {
   //Pick random positions from the SGF file, but deterministically
-  vector<Move> moves = sgf->moves;
+  std::vector<Move> moves = sgf->moves;
   string posSeed = "benchmarkPosSeed|";
   for (int i = 0; i < moves.size(); i++)
   { /*
@@ -867,7 +867,7 @@ PlayUtils::BenchmarkResults PlayUtils::benchmarkSearchOnPositionsAndPrint(
     posSeed += "|";
   }
 
-  vector<int> possiblePositionIdxs;
+  std::vector<int> possiblePositionIdxs;
   {
     Rand posRand(posSeed);
     for (int i = 0; i < moves.size(); i++)
@@ -888,7 +888,7 @@ PlayUtils::BenchmarkResults PlayUtils::benchmarkSearchOnPositionsAndPrint(
       possiblePositionIdxs.resize(numPositionsToUse);
   }
 
-  sort(possiblePositionIdxs.begin(), possiblePositionIdxs.end());
+  std::sort(possiblePositionIdxs.begin(), possiblePositionIdxs.end());
 
   BenchmarkResults results;
   results.numThreads = params.numThreads;
@@ -914,7 +914,7 @@ PlayUtils::BenchmarkResults PlayUtils::benchmarkSearchOnPositionsAndPrint(
 
   for (int i = 0; i < possiblePositionIdxs.size(); i++)
   {
-    cout << "\r" << results.toStringNotDone() << "      " << flush;
+    cout << "\r" << results.toStringNotDone() << "      " << std::flush;
 
     int nextIdx = possiblePositionIdxs[i];
     while (moveNum < moves.size() && moveNum < nextIdx)
@@ -951,9 +951,9 @@ PlayUtils::BenchmarkResults PlayUtils::benchmarkSearchOnPositionsAndPrint(
   results.avgBatchSize = nnEval->averageProcessedBatchSize();
 
   if (printElo)
-    cout << "\r" << results.toStringWithElo(baseline, secondsPerGameMove) << endl;
+    cout << "\r" << results.toStringWithElo(baseline, secondsPerGameMove) << std::endl;
   else
-    cout << "\r" << results.toString() << endl;
+    cout << "\r" << results.toString() << std::endl;
 
   delete bot;
 
@@ -966,7 +966,7 @@ void PlayUtils::printGenmoveLog(ostream &out, const AsyncBot *bot, const NNEvalu
   Board::printBoard(out, bot->getRootBoard(), from, &(bot->getRootHist().moveHistory));
   Board::printBoard(out, bot->getRootBoard(), to, &(bot->getRootHist().moveHistory));
   out << bot->getRootHist().rules << "\n";
-  if (!isnan(timeTaken))
+  if (!std::isnan(timeTaken))
     out << "Time taken: " << timeTaken << "\n";
   out << "Root visits: " << search->getRootVisits() << "\n";
   out << "New playouts: " << search->lastSearchNumPlayouts << "\n";
@@ -984,9 +984,9 @@ void PlayUtils::printGenmoveLog(ostream &out, const AsyncBot *bot, const NNEvalu
 
 Rules PlayUtils::genRandomRules(Rand &rand)
 {
-  vector<int> allowedKoRules = {Rules::KO_SIMPLE, Rules::KO_POSITIONAL, Rules::KO_SITUATIONAL};
-  vector<int> allowedScoringRules = {Rules::SCORING_AREA, Rules::SCORING_TERRITORY};
-  vector<int> allowedTaxRules = {Rules::TAX_NONE, Rules::TAX_SEKI, Rules::TAX_ALL};
+  std::vector<int> allowedKoRules = {Rules::KO_SIMPLE, Rules::KO_POSITIONAL, Rules::KO_SITUATIONAL};
+  std::vector<int> allowedScoringRules = {Rules::SCORING_AREA, Rules::SCORING_TERRITORY};
+  std::vector<int> allowedTaxRules = {Rules::TAX_NONE, Rules::TAX_SEKI, Rules::TAX_ALL};
 
   Rules rules;
   rules.koRule = allowedKoRules[rand.nextUInt(allowedKoRules.size())];

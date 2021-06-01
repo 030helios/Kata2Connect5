@@ -6,9 +6,9 @@
 using namespace std;
 
 template <typename TP>
-time_t to_time_t(TP tp)
+std::time_t to_time_t(TP tp)
 {
-  using namespace chrono;
+  using namespace std::chrono;
   auto sctp = time_point_cast<system_clock::duration>(
     tp - TP::clock::now() + system_clock::now()
   );
@@ -19,7 +19,7 @@ bool LoadModel::findLatestModel(const string& modelsDir, Logger& logger, string&
   namespace gfs = ghc::filesystem;
 
   bool hasLatestTime = false;
-  time_t latestTime = 0;
+  std::time_t latestTime = 0;
   gfs::path latestPath;
   for(gfs::directory_iterator iter(modelsDir); iter != gfs::directory_iterator(); ++iter) {
     gfs::path dirPath = iter->path();
@@ -73,7 +73,7 @@ void LoadModel::setLastModifiedTimeToNow(const string& filePath, Logger& logger)
 
 void LoadModel::deleteModelsOlderThan(const string& modelsDir, Logger& logger, const time_t& time) {
   namespace gfs = ghc::filesystem;
-  vector<gfs::path> pathsToRemove;
+  std::vector<gfs::path> pathsToRemove;
   for(gfs::directory_iterator iter(modelsDir); iter != gfs::directory_iterator(); ++iter) {
     gfs::path filePath = iter->path();
     if(gfs::is_directory(filePath))

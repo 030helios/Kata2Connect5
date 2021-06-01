@@ -158,7 +158,7 @@ NNEvaluator* TinyModelTest::runTinyModelTest(const string& baseDir, Logger& logg
     for(int pos = 0; pos<361; pos++) {
       double prob = nnOutput.policyProbs[pos];
       if(expectedPolicy[pos] >= 0) {
-        EQ(prob*10000, expectedPolicy[pos], min(40.0, expectedPolicy[pos] * 0.1 + 1.0));
+        EQ(prob*10000, expectedPolicy[pos], std::min(40.0, expectedPolicy[pos] * 0.1 + 1.0));
       }
     }
 
@@ -196,15 +196,15 @@ NNEvaluator* TinyModelTest::runTinyModelTest(const string& baseDir, Logger& logg
       for(int i = 0; i<10; i++)
         runOneTest();
     }
-    catch(exception& e) {
+    catch(std::exception& e) {
       cout << "Tiny model test exception: " << e.what() << endl;
       throw;
     }
   };
 
-  vector<thread> testThreads;
+  std::vector<std::thread> testThreads;
   for(int i = 0; i<4; i++)
-    testThreads.push_back(thread(runAFewTests));
+    testThreads.push_back(std::thread(runAFewTests));
   for(int i = 0; i<4; i++)
     testThreads[i].join();
 

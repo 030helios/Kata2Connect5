@@ -265,7 +265,7 @@ void Search::setPlayerAndClearHistory(Player pla)
   avoidMoveUntilByLocWhite.clear();
 }
 
-void Search::setAvoidMoveUntilByLoc(const vector<int> &bVec, const vector<int> &wVec)
+void Search::setAvoidMoveUntilByLoc(const std::vector<int> &bVec, const std::vector<int> &wVec)
 {
   if (avoidMoveUntilByLocBlack == bVec && avoidMoveUntilByLocWhite == wVec)
     return;
@@ -348,8 +348,8 @@ bool Search::makeMove(Loc fromLoc, Loc toLoc, Player movePla)
     if (foundChild)
     {
       SearchNode *child = rootNode->children[foundChildIdx];
-      mutex &mutex = mutexPool->getMutex(child->lockIdx);
-      lock_guard<mutex> lock(mutex);
+      std::mutex &mutex = mutexPool->getMutex(child->lockIdx);
+      lock_guard<std::mutex> lock(mutex);
       if (child->nnOutput == nullptr)
         foundChild = false;
     }
@@ -361,14 +361,14 @@ bool Search::makeMove(Loc fromLoc, Loc toLoc, Player movePla)
       SearchNode *child = rootNode->children[foundChildIdx];
 
       {
-        while (rootNode->statsLock.test_and_set(memory_order_acquire))
+        while (rootNode->statsLock.test_and_set(std::memory_order_acquire))
           ;
         int64_t rootVisits = rootNode->stats.visits;
-        rootNode->statsLock.clear(memory_order_release);
-        while (child->statsLock.test_and_set(memory_order_acquire))
+        rootNode->statsLock.clear(std::memory_order_release);
+        while (child->statsLock.test_and_set(std::memory_order_acquire))
           ;
         int64_t childVisits = child->stats.visits;
-        child->statsLock.clear(memory_order_release);
+        child->statsLock.clear(std::memory_order_release);
         effectiveSearchTimeCarriedOver = effectiveSearchTimeCarriedOver * (double)childVisits / (double)rootVisits *
                                          searchParams.treeReuseCarryOverTimeFactor;
       }
@@ -485,18 +485,18 @@ void Search::runWholeSearch(Player movePla, Logger &logger, bool pondering)
 {
   if (movePla != rootPla)
     setPlayerAndClearHistory(movePla);
-  atomic<bool> shouldStopNow(false);
+  std::atomic<bool> shouldStopNow(false);
   runWholeSearch(logger, shouldStopNow, pondering);
 }
 
-void Search::runWholeSearch(Logger &logger, atomic<bool> &shouldStopNow)
+void Search::runWholeSearch(Logger &logger, std::atomic<bool> &shouldStopNow)
 {
   runWholeSearch(logger, shouldStopNow, false);
 }
 
-void Search::runWholeSearch(Logger &logger, atomic<bool> &shouldStopNow, bool pondering)
+void Search::runWholeSearch(Logger &logger, std::atomic<bool> &shouldStopNow, bool pondering)
 {
-  function<void()> *searchBegun = NULL;
+  std::function<void()> *searchBegun = NULL;
   runWholeSearch(logger, shouldStopNow, searchBegun, pondering, TimeControls(), 1.0);
 }
 
@@ -512,7 +512,7 @@ double Search::numVisitsNeededToBeNonFutile(double maxVisitsMoveVisits)
   if (chosenMoveTemperature < 1e-3)
     return requiredVisits;
   double requiredVisitsDueToTemp = maxVisitsMoveVisits * pow(0.01, chosenMoveTemperature);
-  return min(requiredVisits, requiredVisitsDueToTemp);
+  return std::min(requiredVisits, requiredVisitsDueToTemp);
 }
 
 double Search::computeUpperBoundVisitsLeftDueToTime(int64_t rootVisits, double timeUsed, double plannedTimeLimit)
@@ -572,7 +572,7 @@ Search::recomputeSearchTimeLimit(const TimeControls &tc, double timeUsed, double
       // If the original policy was confident and the surprise is low, then this is probably an "obvious" move.
       double obviousnessByEntropy = exp(-policyEntropy / searchParams.obviousMovesPolicyEntropyTolerance);
       double obviousnessBySurprise = exp(-surprise / searchParams.obviousMovesPolicySurpriseTolerance);
-      double obviousnessWeight = min(obviousnessByEntropy, obviousnessBySurprise);
+      double obviousnessWeight = std::min(obviousnessByEntropy, obviousnessBySurprise);
       tcRec *= 1.0 + obviousnessWeight * (searchParams.obviousMovesTimeFactor - 1.0);
     }
   }
@@ -586,7 +586,7 @@ Search::recomputeSearchTimeLimit(const TimeControls &tc, double timeUsed, double
     // instead of instamoving, there are some benefits from root-level search due to broader root exploration and the
     // cost is small, also we may be over counting the ponder benefit if search is faster on this node than on the
     // previous turn.
-    tcRec = tcRec * min(1.0, log(1.0 + exp(remainingTimeNeededFactor * 6.0)) / 6.0);
+    tcRec = tcRec * std::min(1.0, log(1.0 + exp(remainingTimeNeededFactor * 6.0)) / 6.0);
   }
 
   // Make sure we're not wasting time
@@ -600,10 +600,10 @@ Search::recomputeSearchTimeLimit(const TimeControls &tc, double timeUsed, double
     double upperBoundVisitsLeftDueToTime = computeUpperBoundVisitsLeftDueToTime(rootVisits, timeUsed, tcRec);
     if (upperBoundVisitsLeftDueToTime < searchParams.futileVisitsThreshold * rootVisits)
     {
-      vector<Loc> fromLocs;
-      vector<Loc> toLocs;
-      vector<double> playSelectionValues;
-      vector<double> visitCounts;
+      std::vector<Loc> fromLocs;
+      std::vector<Loc> toLocs;
+      std::vector<double> playSelectionValues;
+      std::vector<double> visitCounts;
       bool suc = getPlaySelectionValues(fromLocs,toLocs, playSelectionValues, &visitCounts, 1.0);
       if (suc && playSelectionValues.size() > 0)
       {
@@ -665,8 +665,8 @@ Search::recomputeSearchTimeLimit(const TimeControls &tc, double timeUsed, double
 
 void Search::runWholeSearch(
     Logger &logger,
-    atomic<bool> &shouldStopNow,
-    function<void()> *searchBegun,
+    std::atomic<bool> &shouldStopNow,
+    std::function<void()> *searchBegun,
     bool pondering,
     const TimeControls &tc,
     double searchFactor)
@@ -674,9 +674,9 @@ void Search::runWholeSearch(
   ClockTimer timer;
   atomic<int64_t> numPlayoutsShared(0);
 
-  if (!atomic_is_lock_free(&numPlayoutsShared))
+  if (!std::atomic_is_lock_free(&numPlayoutsShared))
     logger.write("Warning: int64_t atomic numPlayoutsShared is not lock free");
-  if (!atomic_is_lock_free(&shouldStopNow))
+  if (!std::atomic_is_lock_free(&shouldStopNow))
     logger.write("Warning: bool atomic shouldStopNow is not lock free");
 
   // Do this first, just in case this causes us to clear things and have 0 effective time carried over
@@ -694,30 +694,30 @@ void Search::runWholeSearch(
     if (searchFactor != 1.0)
     {
       double cap = (double)((int64_t)1L << 62);
-      maxVisits = (int64_t)ceil(min(cap, maxVisits * searchFactor));
-      maxPlayouts = (int64_t)ceil(min(cap, maxPlayouts * searchFactor));
+      maxVisits = (int64_t)ceil(std::min(cap, maxVisits * searchFactor));
+      maxPlayouts = (int64_t)ceil(std::min(cap, maxPlayouts * searchFactor));
       maxTime = maxTime * searchFactor;
     }
   }
 
   // Apply time controls. These two don't particularly need to be synchronized with each other so its fine to have two
   // separate atomics.
-  atomic<double> tcMaxTime(1e30);
-  atomic<double> upperBoundVisitsLeftDueToTime(1e30);
+  std::atomic<double> tcMaxTime(1e30);
+  std::atomic<double> upperBoundVisitsLeftDueToTime(1e30);
   const bool hasMaxTime = maxTime < 1.0e12;
   const bool hasTc = !pondering && !tc.isEffectivelyUnlimitedTime();
   if (!pondering && (hasTc || hasMaxTime))
   {
-    int64_t rootVisits = numPlayoutsShared.load(memory_order_relaxed) + numNonPlayoutVisits;
+    int64_t rootVisits = numPlayoutsShared.load(std::memory_order_relaxed) + numNonPlayoutVisits;
     double timeUsed = timer.getSeconds();
     double tcLimit = 1e30;
     if (hasTc)
     {
       tcLimit = recomputeSearchTimeLimit(tc, timeUsed, searchFactor, rootVisits);
-      tcMaxTime.store(tcLimit, memory_order_release);
+      tcMaxTime.store(tcLimit, std::memory_order_release);
     }
-    double upperBoundVisits = computeUpperBoundVisitsLeftDueToTime(rootVisits, timeUsed, min(tcLimit, maxTime));
-    upperBoundVisitsLeftDueToTime.store(upperBoundVisits, memory_order_release);
+    double upperBoundVisits = computeUpperBoundVisitsLeftDueToTime(rootVisits, timeUsed, std::min(tcLimit, maxTime));
+    upperBoundVisitsLeftDueToTime.store(upperBoundVisits, std::memory_order_release);
   }
 
   auto searchLoop = [this,
@@ -739,7 +739,7 @@ void Search::runWholeSearch(
   {
     SearchThread *stbuf = new SearchThread(threadIdx, *this, &logger);
 
-    int64_t numPlayouts = numPlayoutsShared.load(memory_order_relaxed);
+    int64_t numPlayouts = numPlayoutsShared.load(std::memory_order_relaxed);
     try
     {
       double lastTimeUsedRecomputingTcLimit = 0.0;
@@ -751,7 +751,7 @@ void Search::runWholeSearch(
 
         double tcMaxTimeLimit = 0.0;
         if (hasTc)
-          tcMaxTimeLimit = tcMaxTime.load(memory_order_acquire);
+          tcMaxTimeLimit = tcMaxTime.load(std::memory_order_acquire);
 
         bool shouldStop = (numPlayouts >= maxPlayouts) || (numPlayouts + numNonPlayoutVisits >= maxVisits);
 
@@ -760,9 +760,9 @@ void Search::runWholeSearch(
         if (hasTc && numPlayouts >= 2 && timeUsed >= tcMaxTimeLimit)
           shouldStop = true;
 
-        if (shouldStop || shouldStopNow.load(memory_order_relaxed))
+        if (shouldStop || shouldStopNow.load(std::memory_order_relaxed))
         {
-          shouldStopNow.store(true, memory_order_relaxed);
+          shouldStopNow.store(true, std::memory_order_relaxed);
           break;
         }
 
@@ -775,22 +775,22 @@ void Search::runWholeSearch(
           if (hasTc)
           {
             tcLimit = recomputeSearchTimeLimit(tc, timeUsed, searchFactor, rootVisits);
-            tcMaxTime.store(tcLimit, memory_order_release);
+            tcMaxTime.store(tcLimit, std::memory_order_release);
           }
           double upperBoundVisits =
-              computeUpperBoundVisitsLeftDueToTime(rootVisits, timeUsed, min(tcLimit, maxTime));
-          upperBoundVisitsLeftDueToTime.store(upperBoundVisits, memory_order_release);
+              computeUpperBoundVisitsLeftDueToTime(rootVisits, timeUsed, std::min(tcLimit, maxTime));
+          upperBoundVisitsLeftDueToTime.store(upperBoundVisits, std::memory_order_release);
         }
 
         double upperBoundVisitsLeft = 1e30;
         if (hasTc)
-          upperBoundVisitsLeft = upperBoundVisitsLeftDueToTime.load(memory_order_acquire);
-        upperBoundVisitsLeft = min(upperBoundVisitsLeft, (double)maxPlayouts - numPlayouts);
-        upperBoundVisitsLeft = min(upperBoundVisitsLeft, (double)maxVisits - numPlayouts - numNonPlayoutVisits);
+          upperBoundVisitsLeft = upperBoundVisitsLeftDueToTime.load(std::memory_order_acquire);
+        upperBoundVisitsLeft = std::min(upperBoundVisitsLeft, (double)maxPlayouts - numPlayouts);
+        upperBoundVisitsLeft = std::min(upperBoundVisitsLeft, (double)maxVisits - numPlayouts - numNonPlayoutVisits);
 
         runSinglePlayout(*stbuf, upperBoundVisitsLeft);
 
-        numPlayouts = numPlayoutsShared.fetch_add((int64_t)1, memory_order_relaxed);
+        numPlayouts = numPlayoutsShared.fetch_add((int64_t)1, std::memory_order_relaxed);
         numPlayouts += 1;
       }
     }
@@ -821,9 +821,9 @@ void Search::runWholeSearch(
     searchLoop(0);
   else
   {
-    thread *threads = new thread[searchParams.numThreads - 1];
+    std::thread *threads = new std::thread[searchParams.numThreads - 1];
     for (int i = 0; i < searchParams.numThreads - 1; i++)
-      threads[i] = thread(searchLoop, i + 1);
+      threads[i] = std::thread(searchLoop, i + 1);
     searchLoop(0);
     for (int i = 0; i < searchParams.numThreads - 1; i++)
       threads[i].join();
@@ -831,7 +831,7 @@ void Search::runWholeSearch(
   }
 
   // Relaxed load is fine since numPlayoutsShared should be synchronized already due to the joins
-  lastSearchNumPlayouts = numPlayoutsShared.load(memory_order_relaxed);
+  lastSearchNumPlayouts = numPlayoutsShared.load(std::memory_order_relaxed);
   effectiveSearchTimeCarriedOver += timer.getSeconds() - actualSearchStartTime;
 }
 
@@ -916,20 +916,20 @@ void Search::beginSearch(bool pondering)
         for (int i = 0; i < numChildren; i++)
         {
           const SearchNode *child = node.children[i];
-          while (child->statsLock.test_and_set(memory_order_acquire))
+          while (child->statsLock.test_and_set(std::memory_order_acquire))
             ;
           int64_t childVisits = child->stats.visits;
-          child->statsLock.clear(memory_order_release);
+          child->statsLock.clear(std::memory_order_release);
           newNumVisits += childVisits;
         }
         // For the node's own visit itself
         newNumVisits += 1;
 
         // Set the visits in place
-        while (node.statsLock.test_and_set(memory_order_acquire))
+        while (node.statsLock.test_and_set(std::memory_order_acquire))
           ;
         node.stats.visits = newNumVisits;
-        node.statsLock.clear(memory_order_release);
+        node.statsLock.clear(std::memory_order_release);
 
         // Update all other stats
         recomputeNodeStats(node, dummyThread, 0, 0, true);
@@ -973,14 +973,14 @@ void Search::recursivelyRemoveSubtreeValueBiasBeforeDeleteSynchronous(SearchNode
 void Search::recursivelyRecomputeStats(SearchNode &node, SearchThread &thread, bool isRoot)
 {
   // First, recompute all children.
-  vector<SearchNode *> children;
+  std::vector<SearchNode *> children;
   children.reserve(rootBoard.x_size * rootBoard.y_size + 1);
 
   int numChildren;
   bool noNNOutput;
   {
-    mutex &mutex = mutexPool->getMutex(node.lockIdx);
-    lock_guard<mutex> lock(mutex);
+    std::mutex &mutex = mutexPool->getMutex(node.lockIdx);
+    lock_guard<std::mutex> lock(mutex);
     numChildren = node.numChildren;
     for (int i = 0; i < numChildren; i++)
       children.push_back(node.children[i]);
@@ -1001,14 +1001,14 @@ void Search::recursivelyRecomputeStats(SearchNode &node, SearchThread &thread, b
   // If the node has no children, then just update its utility directly
   if (numChildren <= 0)
   {
-    while (node.statsLock.test_and_set(memory_order_acquire))
+    while (node.statsLock.test_and_set(std::memory_order_acquire))
       ;
     double resultUtilitySum = node.stats.getResultUtilitySum(searchParams);
     double scoreMeanSum = node.stats.scoreMeanSum;
     double scoreMeanSqSum = node.stats.scoreMeanSqSum;
     double weightSum = node.stats.weightSum;
     int64_t numVisits = node.stats.visits;
-    node.statsLock.clear(memory_order_release);
+    node.statsLock.clear(std::memory_order_release);
 
     // It's possible that this node has 0 weight in the case where it's the root node
     // and has 0 visits because we began a search and then stopped it before any playouts happened.
@@ -1026,11 +1026,11 @@ void Search::recursivelyRecomputeStats(SearchNode &node, SearchThread &thread, b
       double newUtilitySum = newUtility * weightSum;
       double newUtilitySqSum = newUtility * newUtility * weightSum;
 
-      while (node.statsLock.test_and_set(memory_order_acquire))
+      while (node.statsLock.test_and_set(std::memory_order_acquire))
         ;
       node.stats.utilitySum = newUtilitySum;
       node.stats.utilitySqSum = newUtilitySqSum;
-      node.statsLock.clear(memory_order_release);
+      node.statsLock.clear(std::memory_order_release);
     }
   }
   else
@@ -1070,12 +1070,12 @@ void Search::computeRootValues()
     if (rootNode != NULL)
     {
       const SearchNode &node = *rootNode;
-      while (node.statsLock.test_and_set(memory_order_acquire))
+      while (node.statsLock.test_and_set(std::memory_order_acquire))
         ;
       double scoreMeanSum = node.stats.scoreMeanSum;
       double weightSum = node.stats.weightSum;
       int64_t numVisits = node.stats.visits;
-      node.statsLock.clear(memory_order_release);
+      node.statsLock.clear(std::memory_order_release);
       if (numVisits > 0 && weightSum > 0)
       {
         foundExpectedScoreFromTree = true;
@@ -1105,10 +1105,10 @@ int64_t Search::getRootVisits() const
 {
   if (rootNode == NULL)
     return 0;
-  while (rootNode->statsLock.test_and_set(memory_order_acquire))
+  while (rootNode->statsLock.test_and_set(std::memory_order_acquire))
     ;
   int64_t n = rootNode->stats.visits;
-  rootNode->statsLock.clear(memory_order_release);
+  rootNode->statsLock.clear(std::memory_order_release);
   return n;
 }
 
@@ -1132,7 +1132,7 @@ void Search::computeDirichletAlphaDistribution(int policySize, const float *poli
   {
     if (policyProbs[i] >= 0)
     {
-      alphaDistr[i] = log(min(0.01, (double)policyProbs[i]) + 1e-20);
+      alphaDistr[i] = log(std::min(0.01, (double)policyProbs[i]) + 1e-20);
       logPolicySum += alphaDistr[i];
     }
   }
@@ -1142,7 +1142,7 @@ void Search::computeDirichletAlphaDistribution(int policySize, const float *poli
   {
     if (policyProbs[i] >= 0)
     {
-      alphaDistr[i] = max(0.0, alphaDistr[i] - logPolicyMean);
+      alphaDistr[i] = std::max(0.0, alphaDistr[i] - logPolicyMean);
       alphaPropSum += alphaDistr[i];
     }
   }
@@ -1214,14 +1214,14 @@ void Search::maybeAddPolicyNoiseAndTempAlreadyLocked(SearchThread &thread, Searc
 
   // Copy nnOutput as we're about to modify its policy to add noise or temperature
   {
-    shared_ptr<NNOutput> newNNOutput = make_shared<NNOutput>(*(node.nnOutput));
+    shared_ptr<NNOutput> newNNOutput = std::make_shared<NNOutput>(*(node.nnOutput));
     // Replace the old pointer
     node.nnOutput = newNNOutput;
   }
 
   float *noisedPolicyProbs = new float[NNPos::MAX_NN_POLICY_SIZE];
   node.nnOutput->noisedPolicyProbs = noisedPolicyProbs;
-  copy(node.nnOutput->policyProbs, node.nnOutput->policyProbs + NNPos::MAX_NN_POLICY_SIZE, noisedPolicyProbs);
+  std::copy(node.nnOutput->policyProbs, node.nnOutput->policyProbs + NNPos::MAX_NN_POLICY_SIZE, noisedPolicyProbs);
 
   if (searchParams.rootPolicyTemperature != 1.0 || searchParams.rootPolicyTemperatureEarly != 1.0)
   {
@@ -1272,9 +1272,9 @@ void Search::maybeAddPolicyNoiseAndTempAlreadyLocked(SearchThread &thread, Searc
 void Search::getValueChildWeights(
     int numChildren,
     // Unlike everywhere else where values are from white's perspective, values here are from one's own perspective
-    const vector<double> &childSelfValuesBuf,
-    const vector<int64_t> &childVisitsBuf,
-    vector<double> &resultBuf) const
+    const std::vector<double> &childSelfValuesBuf,
+    const std::vector<int64_t> &childVisitsBuf,
+    std::vector<double> &resultBuf) const
 {
   resultBuf.clear();
   if (numChildren <= 0)
@@ -1452,7 +1452,7 @@ double Search::getExploreSelectionValue(
   int movePos = getDouplePos(fromLoc, toLoc);
   float nnPolicyProb = parentPolicyProbs[movePos];
 
-  while (child->statsLock.test_and_set(memory_order_acquire))
+  while (child->statsLock.test_and_set(std::memory_order_acquire))
     ;
   int64_t childVisits = child->stats.visits;
   double utilitySum = child->stats.utilitySum;
@@ -1460,7 +1460,7 @@ double Search::getExploreSelectionValue(
   double scoreMeanSqSum = child->stats.scoreMeanSqSum;
   double weightSum = child->stats.weightSum;
   int32_t childVirtualLosses = child->virtualLosses;
-  child->statsLock.clear(memory_order_release);
+  child->statsLock.clear(std::memory_order_release);
 
   // It's possible that childVisits is actually 0 here with multithreading because we're visiting this node while a
   // child has been expanded but its thread not yet finished its first visit
@@ -1557,14 +1557,14 @@ int64_t Search::getReducedPlaySelectionVisits(
   int movePos = getDouplePos(fromLoc, toLoc);
   float nnPolicyProb = parentPolicyProbs[movePos];
 
-  while (child->statsLock.test_and_set(memory_order_acquire))
+  while (child->statsLock.test_and_set(std::memory_order_acquire))
     ;
   int64_t childVisits = child->stats.visits;
   double utilitySum = child->stats.utilitySum;
   double scoreMeanSum = child->stats.scoreMeanSum;
   double scoreMeanSqSum = child->stats.scoreMeanSqSum;
   double weightSum = child->stats.weightSum;
-  child->statsLock.clear(memory_order_release);
+  child->statsLock.clear(std::memory_order_release);
 
   // Child visits may be 0 if this function is called in a multithreaded context, such as during live analysis
   if (childVisits <= 0)
@@ -1589,11 +1589,11 @@ double Search::getFpuValueForChildrenAssumeVisited(
 {
   if (searchParams.fpuParentWeight < 1.0)
   {
-    while (node.statsLock.test_and_set(memory_order_acquire))
+    while (node.statsLock.test_and_set(std::memory_order_acquire))
       ;
     double utilitySum = node.stats.utilitySum;
     double weightSum = node.stats.weightSum;
-    node.statsLock.clear(memory_order_release);
+    node.statsLock.clear(std::memory_order_release);
 
     assert(weightSum > 0.0);
     parentUtility = utilitySum / weightSum;
@@ -1655,10 +1655,10 @@ void Search::selectBestChildToDescend(
     float nnPolicyProb = policyProbs[movePos];
     policyProbMassVisited += nnPolicyProb;
 
-    while (child->statsLock.test_and_set(memory_order_acquire))
+    while (child->statsLock.test_and_set(std::memory_order_acquire))
       ;
     int64_t childVisits = child->stats.visits;
-    child->statsLock.clear(memory_order_release);
+    child->statsLock.clear(std::memory_order_release);
 
     totalChildVisits += childVisits;
     if (childVisits > maxChildVisits)
@@ -1672,7 +1672,7 @@ void Search::selectBestChildToDescend(
   double parentUtility;
   double fpuValue = getFpuValueForChildrenAssumeVisited(node, thread.pla, isRoot, policyProbMassVisited, parentUtility);
 
-  fill(posesWithChildBuf, posesWithChildBuf + NNPos::MAX_NN_POLICY_SIZE, false);
+  std::fill(posesWithChildBuf, posesWithChildBuf + NNPos::MAX_NN_POLICY_SIZE, false);
 
   // Try all existing children
   for (int i = 0; i < numChildren; i++)
@@ -1694,7 +1694,7 @@ void Search::selectBestChildToDescend(
     posesWithChildBuf[getDouplePos(fromLoc, toLoc)] = true;
   }
 
-  const vector<int> &avoidMoveUntilByLoc =
+  const std::vector<int> &avoidMoveUntilByLoc =
       thread.pla == P_BLACK ? avoidMoveUntilByLocBlack : avoidMoveUntilByLocWhite;
 
   // Try the new child with the best policy value
@@ -1751,24 +1751,24 @@ void Search::recomputeNodeStats(
     bool isRoot)
 {
   // Find all children and compute weighting of the children based on their values
-  vector<double> &weightFactors = thread.weightFactorBuf;
-  vector<double> &winValues = thread.winValuesBuf;
-  vector<double> &noResultValues = thread.noResultValuesBuf;
-  vector<double> &scoreMeans = thread.scoreMeansBuf;
-  vector<double> &scoreMeanSqs = thread.scoreMeanSqsBuf;
-  vector<double> &leads = thread.leadsBuf;
-  vector<double> &utilitySums = thread.utilityBuf;
-  vector<double> &utilitySqSums = thread.utilitySqBuf;
-  vector<double> &selfUtilities = thread.selfUtilityBuf;
-  vector<double> &weightSums = thread.weightBuf;
-  vector<double> &weightSqSums = thread.weightSqBuf;
-  vector<int64_t> &visits = thread.visitsBuf;
+  std::vector<double> &weightFactors = thread.weightFactorBuf;
+  std::vector<double> &winValues = thread.winValuesBuf;
+  std::vector<double> &noResultValues = thread.noResultValuesBuf;
+  std::vector<double> &scoreMeans = thread.scoreMeansBuf;
+  std::vector<double> &scoreMeanSqs = thread.scoreMeanSqsBuf;
+  std::vector<double> &leads = thread.leadsBuf;
+  std::vector<double> &utilitySums = thread.utilityBuf;
+  std::vector<double> &utilitySqSums = thread.utilitySqBuf;
+  std::vector<double> &selfUtilities = thread.selfUtilityBuf;
+  std::vector<double> &weightSums = thread.weightBuf;
+  std::vector<double> &weightSqSums = thread.weightSqBuf;
+  std::vector<int64_t> &visits = thread.visitsBuf;
 
   int64_t totalChildVisits = 0;
   int64_t maxChildVisits = 0;
 
-  mutex &mutex = mutexPool->getMutex(node.lockIdx);
-  unique_lock<mutex> lock(mutex);
+  std::mutex &mutex = mutexPool->getMutex(node.lockIdx);
+  unique_lock<std::mutex> lock(mutex);
 
   int numChildren = node.numChildren;
   int numGoodChildren = 0;
@@ -1776,7 +1776,7 @@ void Search::recomputeNodeStats(
   {
     const SearchNode *child = node.children[i];
 
-    while (child->statsLock.test_and_set(memory_order_acquire))
+    while (child->statsLock.test_and_set(std::memory_order_acquire))
       ;
     int64_t childVisits = child->stats.visits;
     double winValueSum = child->stats.winValueSum;
@@ -1788,7 +1788,7 @@ void Search::recomputeNodeStats(
     double weightSqSum = child->stats.weightSqSum;
     double utilitySum = child->stats.utilitySum;
     double utilitySqSum = child->stats.utilitySqSum;
-    child->statsLock.clear(memory_order_release);
+    child->statsLock.clear(std::memory_order_release);
 
     if (childVisits <= 0)
       continue;
@@ -1827,8 +1827,8 @@ void Search::recomputeNodeStats(
   double amountToPrune = 0.0;
   if (isRoot && searchParams.rootNoiseEnabled)
   {
-    amountToSubtract = min(searchParams.chosenMoveSubtract, maxChildVisits / 64.0);
-    amountToPrune = min(searchParams.chosenMovePrune, maxChildVisits / 64.0);
+    amountToSubtract = std::min(searchParams.chosenMoveSubtract, maxChildVisits / 64.0);
+    amountToPrune = std::min(searchParams.chosenMovePrune, maxChildVisits / 64.0);
   }
 
   double winValueSum = 0.0;
@@ -1895,7 +1895,7 @@ void Search::recomputeNodeStats(
         double subtreeValueBiasWeight = pow(totalChildVisits, searchParams.subtreeValueBiasWeightExponent);
         double subtreeValueBiasDeltaSum = (utilityChildren - utility) * subtreeValueBiasWeight;
 
-        while (entry.entryLock.test_and_set(memory_order_acquire))
+        while (entry.entryLock.test_and_set(std::memory_order_acquire))
           ;
         entry.deltaUtilitySum += subtreeValueBiasDeltaSum - node.lastSubtreeValueBiasDeltaSum;
         entry.weightSum += subtreeValueBiasWeight - node.lastSubtreeValueBiasWeight;
@@ -1903,15 +1903,15 @@ void Search::recomputeNodeStats(
         newEntryWeightSum = entry.weightSum;
         node.lastSubtreeValueBiasDeltaSum = subtreeValueBiasDeltaSum;
         node.lastSubtreeValueBiasWeight = subtreeValueBiasWeight;
-        entry.entryLock.clear(memory_order_release);
+        entry.entryLock.clear(std::memory_order_release);
       }
       else
       {
-        while (entry.entryLock.test_and_set(memory_order_acquire))
+        while (entry.entryLock.test_and_set(std::memory_order_acquire))
           ;
         newEntryDeltaUtilitySum = entry.deltaUtilitySum;
         newEntryWeightSum = entry.weightSum;
-        entry.entryLock.clear(memory_order_release);
+        entry.entryLock.clear(std::memory_order_release);
       }
 
       // This is the amount of the direct evaluation of this node that we are going to bias towards the table entry
@@ -1921,7 +1921,7 @@ void Search::recomputeNodeStats(
       // This is the amount by which we need to scale desiredWeight such that if the table entry were actually equal to
       // the current difference between the direct eval and the children, we would perform a no-op... unless a noop is
       // actually impossible Then we just take what we can get. desiredWeight *= weightSum / (1.0-biasFactor) /
-      // max(0.001, (weightSum + desiredWeight - desiredWeight / (1.0-biasFactor)));
+      // std::max(0.001, (weightSum + desiredWeight - desiredWeight / (1.0-biasFactor)));
     }
 
     winValueSum += winProb * desiredWeight;
@@ -1935,7 +1935,7 @@ void Search::recomputeNodeStats(
     weightSqSum += desiredWeight * desiredWeight;
   }
 
-  while (node.statsLock.test_and_set(memory_order_acquire))
+  while (node.statsLock.test_and_set(std::memory_order_acquire))
     ;
   node.stats.visits += numVisitsToAdd;
   // It's possible that these values are a bit wrong if there's a race and two threads each try to update this
@@ -1952,7 +1952,7 @@ void Search::recomputeNodeStats(
   node.stats.weightSum = weightSum;
   node.stats.weightSqSum = weightSqSum;
   node.virtualLosses -= virtualLossesToSubtract;
-  node.statsLock.clear(memory_order_release);
+  node.statsLock.clear(std::memory_order_release);
 }
 
 void Search::runSinglePlayout(SearchThread &thread, double upperBoundVisitsLeft)
@@ -1984,18 +1984,18 @@ void Search::addLeafValue(
   if (searchParams.subtreeValueBiasFactor != 0 && !isTerminal && node.subtreeValueBiasTableEntry != nullptr)
   {
     SubtreeValueBiasEntry &entry = *(node.subtreeValueBiasTableEntry);
-    while (entry.entryLock.test_and_set(memory_order_acquire))
+    while (entry.entryLock.test_and_set(std::memory_order_acquire))
       ;
     double newEntryDeltaUtilitySum = entry.deltaUtilitySum;
     double newEntryWeightSum = entry.weightSum;
-    entry.entryLock.clear(memory_order_release);
+    entry.entryLock.clear(std::memory_order_release);
     // This is the amount of the direct evaluation of this node that we are going to bias towards the table entry
     const double biasFactor = searchParams.subtreeValueBiasFactor;
     if (newEntryWeightSum > 0.001)
       utility += biasFactor * newEntryDeltaUtilitySum / newEntryWeightSum;
   }
 
-  while (node.statsLock.test_and_set(memory_order_acquire))
+  while (node.statsLock.test_and_set(std::memory_order_acquire))
     ;
   node.stats.visits += 1;
   node.stats.winValueSum += winValue;
@@ -2008,7 +2008,7 @@ void Search::addLeafValue(
   node.stats.weightSum += 1.0;
   node.stats.weightSqSum += 1.0;
   node.virtualLosses -= virtualLossesToSubtract;
-  node.statsLock.clear(memory_order_release);
+  node.statsLock.clear(std::memory_order_release);
 }
 
 // Assumes node is locked
@@ -2053,12 +2053,12 @@ void Search::initNodeNNOutput(
   nnInputParams.nnPolicyTemperature = searchParams.nnPolicyTemperature;
   if (isRoot && searchParams.rootNumSymmetriesToSample > 1)
   {
-    vector<shared_ptr<NNOutput>> ptrs;
-    array<int, NNInputs::NUM_SYMMETRY_COMBINATIONS> symmetryIndexes;
-    iota(symmetryIndexes.begin(), symmetryIndexes.end(), 0);
+    std::vector<shared_ptr<NNOutput>> ptrs;
+    std::array<int, NNInputs::NUM_SYMMETRY_COMBINATIONS> symmetryIndexes;
+    std::iota(symmetryIndexes.begin(), symmetryIndexes.end(), 0);
     for (int i = 0; i < searchParams.rootNumSymmetriesToSample; i++)
     {
-      swap(symmetryIndexes[i], symmetryIndexes[thread.rand.nextInt(i, NNInputs::NUM_SYMMETRY_COMBINATIONS - 1)]);
+      std::swap(symmetryIndexes[i], symmetryIndexes[thread.rand.nextInt(i, NNInputs::NUM_SYMMETRY_COMBINATIONS - 1)]);
       nnInputParams.symmetry = symmetryIndexes[i];
       bool skipCacheThisIteration = true; // Skip cache since there's no guarantee which symmetry is in the cache
       nnEvaluator->evaluate(
@@ -2069,15 +2069,15 @@ void Search::initNodeNNOutput(
           thread.nnResultBuf,
           skipCacheThisIteration,
           includeOwnerMap);
-      ptrs.push_back(move(thread.nnResultBuf.result));
+      ptrs.push_back(std::move(thread.nnResultBuf.result));
     }
-    node.nnOutput = shared_ptr<NNOutput>(new NNOutput(ptrs));
+    node.nnOutput = std::shared_ptr<NNOutput>(new NNOutput(ptrs));
   }
   else
   {
     nnEvaluator->evaluate(
         thread.board, thread.history, thread.pla, nnInputParams, thread.nnResultBuf, skipCache, includeOwnerMap);
-    node.nnOutput = move(thread.nnResultBuf.result);
+    node.nnOutput = std::move(thread.nnResultBuf.result);
   }
 
   assert(node.nnOutput->noisedPolicyProbs == NULL);
@@ -2145,8 +2145,8 @@ void Search::playoutDescend(
     }
   }
 
-  mutex &mutex = mutexPool->getMutex(node.lockIdx);
-  unique_lock<mutex> lock(mutex);
+  std::mutex &mutex = mutexPool->getMutex(node.lockIdx);
+  unique_lock<std::mutex> lock(mutex);
 
   // Hit leaf node, finish
   if (node.nnOutput == nullptr)
@@ -2226,10 +2226,10 @@ void Search::playoutDescend(
     child = node.children[bestChildIdx];
   }
 
-  while (child->statsLock.test_and_set(memory_order_acquire))
+  while (child->statsLock.test_and_set(std::memory_order_acquire))
     ;
   child->virtualLosses += searchParams.numVirtualLossesPerThread;
-  child->statsLock.clear(memory_order_release);
+  child->statsLock.clear(std::memory_order_release);
 
   if (searchParams.subtreeValueBiasFactor != 0)
   {
@@ -2237,7 +2237,7 @@ void Search::playoutDescend(
     if(node.prevMoveLoc != Board::NULL_LOC) {
       assert(subtreeValueBiasTable != NULL);
       child->subtreeValueBiasTableEntry =
-        move(subtreeValueBiasTable->get(thread.pla, node.prevMoveLoc, child->prevMoveLoc, thread.board));
+        std::move(subtreeValueBiasTable->get(thread.pla, node.prevMoveLoc, child->prevMoveLoc, thread.board));
     }
     */
   }

@@ -163,7 +163,7 @@ string GTPConfig::makeConfig(
   int64_t maxPlayouts,
   double maxTime,
   double maxPonderTime,
-  vector<int> deviceIdxs,
+  std::vector<int> deviceIdxs,
   int nnCacheSizePowerOfTwo,
   int nnMutexPoolSizePowerOfTwo,
   int numSearchThreads

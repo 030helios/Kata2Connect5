@@ -36,8 +36,8 @@ struct AnalyzeRequest {
   bool reportDuringSearch;
   double reportDuringSearchEvery;
 
-  vector<int> avoidMoveUntilByLocBlack;
-  vector<int> avoidMoveUntilByLocWhite;
+  std::vector<int> avoidMoveUntilByLocBlack;
+  std::vector<int> avoidMoveUntilByLocWhite;
 
   //Starts with STATUS_IN_QUEUE.
   //Thread that grabs it from queue it changes it to STATUS_POPPED
@@ -47,7 +47,7 @@ struct AnalyzeRequest {
   static constexpr int STATUS_IN_QUEUE = -1;
   static constexpr int STATUS_POPPED = -2;
   static constexpr int STATUS_TERMINATED = -3;
-  atomic<int> status;
+  std::atomic<int> status;
 };
 
 
@@ -204,13 +204,13 @@ int MainCmds::analysis(int argc, const char* const* argv) {
       delete s;
   };
 
-  ThreadSafePriorityQueue<pair<int64_t,int64_t>, AnalyzeRequest*> toAnalyzeQueue;
+  ThreadSafePriorityQueue<std::pair<int64_t,int64_t>, AnalyzeRequest*> toAnalyzeQueue;
   int64_t numRequestsSoFar = 0; // Used as tie breaker for requests with same priority
   int64_t internalIdCounter = 0; // Counter for internalId on requests.
 
   //Open requests, keyed by internalId, mutexed by the mutex
-  mutex openRequestsMutex;
-  map<int64_t, AnalyzeRequest*> openRequests;
+  std::mutex openRequestsMutex;
+  std::map<int64_t, AnalyzeRequest*> openRequests;
 
   auto reportError = [&pushToWrite](const string& s) {
     json ret;
@@ -267,14 +267,14 @@ int MainCmds::analysis(int argc, const char* const* argv) {
     &logger,&toAnalyzeQueue,&toWriteQueue,&preventEncore,&reportAnalysis,&reportNoAnalysis,&logSearchInfo,&nnEval,&openRequestsMutex,&openRequests
   ](AsyncBot* bot, int threadIdx) {
     while(true) {
-      pair<pair<int64_t,int64_t>,AnalyzeRequest*> analysisItem;
+      std::pair<std::pair<int64_t,int64_t>,AnalyzeRequest*> analysisItem;
       bool suc = toAnalyzeQueue.waitPop(analysisItem);
       if(!suc)
         break;
       AnalyzeRequest* request = analysisItem.second;
       int expected = AnalyzeRequest::STATUS_IN_QUEUE;
       //If it's already terminated, then there's nothing for us to do
-      if(!request->status.compare_exchange_strong(expected, AnalyzeRequest::STATUS_POPPED, memory_order_acq_rel)) {
+      if(!request->status.compare_exchange_strong(expected, AnalyzeRequest::STATUS_POPPED, std::memory_order_acq_rel)) {
         assert(expected == AnalyzeRequest::STATUS_TERMINATED);
       }
       //Else, the request is live and we marked it as popped
@@ -288,18 +288,18 @@ int MainCmds::analysis(int argc, const char* const* argv) {
         double searchFactor = 1.0;
 
         //Handle termination between the time we pop and the search starts
-        function<void()> onSearchBegun = [&request,&bot,&threadIdx]() {
+        std::function<void()> onSearchBegun = [&request,&bot,&threadIdx]() {
           //Try to record that we're handling this request and indicate that the search is started by this thread
           int expected2 = AnalyzeRequest::STATUS_POPPED;
           //If it was terminated, then stop our search
-          if(!request->status.compare_exchange_strong(expected2, threadIdx, memory_order_acq_rel)) {
+          if(!request->status.compare_exchange_strong(expected2, threadIdx, std::memory_order_acq_rel)) {
             assert(expected2 == AnalyzeRequest::STATUS_TERMINATED);
             bot->stopWithoutWait();
           }
         };
 
         if(request->reportDuringSearch) {
-          function<void(const Search* search)> callback = [&request,&reportAnalysis](const Search* search) {
+          std::function<void(const Search* search)> callback = [&request,&reportAnalysis](const Search* search) {
             const bool isDuringSearch = true;
             reportAnalysis(request,search,isDuringSearch);
           };
@@ -323,7 +323,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
           if(!analysisWritten) {
             //If the reason we stopped was because we noticed a terminate, then we will write out a dummy response even if we didn't have
             //enough info to generate a real one, to fulfill a promise in the API docs that we always write something.
-            if(request->status.load(memory_order_acquire) == AnalyzeRequest::STATUS_TERMINATED)
+            if(request->status.load(std::memory_order_acquire) == AnalyzeRequest::STATUS_TERMINATED)
               reportNoAnalysis(request);
             //Otherwise, this case is only possible if we're just shutting down
             else
@@ -337,7 +337,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
 
       //This request is no longer open
       {
-        lock_guard<mutex> lock(openRequestsMutex);
+        std::lock_guard<std::mutex> lock(openRequestsMutex);
         openRequests.erase(request->internalId);
       }
       delete request;
@@ -347,13 +347,13 @@ int MainCmds::analysis(int argc, const char* const* argv) {
     Logger::logThreadUncaught("analysis loop", &logger, [&](){ analysisLoop(bot, threadIdx); });
   };
 
-  vector<thread> threads;
-  thread write_thread = thread(writeLoop);
-  vector<AsyncBot*> bots;
+  std::vector<std::thread> threads;
+  std::thread write_thread = std::thread(writeLoop);
+  std::vector<AsyncBot*> bots;
   for(int threadIdx = 0; threadIdx<numAnalysisThreads; threadIdx++) {
     string searchRandSeed = Global::uint64ToHexString(seedRand.nextUInt64()) + Global::uint64ToHexString(seedRand.nextUInt64());
     AsyncBot* bot = new AsyncBot(defaultParams, nnEval, &logger, searchRandSeed);
-    threads.push_back(thread(analysisLoopProtected,bot,threadIdx));
+    threads.push_back(std::thread(analysisLoopProtected,bot,threadIdx));
     bots.push_back(bot);
   }
 
@@ -422,7 +422,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
           }
 
           bool hasTurnNumbers = false;
-          vector<int> turnNumbers;
+          std::vector<int> turnNumbers;
           if(input.find("turnNumbers") != input.end()) {
             try {
               turnNumbers = input["turnNumbers"].get<vector<int> >();
@@ -436,7 +436,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
 
           auto terminateRequest = [&bots,&reportNoAnalysis](AnalyzeRequest* request) {
             //Firstly, flag the request as terminated
-            int prevStatus = request->status.exchange(AnalyzeRequest::STATUS_TERMINATED,memory_order_acq_rel);
+            int prevStatus = request->status.exchange(AnalyzeRequest::STATUS_TERMINATED,std::memory_order_acq_rel);
             //Already terminated? Nothing to do.
             if(prevStatus == AnalyzeRequest::STATUS_TERMINATED)
             {}
@@ -459,8 +459,8 @@ int MainCmds::analysis(int argc, const char* const* argv) {
           };
 
           {
-            lock_guard<mutex> lock(openRequestsMutex);
-            set<int> turnNumbersSet(turnNumbers.begin(),turnNumbers.end());
+            std::lock_guard<std::mutex> lock(openRequestsMutex);
+            std::set<int> turnNumbersSet(turnNumbers.begin(),turnNumbers.end());
             for(auto it = openRequests.begin(); it != openRequests.end(); ++it) {
               AnalyzeRequest* request = it->second;
               if(request->id == terminateId && (!hasTurnNumbers || (turnNumbersSet.find(request->turnNumber) != turnNumbersSet.end())))
@@ -588,7 +588,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
         boardYSize = (int)yBuf;
       }
 
-      auto parseBoardLocs = [boardXSize,boardYSize,&rbase,&reportErrorForId](const json& dict, const char* field, vector<Loc>& buf, bool allowPass) {
+      auto parseBoardLocs = [boardXSize,boardYSize,&rbase,&reportErrorForId](const json& dict, const char* field, std::vector<Loc>& buf, bool allowPass) {
         buf.clear();
         if(!dict[field].is_array()) {
           reportErrorForId(rbase.id, field, "Must be an array of GTP board vertices");
@@ -617,7 +617,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
         return true;
       };
 
-      auto parseBoardMoves = [boardXSize,boardYSize,&rbase,&reportErrorForId](const json& dict, const char* field, vector<Move>& buf, bool allowPass) {
+      auto parseBoardMoves = [boardXSize,boardYSize,&rbase,&reportErrorForId](const json& dict, const char* field, std::vector<Move>& buf, bool allowPass) {
         buf.clear();
         if(!dict[field].is_array()) {
           reportErrorForId(rbase.id, field, "Must be an array of pairs of the form: [\"b\" or \"w\", GTP board vertex]");
@@ -666,12 +666,12 @@ int MainCmds::analysis(int argc, const char* const* argv) {
         return true;
       };
       /*
-      vector<Move> placements;
+      std::vector<Move> placements;
       if(input.find("initialStones") != input.end()) {
         if(!parseBoardMoves(input, "initialStones", placements, false))
           continue;
       }*/
-      vector<Move> moveHistory;
+      std::vector<Move> moveHistory;
       if(input.find("moves") != input.end()) {
         if(!parseBoardMoves(input, "moves", moveHistory, true))
           continue;
@@ -687,9 +687,9 @@ int MainCmds::analysis(int argc, const char* const* argv) {
           continue;
       }
 
-      vector<bool> shouldAnalyze(moveHistory.size()+1,false);
+      std::vector<bool> shouldAnalyze(moveHistory.size()+1,false);
       if(input.find("analyzeTurns") != input.end()) {
-        vector<int> analyzeTurns;
+        std::vector<int> analyzeTurns;
         try {
           analyzeTurns = input["analyzeTurns"].get<vector<int> >();
         }
@@ -715,9 +715,9 @@ int MainCmds::analysis(int argc, const char* const* argv) {
         shouldAnalyze[shouldAnalyze.size()-1] = true;
       }
 
-      map<int,int64_t> priorities;
+      std::map<int,int64_t> priorities;
       if(input.find("priorities") != input.end()) {
-        vector<int64_t> prioritiesVec;
+        std::vector<int64_t> prioritiesVec;
         try {
           prioritiesVec = input["priorities"].get<vector<int64_t> >();
         }
@@ -729,7 +729,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
           reportErrorForId(rbase.id, "priorities", "Can only specify when also specifying analyzeTurns");
           continue;
         }
-        vector<int> analyzeTurns = input["analyzeTurns"].get<vector<int> >();
+        std::vector<int> analyzeTurns = input["analyzeTurns"].get<vector<int> >();
         if(prioritiesVec.size() != analyzeTurns.size()) {
           reportErrorForId(rbase.id, "priorities", "Must be of matching length to analyzeTurns");
           continue;
@@ -815,7 +815,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
           reportErrorForId(rbase.id, "overrideSettings", "Must be an object");
           continue;
         }
-        map<string,string> overrideSettings;
+        std::map<string,string> overrideSettings;
         for(auto it = settings.begin(); it != settings.end(); ++it) {
           overrideSettings[it.key()] = it.value().is_string() ? it.value().get<string>(): it.value().dump(); // always convert to string
         }
@@ -830,7 +830,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
             loadParams(localCfg, rbase.params, rbase.perspective, defaultPerspective);
             SearchParams::failIfParamsDifferOnUnchangeableParameter(defaultParams,rbase.params);
             //Hard failure on unused override keys newly present in the config
-            vector<string> unusedKeys = localCfg.unusedKeys();
+            std::vector<string> unusedKeys = localCfg.unusedKeys();
             if(unusedKeys.size() > 0) {
               reportErrorForId(rbase.id, "overrideSettings", string("Unknown config params: ") + Global::concat(unusedKeys,","));
               continue;
@@ -936,7 +936,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
           }
 
           Player avoidPla;
-          vector<Loc> parsedLocs;
+          std::vector<Loc> parsedLocs;
           int64_t untilDepth;
           bool suc;
           suc = parsePlayer(avoidParams, "player", avoidPla);
@@ -946,10 +946,10 @@ int MainCmds::analysis(int argc, const char* const* argv) {
           suc = parseInteger(avoidParams, "untilDepth", untilDepth, 1, 1000000000, "Must be a positive integer");
           if(!suc) { failed = true; break; }
 
-          vector<int>& avoidMoveUntilByLoc = avoidPla == P_BLACK ? rbase.avoidMoveUntilByLocBlack : rbase.avoidMoveUntilByLocWhite;
+          std::vector<int>& avoidMoveUntilByLoc = avoidPla == P_BLACK ? rbase.avoidMoveUntilByLocBlack : rbase.avoidMoveUntilByLocWhite;
           avoidMoveUntilByLoc.resize(Board::MAX_ARR_SIZE);
           if(hasAllowMoves) {
-            fill(avoidMoveUntilByLoc.begin(),avoidMoveUntilByLoc.end(),(int)untilDepth);
+            std::fill(avoidMoveUntilByLoc.begin(),avoidMoveUntilByLoc.end(),(int)untilDepth);
             for(Loc loc: parsedLocs) {
               avoidMoveUntilByLoc[loc] = 0;
             }
@@ -990,7 +990,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
       BoardHistory hist(board,nextPla,rules,0);
 
       //Build and enqueue requests
-      vector<AnalyzeRequest*> newRequests;
+      std::vector<AnalyzeRequest*> newRequests;
       bool foundIllegalMove =  false;
       for(int turnNumber = 0; turnNumber <= moveHistory.size(); turnNumber++) {
         if(shouldAnalyze[turnNumber]) {
@@ -1020,7 +1020,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
           newRequest->priority = priority;
           newRequest->avoidMoveUntilByLocBlack = rbase.avoidMoveUntilByLocBlack;
           newRequest->avoidMoveUntilByLocWhite = rbase.avoidMoveUntilByLocWhite;
-          newRequest->status.store(AnalyzeRequest::STATUS_IN_QUEUE,memory_order_release);
+          newRequest->status.store(AnalyzeRequest::STATUS_IN_QUEUE,std::memory_order_release);
           newRequests.push_back(newRequest);
         }
         if(turnNumber >= moveHistory.size())
@@ -1041,7 +1041,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
 
       //Add all requests to open requests
       {
-        lock_guard<mutex> lock(openRequestsMutex);
+        std::lock_guard<std::mutex> lock(openRequestsMutex);
         for(int i = 0; i<newRequests.size(); i++) {
           openRequests[newRequests[i]->internalId] = newRequests[i];
         }
@@ -1049,8 +1049,8 @@ int MainCmds::analysis(int argc, const char* const* argv) {
       //Push into queue for processing
       for(int i = 0; i<newRequests.size(); i++) {
         //Compare first by user-provided priority, and next breaks ties by preferring earlier requests.
-        pair<int64_t,int64_t> priorityKey = make_pair(newRequests[i]->priority, -numRequestsSoFar);
-        bool suc = toAnalyzeQueue.forcePush( make_pair(priorityKey, newRequests[i]) );
+        std::pair<int64_t,int64_t> priorityKey = std::make_pair(newRequests[i]->priority, -numRequestsSoFar);
+        bool suc = toAnalyzeQueue.forcePush( std::make_pair(priorityKey, newRequests[i]) );
         assert(suc);
         (void)suc;
         numRequestsSoFar++;

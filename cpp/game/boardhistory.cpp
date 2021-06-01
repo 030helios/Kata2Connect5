@@ -19,8 +19,8 @@ BoardHistory::BoardHistory()
    isGameFinished(false),winner(C_EMPTY),finalWhiteMinusBlackScore(0.0f),
    isScored(false),isNoResult(false),isResignation(false)
 {
-  fill(wasEverOccupiedOrPlayed, wasEverOccupiedOrPlayed+Board::MAX_ARR_SIZE, false);
-  fill(superKoBanned, superKoBanned+Board::MAX_ARR_SIZE, false);
+  std::fill(wasEverOccupiedOrPlayed, wasEverOccupiedOrPlayed+Board::MAX_ARR_SIZE, false);
+  std::fill(superKoBanned, superKoBanned+Board::MAX_ARR_SIZE, false);
 }
 
 BoardHistory::~BoardHistory()
@@ -41,8 +41,8 @@ BoardHistory::BoardHistory(const Board& board, Player pla, const Rules& r, int e
    isGameFinished(false),winner(C_EMPTY),finalWhiteMinusBlackScore(0.0f),
    isScored(false),isNoResult(false),isResignation(false)
 {
-  fill(wasEverOccupiedOrPlayed, wasEverOccupiedOrPlayed+Board::MAX_ARR_SIZE, false);
-  fill(superKoBanned, superKoBanned+Board::MAX_ARR_SIZE, false);
+  std::fill(wasEverOccupiedOrPlayed, wasEverOccupiedOrPlayed+Board::MAX_ARR_SIZE, false);
+  std::fill(superKoBanned, superKoBanned+Board::MAX_ARR_SIZE, false);
   clear(board,pla,rules);
 }
 
@@ -60,9 +60,9 @@ BoardHistory::BoardHistory(const BoardHistory& other)
    isGameFinished(other.isGameFinished),winner(other.winner),finalWhiteMinusBlackScore(other.finalWhiteMinusBlackScore),
    isScored(other.isScored),isNoResult(other.isNoResult),isResignation(other.isResignation)
 {
-  copy(other.recentBoards, other.recentBoards+NUM_RECENT_BOARDS, recentBoards);
-  copy(other.wasEverOccupiedOrPlayed, other.wasEverOccupiedOrPlayed+Board::MAX_ARR_SIZE, wasEverOccupiedOrPlayed);
-  copy(other.superKoBanned, other.superKoBanned+Board::MAX_ARR_SIZE, superKoBanned);
+  std::copy(other.recentBoards, other.recentBoards+NUM_RECENT_BOARDS, recentBoards);
+  std::copy(other.wasEverOccupiedOrPlayed, other.wasEverOccupiedOrPlayed+Board::MAX_ARR_SIZE, wasEverOccupiedOrPlayed);
+  std::copy(other.superKoBanned, other.superKoBanned+Board::MAX_ARR_SIZE, superKoBanned);
 }
 
 
@@ -77,11 +77,11 @@ BoardHistory& BoardHistory::operator=(const BoardHistory& other)
   initialPla = other.initialPla;
   initialTurnNumber = other.initialTurnNumber;
   whiteHasMoved = other.whiteHasMoved;
-  copy(other.recentBoards, other.recentBoards+NUM_RECENT_BOARDS, recentBoards);
+  std::copy(other.recentBoards, other.recentBoards+NUM_RECENT_BOARDS, recentBoards);
   currentRecentBoardIdx = other.currentRecentBoardIdx;
   presumedNextMovePla = other.presumedNextMovePla;
-  copy(other.wasEverOccupiedOrPlayed, other.wasEverOccupiedOrPlayed+Board::MAX_ARR_SIZE, wasEverOccupiedOrPlayed);
-  copy(other.superKoBanned, other.superKoBanned+Board::MAX_ARR_SIZE, superKoBanned);
+  std::copy(other.wasEverOccupiedOrPlayed, other.wasEverOccupiedOrPlayed+Board::MAX_ARR_SIZE, wasEverOccupiedOrPlayed);
+  std::copy(other.superKoBanned, other.superKoBanned+Board::MAX_ARR_SIZE, superKoBanned);
   hashesBeforeBlackPass = other.hashesBeforeBlackPass;
   hashesBeforeWhitePass = other.hashesBeforeWhitePass;
   numTurnsThisPhase = other.numTurnsThisPhase;
@@ -97,7 +97,7 @@ BoardHistory& BoardHistory::operator=(const BoardHistory& other)
 
 BoardHistory::BoardHistory(BoardHistory&& other) noexcept
  :rules(other.rules),
-  moveHistory(move(other.moveHistory)),koHashHistory(move(other.koHashHistory)),
+  moveHistory(std::move(other.moveHistory)),koHashHistory(std::move(other.koHashHistory)),
   initialBoard(other.initialBoard),
   initialPla(other.initialPla),
   initialTurnNumber(other.initialTurnNumber),
@@ -105,31 +105,31 @@ BoardHistory::BoardHistory(BoardHistory&& other) noexcept
   recentBoards(),
   currentRecentBoardIdx(other.currentRecentBoardIdx),
   presumedNextMovePla(other.presumedNextMovePla),
-  hashesBeforeBlackPass(move(other.hashesBeforeBlackPass)),hashesBeforeWhitePass(move(other.hashesBeforeWhitePass)),
+  hashesBeforeBlackPass(std::move(other.hashesBeforeBlackPass)),hashesBeforeWhitePass(std::move(other.hashesBeforeWhitePass)),
   isGameFinished(other.isGameFinished),winner(other.winner),finalWhiteMinusBlackScore(other.finalWhiteMinusBlackScore),
   isScored(other.isScored),isNoResult(other.isNoResult),isResignation(other.isResignation)
 {
-  copy(other.recentBoards, other.recentBoards+NUM_RECENT_BOARDS, recentBoards);
-  copy(other.wasEverOccupiedOrPlayed, other.wasEverOccupiedOrPlayed+Board::MAX_ARR_SIZE, wasEverOccupiedOrPlayed);
-  copy(other.superKoBanned, other.superKoBanned+Board::MAX_ARR_SIZE, superKoBanned);
+  std::copy(other.recentBoards, other.recentBoards+NUM_RECENT_BOARDS, recentBoards);
+  std::copy(other.wasEverOccupiedOrPlayed, other.wasEverOccupiedOrPlayed+Board::MAX_ARR_SIZE, wasEverOccupiedOrPlayed);
+  std::copy(other.superKoBanned, other.superKoBanned+Board::MAX_ARR_SIZE, superKoBanned);
 }
 
 BoardHistory& BoardHistory::operator=(BoardHistory&& other) noexcept
 {
   rules = other.rules;
-  moveHistory = move(other.moveHistory);
-  koHashHistory = move(other.koHashHistory);
+  moveHistory = std::move(other.moveHistory);
+  koHashHistory = std::move(other.koHashHistory);
   initialBoard = other.initialBoard;
   initialPla = other.initialPla;
   initialTurnNumber = other.initialTurnNumber;
   whiteHasMoved = other.whiteHasMoved;
-  copy(other.recentBoards, other.recentBoards+NUM_RECENT_BOARDS, recentBoards);
+  std::copy(other.recentBoards, other.recentBoards+NUM_RECENT_BOARDS, recentBoards);
   currentRecentBoardIdx = other.currentRecentBoardIdx;
   presumedNextMovePla = other.presumedNextMovePla;
-  copy(other.wasEverOccupiedOrPlayed, other.wasEverOccupiedOrPlayed+Board::MAX_ARR_SIZE, wasEverOccupiedOrPlayed);
-  copy(other.superKoBanned, other.superKoBanned+Board::MAX_ARR_SIZE, superKoBanned);
-  hashesBeforeBlackPass = move(other.hashesBeforeBlackPass);
-  hashesBeforeWhitePass = move(other.hashesBeforeWhitePass);
+  std::copy(other.wasEverOccupiedOrPlayed, other.wasEverOccupiedOrPlayed+Board::MAX_ARR_SIZE, wasEverOccupiedOrPlayed);
+  std::copy(other.superKoBanned, other.superKoBanned+Board::MAX_ARR_SIZE, superKoBanned);
+  hashesBeforeBlackPass = std::move(other.hashesBeforeBlackPass);
+  hashesBeforeWhitePass = std::move(other.hashesBeforeWhitePass);
   numTurnsThisPhase = other.numTurnsThisPhase;
   isGameFinished = other.isGameFinished;
   winner = other.winner;
@@ -166,7 +166,7 @@ void BoardHistory::clear(const Board& board, Player pla, const Rules& r) {
     }
   }
 
-  fill(superKoBanned, superKoBanned+Board::MAX_ARR_SIZE, false);
+  std::fill(superKoBanned, superKoBanned+Board::MAX_ARR_SIZE, false);
   hashesBeforeBlackPass.clear();
   hashesBeforeWhitePass.clear();
   numTurnsThisPhase = 0;
@@ -368,7 +368,7 @@ void KoHashTable::recompute(const BoardHistory& history) {
     return a < b;
   };
 
-  sort(koHashHistorySortedByLowBits.begin(),koHashHistorySortedByLowBits.end(),cmpFirstByLowBits);
+  std::sort(koHashHistorySortedByLowBits.begin(),koHashHistorySortedByLowBits.end(),cmpFirstByLowBits);
 
   //Just in case, since we're using 32 bits for indices.
   if(koHashHistorySortedByLowBits.size() > 1000000000)

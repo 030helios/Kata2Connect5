@@ -18,8 +18,8 @@
 
 using namespace std;
 
-static atomic<bool> sigReceived(false);
-static atomic<bool> shouldStop(false);
+static std::atomic<bool> sigReceived(false);
+static std::atomic<bool> shouldStop(false);
 static void signalHandler(int signal)
 {
   if(signal == SIGINT || signal == SIGTERM) {
@@ -123,10 +123,10 @@ int MainCmds::selfplay(int argc, const char* const* argv) {
   if(!logToStdout)
     cout << "Loaded all config stuff, starting self play" << endl;
 
-  if(!atomic_is_lock_free(&shouldStop))
+  if(!std::atomic_is_lock_free(&shouldStop))
     throw StringError("shouldStop is not lock free, signal-quitting mechanism for terminating matches will NOT work!");
-  signal(SIGINT, signalHandler);
-  signal(SIGTERM, signalHandler);
+  std::signal(SIGINT, signalHandler);
+  std::signal(SIGTERM, signalHandler);
 
 
   //Returns true if a new net was loaded.
@@ -191,7 +191,7 @@ int MainCmds::selfplay(int argc, const char* const* argv) {
           return false;
         }
         double sleepTime = 10.0 + rand.nextDouble() * 30.0;
-        this_thread::sleep_for(chrono::duration<double>(sleepTime));
+        std::this_thread::sleep_for(std::chrono::duration<double>(sleepTime));
         continue;
       }
     }
@@ -226,7 +226,7 @@ int MainCmds::selfplay(int argc, const char* const* argv) {
   cfg.warnUnusedKeys(cerr,&logger);
 
   //Shared across all game loop threads
-  atomic<int64_t> numGamesStarted(0);
+  std::atomic<int64_t> numGamesStarted(0);
   ForkData* forkData = new ForkData();
   auto gameLoop = [
     &gameRunner,
@@ -257,7 +257,7 @@ int MainCmds::selfplay(int argc, const char* const* argv) {
       }
 
       //Callback that runGame will call periodically to ask us if we have a new neural net
-      function<NNEvaluator*()> checkForNewNNEval = [&manager,&nnEval,&prevModelName,&logger,&threadIdx]() -> NNEvaluator* {
+      std::function<NNEvaluator*()> checkForNewNNEval = [&manager,&nnEval,&prevModelName,&logger,&threadIdx]() -> NNEvaluator* {
         NNEvaluator* newNNEval = manager->acquireLatest();
         assert(newNNEval != NULL);
         if(newNNEval == nnEval) {
@@ -274,7 +274,7 @@ int MainCmds::selfplay(int argc, const char* const* argv) {
 
       FinishedGameData* gameData = NULL;
 
-      int64_t gameIdx = numGamesStarted.fetch_add(1,memory_order_acq_rel);
+      int64_t gameIdx = numGamesStarted.fetch_add(1,std::memory_order_acq_rel);
       if(gameIdx < maxGamesTotal) {
         manager->countOneGameStarted(nnEval);
         MatchPairer::BotSpec botSpecB;
@@ -313,8 +313,8 @@ int MainCmds::selfplay(int argc, const char* const* argv) {
   };
 
   //Looping thread for polling for new neural nets and loading them in
-  mutex modelLoadMutex;
-  condition_variable modelLoadSleepVar;
+  std::mutex modelLoadMutex;
+  std::condition_variable modelLoadSleepVar;
   auto modelLoadLoop = [&modelLoadMutex,&modelLoadSleepVar,&logger,&manager,&loadLatestNeuralNetIntoManager]() {
     logger.write("Model loading loop thread starting");
 
@@ -329,8 +329,8 @@ int MainCmds::selfplay(int argc, const char* const* argv) {
         break;
 
       //Sleep for a while and then re-poll
-      unique_lock<mutex> lock(modelLoadMutex);
-      modelLoadSleepVar.wait_for(lock, chrono::seconds(20), [](){return shouldStop.load();});
+      std::unique_lock<std::mutex> lock(modelLoadMutex);
+      modelLoadSleepVar.wait_for(lock, std::chrono::seconds(20), [](){return shouldStop.load();});
     }
 
     logger.write("Model loading loop thread terminating");
@@ -339,11 +339,11 @@ int MainCmds::selfplay(int argc, const char* const* argv) {
     Logger::logThreadUncaught("model load loop", &logger, modelLoadLoop);
   };
 
-  vector<thread> threads;
+  std::vector<std::thread> threads;
   for(int i = 0; i<numGameThreads; i++) {
-    threads.push_back(thread(gameLoopProtected,i));
+    threads.push_back(std::thread(gameLoopProtected,i));
   }
-  thread modelLoadLoopThread(modelLoadLoopProtected);
+  std::thread modelLoadLoopThread(modelLoadLoopProtected);
 
   //Wait for all game threads to stop
   for(int i = 0; i<threads.size(); i++)
@@ -357,7 +357,7 @@ int MainCmds::selfplay(int argc, const char* const* argv) {
   {
     //Lock so that we don't race where we notify the loading thread to wake when it's still in
     //its own critical section but not yet slept, and to ensure the two agree on shouldStop.
-    lock_guard<mutex> lock(modelLoadMutex);
+    std::lock_guard<std::mutex> lock(modelLoadMutex);
     modelLoadSleepVar.notify_all();
   }
   modelLoadLoopThread.join();

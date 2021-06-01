@@ -337,7 +337,7 @@ int MainCmds::runtinynntests(int argc, const char* const* argv) {
       maxPlayouts,
       maxTime,
       maxPonderTime,
-      vector<int>(),
+      std::vector<int>(),
       nnCacheSizePowerOfTwo,
       nnMutexPoolSizePowerOfTwo,
       numSearchThreads

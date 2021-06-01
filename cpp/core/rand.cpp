@@ -236,8 +236,8 @@ void Rand::init()
 
   //Mix thread id.
   {
-    hash<thread::id> hashOfThread;
-    size_t hash = hashOfThread(this_thread::get_id());
+    std::hash<std::thread::id> hashOfThread;
+    size_t hash = hashOfThread(std::this_thread::get_id());
     s += "|";
     s += Global::uint64ToHexString((uint64_t)hash);
   }
@@ -282,7 +282,7 @@ void Rand::init(const string& seed)
     uint32_t hash[4];
     MD5::get(seed.c_str(), seed.size(), hash);
     s += "|";
-    s += to_string(hash[0]);
+    s += std::to_string(hash[0]);
     s += "|";
     s += seed;
   }
@@ -294,7 +294,7 @@ void Rand::init(const string& seed)
     uint64_t nextValue;
     do {
       if(nextHashIdx >= 4) {
-        string tmp = to_string(counter) + s;
+        string tmp = std::to_string(counter) + s;
         //cout << tmp << endl;
         counter += 37;
         SHA2::get256(tmp.c_str(), hash);
@@ -958,7 +958,7 @@ rand.nextGamma(maxDouble)
 )%%";
     TestCommon::expect(name,out,expected);
 
-    if(numeric_limits<double>::is_iec559 && numeric_limits<double>::has_infinity) {
+    if(std::numeric_limits<double>::is_iec559 && std::numeric_limits<double>::has_infinity) {
       double inf = INFINITY;
       out << "pow(0.5,inf) " << pow(0.5, inf) << endl;
       out << "pow(1.0,inf) " << pow(1.0, inf) << endl;

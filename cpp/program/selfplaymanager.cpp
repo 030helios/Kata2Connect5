@@ -54,7 +54,7 @@ SelfplayManager::SelfplayManager(
 }
 
 SelfplayManager::~SelfplayManager() {
-  unique_lock<mutex> lock(managerMutex);
+  std::unique_lock<std::mutex> lock(managerMutex);
   for(size_t i = 0; i<modelDatas.size(); i++) {
     //If a client tries to delete this while something is still acquired, there's something wrong.
     assert(modelDatas[i]->acquireCount == 0);
@@ -72,7 +72,7 @@ SelfplayManager::~SelfplayManager() {
 }
 
 uint64_t SelfplayManager::getTotalNumRowsProcessed() const {
-  lock_guard<mutex> lock(managerMutex);
+  std::lock_guard<std::mutex> lock(managerMutex);
   uint64_t total = totalNumRowsProcessed;
   for(size_t i = 0; i<modelDatas.size(); i++) {
     total += modelDatas[i]->nnEval->numRowsProcessed();
@@ -106,7 +106,7 @@ void SelfplayManager::maybeAutoCleanupAlreadyLocked() {
 
 
 void SelfplayManager::cleanupUnusedModelsOlderThan(double seconds) {
-  lock_guard<mutex> lock(managerMutex);
+  std::lock_guard<std::mutex> lock(managerMutex);
   double now = timer.getSeconds();
   for(size_t i = 0; i<modelDatas.size(); i++) {
     ModelData* foundData = modelDatas[i];
@@ -126,7 +126,7 @@ void SelfplayManager::cleanupUnusedModelsOlderThan(double seconds) {
 }
 
 void SelfplayManager::clearUnusedModelCaches() {
-  lock_guard<mutex> lock(managerMutex);
+  std::lock_guard<std::mutex> lock(managerMutex);
   for(size_t i = 0; i<modelDatas.size(); i++) {
     ModelData* foundData = modelDatas[i];
     if(foundData->acquireCount <= 0) {
@@ -143,7 +143,7 @@ void SelfplayManager::loadModelAndStartDataWriting(
   ofstream* sgfOut
 ) {
   string modelName = nnEval->getModelName();
-  lock_guard<mutex> lock(managerMutex);
+  std::lock_guard<std::mutex> lock(managerMutex);
   for(size_t i = 0; i<modelDatas.size(); i++) {
     if(modelDatas[i]->modelName == modelName) {
       throw StringError("SelfplayManager::loadModelAndStartDataWriting: Duplicate model name: " + modelName);
@@ -155,7 +155,7 @@ void SelfplayManager::loadModelAndStartDataWriting(
   ModelData* newModel = new ModelData(modelName,nnEval,maxDataQueueSize,tdataWriter,vdataWriter,sgfOut,initialTime,hasDataWriteLoop);
   modelDatas.push_back(newModel);
   numDataWriteLoopsActive++;
-  thread newThread(dataWriteLoop,this,newModel);
+  std::thread newThread(dataWriteLoop,this,newModel);
   newThread.detach();
 
   maybeAutoCleanupAlreadyLocked();
@@ -168,7 +168,7 @@ void SelfplayManager::loadModelNoDataWritingLoop(
   ofstream* sgfOut
 ) {
   string modelName = nnEval->getModelName();
-  lock_guard<mutex> lock(managerMutex);
+  std::lock_guard<std::mutex> lock(managerMutex);
   for(size_t i = 0; i<modelDatas.size(); i++) {
     if(modelDatas[i]->modelName == modelName) {
       throw StringError("SelfplayManager::loadModelAndStartDataWriting: Duplicate model name: " + modelName);
@@ -183,27 +183,27 @@ void SelfplayManager::loadModelNoDataWritingLoop(
 }
 
 size_t SelfplayManager::numModels() const {
-  lock_guard<mutex> lock(managerMutex);
+  std::lock_guard<std::mutex> lock(managerMutex);
   return modelDatas.size();
 }
 
 vector<string> SelfplayManager::modelNames() const {
-  lock_guard<mutex> lock(managerMutex);
-  vector<string> names;
+  std::lock_guard<std::mutex> lock(managerMutex);
+  std::vector<string> names;
   for(size_t i = 0; i<modelDatas.size(); i++)
     names.push_back(modelDatas[i]->modelName);
   return names;
 }
 
 string SelfplayManager::getLatestModelName() const {
-  lock_guard<mutex> lock(managerMutex);
+  std::lock_guard<std::mutex> lock(managerMutex);
   if(modelDatas.size() <= 0)
     throw StringError("SelfplayManager::getLatestModelName: no models loaded");
   return modelDatas[modelDatas.size()-1]->modelName;
 }
 
-bool SelfplayManager::hasModel(const string& modelName) const {
-  lock_guard<mutex> lock(managerMutex);
+bool SelfplayManager::hasModel(const std::string& modelName) const {
+  std::lock_guard<std::mutex> lock(managerMutex);
   for(size_t i = 0; i<modelDatas.size(); i++) {
     if(modelDatas[i]->modelName == modelName)
       return true;
@@ -222,7 +222,7 @@ void SelfplayManager::releaseAlreadyLocked(ModelData* foundData) {
 }
 
 NNEvaluator* SelfplayManager::acquireModel(const string& modelName) {
-  lock_guard<mutex> lock(managerMutex);
+  std::lock_guard<std::mutex> lock(managerMutex);
   ModelData* foundData = NULL;
   for(size_t i = 0; i<modelDatas.size(); i++) {
     if(modelDatas[i]->modelName == modelName) {
@@ -236,7 +236,7 @@ NNEvaluator* SelfplayManager::acquireModel(const string& modelName) {
 }
 
 NNEvaluator* SelfplayManager::acquireLatest() {
-  lock_guard<mutex> lock(managerMutex);
+  std::lock_guard<std::mutex> lock(managerMutex);
   if(modelDatas.size() <= 0)
     return NULL;
   ModelData* foundData = modelDatas[modelDatas.size()-1];
@@ -244,7 +244,7 @@ NNEvaluator* SelfplayManager::acquireLatest() {
 }
 
 void SelfplayManager::release(const string& modelName) {
-  lock_guard<mutex> lock(managerMutex);
+  std::lock_guard<std::mutex> lock(managerMutex);
   ModelData* foundData = NULL;
   for(size_t i = 0; i<modelDatas.size(); i++) {
     if(modelDatas[i]->modelName == modelName) {
@@ -259,7 +259,7 @@ void SelfplayManager::release(const string& modelName) {
 }
 
 void SelfplayManager::release(NNEvaluator* nnEval) {
-  lock_guard<mutex> lock(managerMutex);
+  std::lock_guard<std::mutex> lock(managerMutex);
   ModelData* foundData = NULL;
   for(size_t i = 0; i<modelDatas.size(); i++) {
     if(modelDatas[i]->nnEval == nnEval) {
@@ -274,7 +274,7 @@ void SelfplayManager::release(NNEvaluator* nnEval) {
 }
 
 void SelfplayManager::countOneGameStarted(NNEvaluator* nnEval) {
-  unique_lock<mutex> lock(managerMutex);
+  std::unique_lock<std::mutex> lock(managerMutex);
   ModelData* foundData = NULL;
   for(size_t i = 0; i<modelDatas.size(); i++) {
     if(modelDatas[i]->nnEval == nnEval) {
@@ -302,7 +302,7 @@ void SelfplayManager::countOneGameStarted(NNEvaluator* nnEval) {
 }
 
 void SelfplayManager::enqueueDataToWrite(const string& modelName, FinishedGameData* gameData) {
-  unique_lock<mutex> lock(managerMutex);
+  std::unique_lock<std::mutex> lock(managerMutex);
   ModelData* foundData = NULL;
   for(size_t i = 0; i<modelDatas.size(); i++) {
     if(modelDatas[i]->modelName == modelName) {
@@ -321,7 +321,7 @@ void SelfplayManager::enqueueDataToWrite(const string& modelName, FinishedGameDa
 }
 
 void SelfplayManager::enqueueDataToWrite(NNEvaluator* nnEval, FinishedGameData* gameData) {
-  unique_lock<mutex> lock(managerMutex);
+  std::unique_lock<std::mutex> lock(managerMutex);
   ModelData* foundData = NULL;
   for(size_t i = 0; i<modelDatas.size(); i++) {
     if(modelDatas[i]->nnEval == nnEval) {
@@ -390,7 +390,7 @@ void SelfplayManager::runDataWriteLoopImpl(ModelData* modelData) {
   //absolutely sure that the manager is done removing it from its own tracking in modelDatas, so we lock
   //the manager to make sure that we block until this is the case. While we're at it, we go ahead and assert it too.
   {
-    lock_guard<mutex> lock(managerMutex);
+    std::lock_guard<std::mutex> lock(managerMutex);
     for(size_t i = 0; i<modelDatas.size(); i++) {
       (void)i;
       assert(modelDatas[i] != modelData);
@@ -413,7 +413,7 @@ void SelfplayManager::runDataWriteLoopImpl(ModelData* modelData) {
   }
 
   //Check back in and notify that we're done once done cleaning up.
-  unique_lock<mutex> lock(managerMutex);
+  std::unique_lock<std::mutex> lock(managerMutex);
   numDataWriteLoopsActive--;
   assert(numDataWriteLoopsActive >= 0);
   if(numDataWriteLoopsActive == 0) {
@@ -425,9 +425,9 @@ void SelfplayManager::runDataWriteLoopImpl(ModelData* modelData) {
 
 void SelfplayManager::withDataWriters(
   NNEvaluator* nnEval,
-  function<void(TrainingDataWriter* tdataWriter, TrainingDataWriter* vdataWriter, ofstream* sgfOut)> f
+  std::function<void(TrainingDataWriter* tdataWriter, TrainingDataWriter* vdataWriter, std::ofstream* sgfOut)> f
 ) {
-  lock_guard<mutex> lock(managerMutex);
+  std::lock_guard<std::mutex> lock(managerMutex);
   ModelData* foundData = NULL;
   for(size_t i = 0; i<modelDatas.size(); i++) {
     if(modelDatas[i]->nnEval == nnEval) {

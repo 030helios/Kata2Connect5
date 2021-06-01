@@ -53,7 +53,7 @@ int MainCmds::evalsgf(int argc, const char *const *argv)
     TCLAP::ValueArg<string> hintLocArg("", "hint-loc", "Hint loc", false, string(), "MOVE");
     TCLAP::ValueArg<long> visitsArg("v", "visits", "Set the number of visits", false, -1, "VISITS");
     TCLAP::ValueArg<int> threadsArg("t", "threads", "Set the number of threads", false, -1, "THREADS");
-    TCLAP::ValueArg<float> overrideKomiArg("", "override-komi", "Artificially set komi", false, numeric_limits<float>::quiet_NaN(), "KOMI");
+    TCLAP::ValueArg<float> overrideKomiArg("", "override-komi", "Artificially set komi", false, std::numeric_limits<float>::quiet_NaN(), "KOMI");
     TCLAP::SwitchArg printOwnershipArg("", "print-ownership", "Print ownership");
     TCLAP::SwitchArg printRootNNValuesArg("", "print-root-nn-values", "Print root nn values");
     TCLAP::SwitchArg printPolicyArg("", "print-policy", "Print policy");
@@ -152,7 +152,7 @@ int MainCmds::evalsgf(int argc, const char *const *argv)
   auto setUpBoardUsingRules = [&board, &nextPla, &hist, overrideKomi, moveNum, &sgf, &extraMoves](const Rules &initialRules)
   {
     sgf->setupInitialBoardAndHist(initialRules, board, nextPla, hist);
-    vector<Move> &moves = sgf->moves;
+    std::vector<Move> &moves = sgf->moves;
 
     if (moveNum < 0)
       throw StringError("Move num " + Global::intToString(moveNum) + " requested but must be non-negative");
@@ -161,7 +161,7 @@ int MainCmds::evalsgf(int argc, const char *const *argv)
 
     sgf->playMovesTolerant(board, nextPla, hist, moveNum, false);
     /*
-    vector<Loc> extraMoveLocs = Location::parseSequence(extraMoves,board);
+    std::vector<Loc> extraMoveLocs = Location::parseSequence(extraMoves,board);
     for(size_t i = 0; i<extraMoveLocs.size(); i++) {
       Loc loc = extraMoveLocs[i];
       if(!hist.isLegal(board,loc,nextPla)) {
@@ -223,7 +223,7 @@ int MainCmds::evalsgf(int argc, const char *const *argv)
     Setup::initializeSession(cfg);
     int maxConcurrentEvals = params.numThreads * 2 + 16; // * 2 + 16 just to give plenty of headroom
     int expectedConcurrentEvals = params.numThreads;
-    int defaultMaxBatchSize = max(8, ((params.numThreads + 3) / 4) * 4);
+    int defaultMaxBatchSize = std::max(8, ((params.numThreads + 3) / 4) * 4);
     string expectedSha256 = "";
     nnEval = Setup::initializeNNEvaluator(
         modelFile, modelFile, expectedSha256, cfg, logger, seedRand, maxConcurrentEvals, expectedConcurrentEvals,

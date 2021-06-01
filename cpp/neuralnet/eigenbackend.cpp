@@ -250,7 +250,7 @@ struct ConvLayer {
       static constexpr int maxTileYSize = 6;
 
       //INTILE_YSIZE, INTILE_XSIZE, ic, oc
-      vector<float> transWeights(inTileXYSize * inChannels * outChannels);
+      std::vector<float> transWeights(inTileXYSize * inChannels * outChannels);
       auto transform3x3_6 = [](float& a0, float& a1, float& a2, float& a3, float& a4, float& a5) {
         float z0 = a0; float z1 = a1; float z2 = a2;
         a0 = 0.25f * z0;
@@ -332,7 +332,7 @@ struct ConvLayer {
       constexpr int inTileYSize = 6;
       size_t totalChannelsRounded = roundUpToMultiple(inChannels,32) + roundUpToMultiple(outChannels,32);
       size_t sizeForTransforms = totalChannelsRounded * maxBatchSize * numTilesY * numTilesX * inTileXSize * inTileYSize;
-      size_t sizeForTileBufs = 2 * inTileXSize * inTileYSize * roundUpToMultiple(max(inChannels,outChannels),32);
+      size_t sizeForTileBufs = 2 * inTileXSize * inTileYSize * roundUpToMultiple(std::max(inChannels,outChannels),32);
       return sizeForTransforms + sizeForTileBufs;
     }
     return 0;
@@ -357,8 +357,8 @@ struct ConvLayer {
       const int outTileYSize = convYSize == 5 ? 2 : 4;
 
       float* tile = convWorkspace;
-      float* tile2 = tile + inTileXSize * inTileYSize * roundUpToMultiple(max(inChannels,outChannels),32);
-      float* convWorkspaceIn = tile2 + inTileXSize * inTileYSize * roundUpToMultiple(max(inChannels,outChannels),32);
+      float* tile2 = tile + inTileXSize * inTileYSize * roundUpToMultiple(std::max(inChannels,outChannels),32);
+      float* convWorkspaceIn = tile2 + inTileXSize * inTileYSize * roundUpToMultiple(std::max(inChannels,outChannels),32);
       float* convWorkspaceOut = convWorkspaceIn + roundUpToMultiple(inChannels,32) * batchSize * numTilesY * numTilesX * inTileXSize * inTileYSize;
       TENSORMAP3 transformedInput(convWorkspaceIn, inChannels, batchSize * numTilesY * numTilesX, inTileXSize * inTileYSize);
       TENSORMAP3 transformedOutput(convWorkspaceOut, outChannels, batchSize * numTilesY * numTilesX, inTileXSize * inTileYSize);
@@ -371,7 +371,7 @@ struct ConvLayer {
                 int y = yTile*outTileYSize+dy+inTileYOffset;
                 int subTileIdx = dy * inTileXSize + dx;
                 if(x < 0 || y < 0 || x >= xSize || y >= ySize) {
-                  fill(tile + subTileIdx * inChannels, tile + (subTileIdx+1) * inChannels, 0.0f);
+                  std::fill(tile + subTileIdx * inChannels, tile + (subTileIdx+1) * inChannels, 0.0f);
                 }
                 else {
                   for(int ic = 0; ic < inChannels; ic++) {
@@ -442,7 +442,7 @@ struct ConvLayer {
       //TODO someday: Does eigen have a fast batched matrix multiply?
       //Here we just manually iterate over the 36 matrices that need to get multiplied.
       //Also, if eigen were to support *interleaved* matrices (viewing it as a matrix whose element is
-      //a vector of length 36 instead of a float), that might allow for improved transform/untransform implementations.
+      //a std::vector of length 36 instead of a float), that might allow for improved transform/untransform implementations.
       for(int dy = 0; dy < inTileYSize; dy++) {
         for(int dx = 0; dx < inTileXSize; dx++) {
           int subTileIdx = dy * inTileXSize + dx;
@@ -610,8 +610,8 @@ struct ConvLayer {
 struct BatchNormLayer {
   string name;
 
-  vector<float> mergedScale;
-  vector<float> mergedBias;
+  std::vector<float> mergedScale;
+  std::vector<float> mergedBias;
 
   BatchNormLayer() = delete;
   BatchNormLayer(const BatchNormLayer&) = delete;
@@ -691,7 +691,7 @@ struct MatMulLayer {
 
 struct MatBiasLayer {
   string name;
-  vector<float> weights;
+  std::vector<float> weights;
 
   MatBiasLayer() = delete;
   MatBiasLayer(const MatBiasLayer&) = delete;
@@ -757,7 +757,7 @@ struct ResidualBlock final : public ResidualBlockIntf {
       finalConv(desc.finalConv,nnX,nnY) {}
 
   size_t requiredConvWorkspaceElts(size_t maxBatchSize) const {
-    return max(
+    return std::max(
       regularConv.requiredConvWorkspaceElts(maxBatchSize),
       finalConv.requiredConvWorkspaceElts(maxBatchSize)
     );
@@ -829,9 +829,9 @@ struct GlobalPoolingResidualBlock final : public ResidualBlockIntf {
 
   size_t requiredConvWorkspaceElts(size_t maxBatchSize) const {
     size_t maxElts = 0;
-    maxElts = max(maxElts,regularConv.requiredConvWorkspaceElts(maxBatchSize));
-    maxElts = max(maxElts,gpoolConv.requiredConvWorkspaceElts(maxBatchSize));
-    maxElts = max(maxElts,finalConv.requiredConvWorkspaceElts(maxBatchSize));
+    maxElts = std::max(maxElts,regularConv.requiredConvWorkspaceElts(maxBatchSize));
+    maxElts = std::max(maxElts,gpoolConv.requiredConvWorkspaceElts(maxBatchSize));
+    maxElts = std::max(maxElts,finalConv.requiredConvWorkspaceElts(maxBatchSize));
     return maxElts;
   }
 
@@ -887,7 +887,7 @@ struct Trunk {
 
   ConvLayer initialConv;
   MatMulLayer initialMatMul;
-  vector<pair<int, unique_ptr<ResidualBlockIntf>>> blocks;
+  std::vector<pair<int, std::unique_ptr<ResidualBlockIntf>>> blocks;
   BatchNormLayer trunkTipBN;
   ActivationLayer trunkTipActivation;
 
@@ -907,16 +907,16 @@ struct Trunk {
     for (int i = 0; i < numBlocks; ++i) {
       if (desc.blocks[i].first == ORDINARY_BLOCK_KIND) {
         ResidualBlockDesc* blockDesc = (ResidualBlockDesc*)desc.blocks[i].second.get();
-        unique_ptr<ResidualBlockIntf> block = make_unique<ResidualBlock>(*blockDesc,nnX,nnY);
-        blocks.push_back(make_pair(ORDINARY_BLOCK_KIND, move(block)));
+        std::unique_ptr<ResidualBlockIntf> block = std::make_unique<ResidualBlock>(*blockDesc,nnX,nnY);
+        blocks.push_back(make_pair(ORDINARY_BLOCK_KIND, std::move(block)));
       }
       else if (desc.blocks[i].first == DILATED_BLOCK_KIND) {
         throw StringError("Eigen backend: Dilated residual blocks are not supported right now");
       }
       else if (desc.blocks[i].first == GLOBAL_POOLING_BLOCK_KIND) {
         GlobalPoolingResidualBlockDesc* blockDesc = (GlobalPoolingResidualBlockDesc*)desc.blocks[i].second.get();
-        unique_ptr<GlobalPoolingResidualBlock> block = make_unique<GlobalPoolingResidualBlock>(*blockDesc,nnX,nnY);
-        blocks.push_back(make_pair(GLOBAL_POOLING_BLOCK_KIND, move(block)));
+        std::unique_ptr<GlobalPoolingResidualBlock> block = std::make_unique<GlobalPoolingResidualBlock>(*blockDesc,nnX,nnY);
+        blocks.push_back(make_pair(GLOBAL_POOLING_BLOCK_KIND, std::move(block)));
       }
       else {
         ASSERT_UNREACHABLE;
@@ -930,7 +930,7 @@ struct Trunk {
   size_t requiredConvWorkspaceElts(size_t maxBatchSize) const {
     size_t maxElts = initialConv.requiredConvWorkspaceElts(maxBatchSize);
     for(int i = 0; i<blocks.size(); i++) {
-      maxElts = max(maxElts,blocks[i].second->requiredConvWorkspaceElts(maxBatchSize));
+      maxElts = std::max(maxElts,blocks[i].second->requiredConvWorkspaceElts(maxBatchSize));
     }
     return maxElts;
   }
@@ -1019,9 +1019,9 @@ struct PolicyHead {
 
   size_t requiredConvWorkspaceElts(size_t maxBatchSize) const {
     size_t maxElts = 0;
-    maxElts = max(maxElts,p1Conv.requiredConvWorkspaceElts(maxBatchSize));
-    maxElts = max(maxElts,g1Conv.requiredConvWorkspaceElts(maxBatchSize));
-    maxElts = max(maxElts,p2Conv.requiredConvWorkspaceElts(maxBatchSize));
+    maxElts = std::max(maxElts,p1Conv.requiredConvWorkspaceElts(maxBatchSize));
+    maxElts = std::max(maxElts,g1Conv.requiredConvWorkspaceElts(maxBatchSize));
+    maxElts = std::max(maxElts,p2Conv.requiredConvWorkspaceElts(maxBatchSize));
     return maxElts;
   }
 
@@ -1090,8 +1090,8 @@ struct ValueHead {
 
   size_t requiredConvWorkspaceElts(size_t maxBatchSize) const {
     size_t maxElts = 0;
-    maxElts = max(maxElts,v1Conv.requiredConvWorkspaceElts(maxBatchSize));
-    maxElts = max(maxElts,vOwnershipConv.requiredConvWorkspaceElts(maxBatchSize));
+    maxElts = std::max(maxElts,v1Conv.requiredConvWorkspaceElts(maxBatchSize));
+    maxElts = std::max(maxElts,vOwnershipConv.requiredConvWorkspaceElts(maxBatchSize));
     return maxElts;
   }
 
@@ -1158,9 +1158,9 @@ struct Model {
 
   size_t requiredConvWorkspaceElts(size_t maxBatchSize) const {
     size_t maxElts = 0;
-    maxElts = max(maxElts,trunk.requiredConvWorkspaceElts(maxBatchSize));
-    maxElts = max(maxElts,policyHead.requiredConvWorkspaceElts(maxBatchSize));
-    maxElts = max(maxElts,valueHead.requiredConvWorkspaceElts(maxBatchSize));
+    maxElts = std::max(maxElts,trunk.requiredConvWorkspaceElts(maxBatchSize));
+    maxElts = std::max(maxElts,policyHead.requiredConvWorkspaceElts(maxBatchSize));
+    maxElts = std::max(maxElts,valueHead.requiredConvWorkspaceElts(maxBatchSize));
     return maxElts;
   }
 
@@ -1288,8 +1288,8 @@ struct Buffers {
   TENSOR4 ownership;
 
   TENSOR3 mask;
-  vector<float> maskSum;
-  vector<float> convWorkspace;
+  std::vector<float> maskSum;
+  std::vector<float> convWorkspace;
 
   Buffers(
     const ModelDesc& desc,
@@ -1347,8 +1347,8 @@ struct InputBuffers {
   size_t singleScoreValueResultElts;
   size_t singleOwnershipResultElts;
 
-  vector<float> spatialInput;
-  vector<float> globalInput;
+  std::vector<float> spatialInput;
+  std::vector<float> globalInput;
 
   InputBuffers(const LoadedModel* loadedModel, int maxBatchSz, int nnXLen, int nnYLen) {
     const ModelDesc& m = loadedModel->modelDesc;
@@ -1369,8 +1369,8 @@ struct InputBuffers {
     assert(NNModelVersion::getNumSpatialFeatures(m.version) == m.numInputChannels);
     assert(NNModelVersion::getNumGlobalFeatures(m.version) == m.numInputGlobalChannels);
 
-    spatialInput = vector<float>(m.numInputChannels * xSize * ySize * maxBatchSize);
-    globalInput = vector<float>(m.numInputGlobalChannels * maxBatchSize);
+    spatialInput = std::vector<float>(m.numInputChannels * xSize * ySize * maxBatchSize);
+    globalInput = std::vector<float>(m.numInputGlobalChannels * maxBatchSize);
   }
 
   ~InputBuffers() { }
@@ -1420,7 +1420,7 @@ struct ComputeContext {
 };
 
 ComputeContext* NeuralNet::createComputeContext(
-  const vector<int>& gpuIdxs,
+  const std::vector<int>& gpuIdxs,
   Logger* logger,
   int nnXLen,
   int nnYLen,
@@ -1512,7 +1512,7 @@ void NeuralNet::getOutput(
   InputBuffers* inputBuffers,
   int numBatchEltsFilled,
   NNResultBuf** inputBufs,
-  vector<NNOutput*>& outputs
+  std::vector<NNOutput*>& outputs
 ) {
   assert(numBatchEltsFilled <= inputBuffers->maxBatchSize);
   assert(numBatchEltsFilled > 0);
@@ -1533,7 +1533,7 @@ void NeuralNet::getOutput(
 
     const float* rowGlobal = inputBufs[nIdx]->rowGlobal;
     const float* rowSpatial = inputBufs[nIdx]->rowSpatial;
-    copy(rowGlobal,rowGlobal+numGlobalFeatures,rowGlobalInput);
+    std::copy(rowGlobal,rowGlobal+numGlobalFeatures,rowGlobalInput);
     SymmetryHelpers::copyInputsWithSymmetry(rowSpatial, rowSpatialInput, 1, nnYLen, nnXLen, numSpatialFeatures, computeHandle->inputsUseNHWC, inputBufs[nIdx]->symmetry);
   }
 
@@ -1573,9 +1573,9 @@ void NeuralNet::getOutput(
   MAP2(scoreValue);
   MAP4(ownership);
   MAP3(mask);
-  vector<float>& maskSum = buffers.maskSum;
+  std::vector<float>& maskSum = buffers.maskSum;
   computeMaskSum(&mask,maskSum.data());
-  vector<float>& convWorkspace = buffers.convWorkspace;
+  std::vector<float>& convWorkspace = buffers.convWorkspace;
 
   computeHandle->context->model.apply(
     &computeHandle->handleInternal,
@@ -1707,8 +1707,8 @@ bool NeuralNet::testEvaluateConv(
   int nnYLen,
   bool useFP16,
   bool useNHWC,
-  const vector<float>& inputBuffer,
-  vector<float>& outputBuffer
+  const std::vector<float>& inputBuffer,
+  std::vector<float>& outputBuffer
 ) {
   if(!useNHWC || useFP16)
     return false;
@@ -1718,7 +1718,7 @@ bool NeuralNet::testEvaluateConv(
   TENSOR4 outTensorBuf(desc->outChannels, nnXLen, nnYLen, batchSize);
   TENSORMAP4 outTensor(outTensorBuf);
   size_t convWorkspaceElts = layer.requiredConvWorkspaceElts(batchSize);
-  vector<float> convWorkspace(convWorkspaceElts);
+  std::vector<float> convWorkspace(convWorkspaceElts);
 
   ComputeHandleInternal handle;
   layer.apply(&handle, &inTensor, &outTensor, convWorkspace.data(), false);
@@ -1736,9 +1736,9 @@ bool NeuralNet::testEvaluateBatchNorm(
   int nnYLen,
   bool useFP16,
   bool useNHWC,
-  const vector<float>& inputBuffer,
-  const vector<float>& maskBuffer,
-  vector<float>& outputBuffer
+  const std::vector<float>& inputBuffer,
+  const std::vector<float>& maskBuffer,
+  std::vector<float>& outputBuffer
 ) {
   if(!useNHWC || useFP16)
     return false;
@@ -1762,9 +1762,9 @@ bool NeuralNet::testEvaluateResidualBlock(
   int nnYLen,
   bool useFP16,
   bool useNHWC,
-  const vector<float>& inputBuffer,
-  const vector<float>& maskBuffer,
-  vector<float>& outputBuffer
+  const std::vector<float>& inputBuffer,
+  const std::vector<float>& maskBuffer,
+  std::vector<float>& outputBuffer
 ) {
   if(!useNHWC || useFP16)
     return false;
@@ -1772,7 +1772,7 @@ bool NeuralNet::testEvaluateResidualBlock(
   TENSORMAP4 inTensor((float*)inputBuffer.data(), desc->preBN.numChannels, nnXLen, nnYLen, batchSize);
   TENSORMAP3 mask((float*)maskBuffer.data(), nnXLen, nnYLen, batchSize);
   size_t convWorkspaceElts = block.requiredConvWorkspaceElts(batchSize);
-  vector<float> convWorkspace(convWorkspaceElts);
+  std::vector<float> convWorkspace(convWorkspaceElts);
 
   TENSOR4 trunkBuf(desc->preBN.numChannels, nnXLen, nnYLen, batchSize);
   TENSOR4 trunkScratchBuf(desc->preBN.numChannels, nnXLen, nnYLen, batchSize);
@@ -1816,9 +1816,9 @@ bool NeuralNet::testEvaluateGlobalPoolingResidualBlock(
   int nnYLen,
   bool useFP16,
   bool useNHWC,
-  const vector<float>& inputBuffer,
-  const vector<float>& maskBuffer,
-  vector<float>& outputBuffer) {
+  const std::vector<float>& inputBuffer,
+  const std::vector<float>& maskBuffer,
+  std::vector<float>& outputBuffer) {
   if(!useNHWC || useFP16)
     return false;
 
@@ -1827,7 +1827,7 @@ bool NeuralNet::testEvaluateGlobalPoolingResidualBlock(
   TENSORMAP4 inTensor((float*)inputBuffer.data(), desc->preBN.numChannels, nnXLen, nnYLen, batchSize);
   TENSORMAP3 mask((float*)maskBuffer.data(), nnXLen, nnYLen, batchSize);
   size_t convWorkspaceElts = block.requiredConvWorkspaceElts(batchSize);
-  vector<float> convWorkspace(convWorkspaceElts);
+  std::vector<float> convWorkspace(convWorkspaceElts);
 
   TENSOR4 trunkBuf(desc->preBN.numChannels, nnXLen, nnYLen, batchSize);
   TENSOR4 trunkScratchBuf(desc->preBN.numChannels, nnXLen, nnYLen, batchSize);
@@ -1847,7 +1847,7 @@ bool NeuralNet::testEvaluateGlobalPoolingResidualBlock(
   TENSORMAP2 gpoolConcat(gpoolConcatBuf);
   TENSORMAP2 gpoolBias(gpoolBiasBuf);
 
-  vector<float> maskSum(batchSize);
+  std::vector<float> maskSum(batchSize);
   computeMaskSum(&mask,maskSum.data());
 
   trunk = inTensor;

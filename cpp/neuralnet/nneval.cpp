@@ -70,7 +70,7 @@ NNEvaluator::NNEvaluator(
   enabled_t useFP16Mode,
   enabled_t useNHWCMode,
   int numThr,
-  const vector<int>& gpuIdxByServerThr,
+  const std::vector<int>& gpuIdxByServerThr,
   const string& rSeed,
   bool doRandomize,
   int defaultSymmetry)
@@ -134,9 +134,9 @@ NNEvaluator::NNEvaluator(
     nnCacheTable = new NNCacheTable(nnCacheSizePowerOfTwo, nnMutexPoolSizePowerofTwo);
 
   if(!debugSkipNeuralNet) {
-    vector<int> gpuIdxs = gpuIdxByServerThread;
-    sort(gpuIdxs.begin(), gpuIdxs.end());
-    unique(gpuIdxs.begin(), gpuIdxs.end());
+    std::vector<int> gpuIdxs = gpuIdxByServerThread;
+    std::sort(gpuIdxs.begin(), gpuIdxs.end());
+    std::unique(gpuIdxs.begin(), gpuIdxs.end());
     loadedModel = NeuralNet::loadModelFile(modelFileName, expectedSha256);
     modelVersion = NeuralNet::getModelVersion(loadedModel);
     inputsVersion = NNModelVersion::getInputsVersion(modelVersion);
@@ -209,7 +209,7 @@ int NNEvaluator::getNumGpus() const {
 #ifdef USE_EIGEN_BACKEND
   return 1;
 #else
-  set<int> gpuIdxs;
+  std::set<int> gpuIdxs;
   for(int i = 0; i < gpuIdxByServerThread.size(); i++) {
     gpuIdxs.insert(gpuIdxByServerThread[i]);
   }
@@ -219,8 +219,8 @@ int NNEvaluator::getNumGpus() const {
 int NNEvaluator::getNumServerThreads() const {
   return (int)gpuIdxByServerThread.size();
 }
-set<int> NNEvaluator::getGpuIdxs() const {
-  set<int> gpuIdxs;
+std::set<int> NNEvaluator::getGpuIdxs() const {
+  std::set<int> gpuIdxs;
 #ifdef USE_EIGEN_BACKEND
   gpuIdxs.insert(0);
 #else
@@ -245,19 +245,19 @@ enabled_t NNEvaluator::getUsingNHWCMode() const {
 }
 
 bool NNEvaluator::getDoRandomize() const {
-  lock_guard<mutex> lock(bufferMutex);
+  lock_guard<std::mutex> lock(bufferMutex);
   return currentDoRandomize;
 }
 int NNEvaluator::getDefaultSymmetry() const {
-  lock_guard<mutex> lock(bufferMutex);
+  lock_guard<std::mutex> lock(bufferMutex);
   return currentDefaultSymmetry;
 }
 void NNEvaluator::setDoRandomize(bool b) {
-  lock_guard<mutex> lock(bufferMutex);
+  lock_guard<std::mutex> lock(bufferMutex);
   currentDoRandomize = b;
 }
 void NNEvaluator::setDefaultSymmetry(int s) {
-  lock_guard<mutex> lock(bufferMutex);
+  lock_guard<std::mutex> lock(bufferMutex);
   currentDefaultSymmetry = s;
 }
 
@@ -270,10 +270,10 @@ Rules NNEvaluator::getSupportedRules(const Rules& desiredRules, bool& supported)
 }
 
 uint64_t NNEvaluator::numRowsProcessed() const {
-  return m_numRowsProcessed.load(memory_order_relaxed);
+  return m_numRowsProcessed.load(std::memory_order_relaxed);
 }
 uint64_t NNEvaluator::numBatchesProcessed() const {
-  return m_numBatchesProcessed.load(memory_order_relaxed);
+  return m_numBatchesProcessed.load(std::memory_order_relaxed);
 }
 double NNEvaluator::averageProcessedBatchSize() const {
   return (double)numRowsProcessed() / (double)numBatchesProcessed();
@@ -305,7 +305,7 @@ static void serveEvals(
   delete buf;
 }
 
-void NNEvaluator::setNumThreads(const vector<int>& gpuIdxByServerThr) {
+void NNEvaluator::setNumThreads(const std::vector<int>& gpuIdxByServerThr) {
   if(serverThreads.size() != 0)
     throw StringError("NNEvaluator::setNumThreads called when threads were already running!");
   numThreads = (int)gpuIdxByServerThr.size();
@@ -321,17 +321,17 @@ void NNEvaluator::spawnServerThreads() {
     int gpuIdxForThisThread = gpuIdxByServerThread[i];
     string randSeedThisThread = randSeed + ":NNEvalServerThread:" + Global::intToString(numServerThreadsEverSpawned);
     numServerThreadsEverSpawned++;
-    thread* thread = new thread(&serveEvals, randSeedThisThread, this, loadedModel, gpuIdxForThisThread, i);
+    std::thread* thread = new std::thread(&serveEvals, randSeedThisThread, this, loadedModel, gpuIdxForThisThread, i);
     serverThreads.push_back(thread);
   }
 
-  unique_lock<mutex> lock(bufferMutex);
+  unique_lock<std::mutex> lock(bufferMutex);
   while(numServerThreadsStartingUp > 0)
     mainThreadWaitingForSpawn.wait(lock);
 }
 
 void NNEvaluator::killServerThreads() {
-  unique_lock<mutex> lock(bufferMutex);
+  unique_lock<std::mutex> lock(bufferMutex);
   isKilled = true;
   lock.unlock();
   serverWaitingForBatchStart.notify_all();
@@ -360,15 +360,15 @@ void NNEvaluator::serve(NNServerBuf& buf, Rand& rand, int gpuIdxForThisThread, i
       serverThreadIdx);
 
   {
-    lock_guard<mutex> lock(bufferMutex);
+    lock_guard<std::mutex> lock(bufferMutex);
     numServerThreadsStartingUp--;
     if(numServerThreadsStartingUp <= 0)
       mainThreadWaitingForSpawn.notify_all();
   }
 
-  vector<NNOutput*> outputBuf;
+  std::vector<NNOutput*> outputBuf;
 
-  unique_lock<mutex> lock(bufferMutex, defer_lock);
+  unique_lock<std::mutex> lock(bufferMutex, std::defer_lock);
   while(true) {
     lock.lock();
     while(m_currentResultBufsLen <= 0 && m_currentResultBufsIdx == m_oldestResultBufsIdx && !isKilled)
@@ -377,7 +377,7 @@ void NNEvaluator::serve(NNServerBuf& buf, Rand& rand, int gpuIdxForThisThread, i
     if(isKilled)
       break;
 
-    swap(m_resultBufss[m_oldestResultBufsIdx], buf.resultBufs);
+    std::swap(m_resultBufss[m_oldestResultBufsIdx], buf.resultBufs);
 
     int numRows;
     // We grabbed everything in the latest buffer, so clients should move on to an entirely new buffer
@@ -405,9 +405,9 @@ void NNEvaluator::serve(NNServerBuf& buf, Rand& rand, int gpuIdxForThisThread, i
         int boardXSize = resultBuf->boardXSizeForServer;
         int boardYSize = resultBuf->boardYSizeForServer;
 
-        unique_lock<mutex> resultLock(resultBuf->resultMutex);
+        unique_lock<std::mutex> resultLock(resultBuf->resultMutex);
         assert(resultBuf->hasResult == false);
-        resultBuf->result = make_shared<NNOutput>();
+        resultBuf->result = std::make_shared<NNOutput>();
 
         float* policyProbs = resultBuf->result->policyProbs;
         for(int i = 0; i < NNPos::MAX_NN_POLICY_SIZE; i++)
@@ -501,17 +501,17 @@ void NNEvaluator::serve(NNServerBuf& buf, Rand& rand, int gpuIdxForThisThread, i
     NeuralNet::getOutput(gpuHandle, buf.inputBuffers, numRows, buf.resultBufs, outputBuf);
     assert(outputBuf.size() == numRows);
 
-    m_numRowsProcessed.fetch_add(numRows, memory_order_relaxed);
-    m_numBatchesProcessed.fetch_add(1, memory_order_relaxed);
+    m_numRowsProcessed.fetch_add(numRows, std::memory_order_relaxed);
+    m_numBatchesProcessed.fetch_add(1, std::memory_order_relaxed);
 
     for(int row = 0; row < numRows; row++) {
       assert(buf.resultBufs[row] != NULL);
       NNResultBuf* resultBuf = buf.resultBufs[row];
       buf.resultBufs[row] = NULL;
 
-      unique_lock<mutex> resultLock(resultBuf->resultMutex);
+      unique_lock<std::mutex> resultLock(resultBuf->resultMutex);
       assert(resultBuf->hasResult == false);
-      resultBuf->result = shared_ptr<NNOutput>(outputBuf[row]);
+      resultBuf->result = std::shared_ptr<NNOutput>(outputBuf[row]);
       resultBuf->hasResult = true;
       resultBuf->clientWaitingForResult.notify_all();
       resultLock.unlock();
@@ -564,7 +564,7 @@ void NNEvaluator::evaluate(
       return;
     } else {
       hadResultWithoutOwnerMap = true;
-      resultWithoutOwnerMap = move(buf.result);
+      resultWithoutOwnerMap = std::move(buf.result);
       buf.result = nullptr;
     }
   }
@@ -613,7 +613,7 @@ void NNEvaluator::evaluate(
 
   buf.symmetry = nnInputParams.symmetry;
 
-  unique_lock<mutex> lock(bufferMutex);
+  unique_lock<std::mutex> lock(bufferMutex);
 
   m_resultBufss[m_currentResultBufsIdx][m_currentResultBufsLen] = &buf;
   m_currentResultBufsLen += 1;
@@ -633,7 +633,7 @@ void NNEvaluator::evaluate(
   assert(!overlooped);
   (void)overlooped;  // Avoid unused variable when asserts disabled
 
-  unique_lock<mutex> resultLock(buf.resultMutex);
+  unique_lock<std::mutex> resultLock(buf.resultMutex);
   while(!buf.hasResult)
     buf.clientWaitingForResult.wait(resultLock);
   resultLock.unlock();
@@ -653,7 +653,7 @@ void NNEvaluator::evaluate(
     buf.result->varTimeLeft = resultWithoutOwnerMap->varTimeLeft;
     buf.result->shorttermWinlossError = resultWithoutOwnerMap->shorttermWinlossError;
     buf.result->shorttermScoreError = resultWithoutOwnerMap->shorttermScoreError;
-    copy(
+    std::copy(
       resultWithoutOwnerMap->policyProbs,
       resultWithoutOwnerMap->policyProbs + NNPos::MAX_NN_POLICY_SIZE,
       buf.result->policyProbs);
@@ -741,7 +741,7 @@ void NNEvaluator::evaluate(
         double noResultLogits = buf.result->whiteNoResultProb;
 
         // Softmax
-        double maxLogits = max(max(winLogits, lossLogits), noResultLogits);
+        double maxLogits = std::max(std::max(winLogits, lossLogits), noResultLogits);
         winProb = exp(winLogits - maxLogits);
         lossProb = exp(lossLogits - maxLogits);
         noResultProb = exp(noResultLogits - maxLogits);
@@ -806,7 +806,7 @@ void NNEvaluator::evaluate(
           noResultLogits -= 100000.0;
 
         // Softmax
-        double maxLogits = max(max(winLogits, lossLogits), noResultLogits);
+        double maxLogits = std::max(std::max(winLogits, lossLogits), noResultLogits);
         winProb = exp(winLogits - maxLogits);
         lossProb = exp(lossLogits - maxLogits);
         noResultProb = exp(noResultLogits - maxLogits);
@@ -943,9 +943,9 @@ bool NNCacheTable::get(Hash128 nnHash, shared_ptr<NNOutput>& ret) {
   uint64_t idx = nnHash.hash0 & tableMask;
   uint32_t mutexIdx = (uint32_t)idx & mutexPoolMask;
   Entry& entry = entries[idx];
-  mutex& mutex = mutexPool->getMutex(mutexIdx);
+  std::mutex& mutex = mutexPool->getMutex(mutexIdx);
 
-  lock_guard<mutex> lock(mutex);
+  std::lock_guard<std::mutex> lock(mutex);
 
   bool found = false;
 #if defined(SIMULATE_TRUE_HASH_COLLISIONS)
@@ -969,10 +969,10 @@ void NNCacheTable::set(const shared_ptr<NNOutput>& p) {
   uint64_t idx = p->nnHash.hash0 & tableMask;
   uint32_t mutexIdx = (uint32_t)idx & mutexPoolMask;
   Entry& entry = entries[idx];
-  mutex& mutex = mutexPool->getMutex(mutexIdx);
+  std::mutex& mutex = mutexPool->getMutex(mutexIdx);
 
   {
-    lock_guard<mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     // Perform a swap, to avoid any expensive free under the mutex.
     entry.ptr.swap(buf);
   }
@@ -985,9 +985,9 @@ void NNCacheTable::clear() {
   for(size_t idx = 0; idx < tableSize; idx++) {
     Entry& entry = entries[idx];
     uint32_t mutexIdx = (uint32_t)idx & mutexPoolMask;
-    mutex& mutex = mutexPool->getMutex(mutexIdx);
+    std::mutex& mutex = mutexPool->getMutex(mutexIdx);
     {
-      lock_guard<mutex> lock(mutex);
+      std::lock_guard<std::mutex> lock(mutex);
       entry.ptr.swap(buf);
     }
     buf.reset();
