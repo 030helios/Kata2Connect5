@@ -35,7 +35,8 @@ static void printNNInputHWAndBoard(
   {
     for (int x = 0; x < nnXLen; x++)
     {
-      int pos = NNPos::xyToPos(x, y, nnXLen);
+      Loc loc = Location::getLoc(x, y, board.x_size);
+      int pos = NNPos::locToDoublePos(Loc(0,0,board.x_size),loc,nnXLen,nnYLen);
       if (x > 0)
         out << " ";
       if (inputsUseNHWC)
