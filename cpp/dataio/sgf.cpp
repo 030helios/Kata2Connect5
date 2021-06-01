@@ -122,7 +122,7 @@ static void parseSgfLocRectangle(const string& s, int xSize, int ySize, int& x1,
 }
 
 static Loc parseSgfLocOrPass(const string& s, int xSize, int ySize) {
-  if(s.length() == 0 || (s == "tt" && (xSize <= 19 || ySize <= 19)))
+  if(s.length() == 0 || (s == "tt" && (xSize <= 6 || ySize <= 6)))
     return Board::PASS_LOC;
   return parseSgfLoc(s,xSize,ySize);
 }
@@ -323,7 +323,7 @@ XYSize Sgf::getXYSize() const {
   int xSize;
   int ySize;
   if(!nodes[0]->hasProperty("SZ"))
-    return XYSize(19,19); //Some SGF files don't specify, in that case assume 19
+    return XYSize(6,6); //Some SGF files don't specify, in that case assume 19
 
   const string& s = nodes[0]->getSingleProperty("SZ");
   if(contains(s,':')) {

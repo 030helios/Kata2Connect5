@@ -42,7 +42,7 @@ def interpret_go_point(bb, size):
     the lower left.
 
     """
-    if bb == b"" or (bb == b"tt" and size <= 19):
+    if bb == b"" or (bb == b"tt" and size <= 6):
         return None
     # May propagate ValueError
     col_b, row_b = bb
@@ -69,7 +69,7 @@ def serialise_go_point(move, size):
         raise ValueError
     if move is None:
         # Prefer 'tt' where possible, for the sake of older code
-        if size <= 19:
+        if size <= 6:
             return b"tt"
         else:
             return b""

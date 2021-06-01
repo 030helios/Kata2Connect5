@@ -258,7 +258,7 @@ def run_gtp(session):
     'gfx/PolicyNoHistory/policy-no-history',
   ]
 
-  board_size = 19
+  board_size = 6
   board = Board(size=board_size)
   moves = []
   boards = []

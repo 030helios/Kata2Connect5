@@ -34,7 +34,7 @@ ExtraBlackAndKomi PlayUtils::chooseExtraBlackAndKomi(
   if (bigStdev > 0.0f && rand.nextBool(bigStdevProb))
     stdevToUse = bigStdev;
   //Adjust for board size, so that we don't give the same massive komis on smaller boards
-  stdevToUse = stdevToUse * (float)(sqrtBoardArea / 19.0);
+  stdevToUse = stdevToUse * (float)(sqrtBoardArea / 6.0);
 
   //Add handicap stones
   int defaultMaxExtraBlack = getDefaultMaxExtraBlack(sqrtBoardArea);

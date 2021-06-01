@@ -16,8 +16,8 @@ void Tests::runOwnershipTests(const string& configFile, const string& modelFile)
   Rules ttRules = Rules::parseRules("tromp-taylor");
   Rules jpRules = Rules::parseRules("japanese");
 
-  int nnXLen = 19;
-  int nnYLen = 19;
+  int nnXLen = 6;
+  int nnYLen = 6;
   SearchParams params = Setup::loadSingleParams(cfg,Setup::SETUP_FOR_GTP);
   NNEvaluator* nnEval;
   {

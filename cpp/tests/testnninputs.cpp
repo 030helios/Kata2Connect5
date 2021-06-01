@@ -233,8 +233,8 @@ void Tests::runNNInputsV3V4Tests()
         nextPla = getOpp(moves[i].pla);
       }
 
-      int nnXLen = 19;
-      int nnYLen = 19;
+      int nnXLen = 6;
+      int nnYLen = 6;
       double drawEquivalentWinsForWhite = 0.2;
 
       int numFeaturesBin;
@@ -295,8 +295,8 @@ void Tests::runNNInputsV3V4Tests()
         nextPla = getOpp(moves[i].pla);
       }
 
-      int nnXLen = 19;
-      int nnYLen = 19;
+      int nnXLen = 6;
+      int nnYLen = 6;
       double drawEquivalentWinsForWhite = 0.3;
 
       int numFeaturesBin;

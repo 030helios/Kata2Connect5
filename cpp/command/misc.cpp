@@ -1096,7 +1096,7 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
       numFilteredSgfs.fetch_add(1);
       return;
     }
-    if (board.x_size != 19 || board.y_size != 19)
+    if (board.x_size != 6 || board.y_size != 6)
     {
       numFilteredSgfs.fetch_add(1);
       return;

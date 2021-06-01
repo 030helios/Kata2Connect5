@@ -11,15 +11,15 @@ from board import Board
 class Model:
 
   def __init__(self,config):
-    self.max_board_size = 19
+    self.max_board_size = 6
     self.num_input_features = 17
-    self.input_shape = [19*19,self.num_input_features]
-    self.post_input_shape = [19,19,self.num_input_features]
-    self.policy_target_shape_nopass = [19*19]
-    self.policy_target_shape = [19*19+1] #+1 for pass move
+    self.input_shape = [6*6,self.num_input_features]
+    self.post_input_shape = [6,6,self.num_input_features]
+    self.policy_target_shape_nopass = [6*6]
+    self.policy_target_shape = [6*6+1] #+1 for pass move
     self.value_target_shape = []
     self.target_weights_shape = []
-    self.rank_shape=[1+9+(17+9)+(19+9)]
+    self.rank_shape=[1+9+(17+9)+(6+9)]
     self.rank_embedding_dim = 8
 
     self.pass_pos = self.max_board_size * self.max_board_size

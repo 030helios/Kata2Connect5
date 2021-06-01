@@ -195,7 +195,7 @@ static void updateDynamicPDAHelper(
   }
   else
   {
-    double boardSizeScaling = pow(19.0 * 19.0 / (double)(board.x_size * board.y_size), 0.75);
+    double boardSizeScaling = pow(6.0 * 6.0 / (double)(board.x_size * board.y_size), 0.75);
     double pdaScalingStartPoints = std::max(4.0 / boardSizeScaling, 2.0);
     double initialBlackAdvantageInPoints = initialBlackAdvantage(hist);
     Player disadvantagedPla = initialBlackAdvantageInPoints >= 0 ? P_WHITE : P_BLACK;
@@ -433,8 +433,8 @@ struct GTPEngine
     bool wasDefault = false;
     if (boardXSize == -1 || boardYSize == -1)
     {
-      boardXSize = 19;
-      boardYSize = 19;
+      boardXSize = 6;
+      boardYSize = 6;
       wasDefault = true;
     }
 

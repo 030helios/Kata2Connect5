@@ -114,7 +114,7 @@ class Node:
         Raises KeyError if the property isn't currently present.
 
         """
-        if identifier == "SZ" and self._presenter.size != 19:
+        if identifier == "SZ" and self._presenter.size != 6:
             raise ValueError("changing size is not permitted")
         del self._property_map[identifier]
 
@@ -553,7 +553,7 @@ class Sgf_game:
         try:
             size_bb = _get_raw('SZ')
         except KeyError:
-            size = 19
+            size = 6
         else:
             try:
                 size = int(size_bb)
