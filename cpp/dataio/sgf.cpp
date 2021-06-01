@@ -1408,9 +1408,11 @@ void CompactSgf::playMovesAssumeLegal(Board& board, Player& nextPla, BoardHistor
     hist.makeBoardMoveAssumeLegal(board,moves[i].loc,moves[i].pla,NULL);
     nextPla = getOpp(moves[i].pla);
   }
+  */
 }
 
 void CompactSgf::playMovesTolerant(Board& board, Player& nextPla, BoardHistory& hist, int64_t turnIdx, bool preventEncore) const {
+  /*
   if(turnIdx < 0 || turnIdx > moves.size())
     throw StringError(
       Global::strprintf(
