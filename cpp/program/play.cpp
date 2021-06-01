@@ -154,13 +154,13 @@ void GameInitializer::initShared(ConfigParser &cfg, Logger &logger)
   sgfCompensateKomiProb = cfg.contains("sgfCompensateKomiProb") ? cfg.getDouble("sgfCompensateKomiProb", 0.0, 1.0) : forkCompensateKomiProb;
   komiAllowIntegerProb = cfg.contains("komiAllowIntegerProb") ? cfg.getDouble("komiAllowIntegerProb", 0.0, 1.0) : 1.0;
 
-  auto generateCumProbs = [](const vector<Sgf::PositionSample> poses, double lambda, double &effectiveSampleSize)
+  auto generateCumProbs = [](const std::vector<Sgf::PositionSample> poses, double lambda, double &effectiveSampleSize)
   {
     int minInitialTurnNumber = 0;
     for (size_t i = 0; i < poses.size(); i++)
       minInitialTurnNumber = std::min(minInitialTurnNumber, poses[i].initialTurnNumber);
 
-    vector<double> cumProbs;
+    std::vector<double> cumProbs;
     cumProbs.resize(poses.size());
     // Fill with uncumulative probs
     for (size_t i = 0; i < poses.size(); i++)
@@ -200,12 +200,12 @@ void GameInitializer::initShared(ConfigParser &cfg, Logger &logger)
     startPosCumProbs.clear();
     startPosesProb = cfg.getDouble("startPosesProb", 0.0, 1.0);
 
-    vector<string> dirs = Global::split(cfg.getString("startPosesFromSgfDir"), ',');
-    vector<string> excludes = Global::split(cfg.contains("startPosesSgfExcludes") ? cfg.getString("startPosesSgfExcludes") : "", ',');
+    std::vector<string> dirs = Global::split(cfg.getString("startPosesFromSgfDir"), ',');
+    std::vector<string> excludes = Global::split(cfg.contains("startPosesSgfExcludes") ? cfg.getString("startPosesSgfExcludes") : "", ',');
     double startPosesLoadProb = cfg.getDouble("startPosesLoadProb", 0.0, 1.0);
     double startPosesTurnWeightLambda = cfg.getDouble("startPosesTurnWeightLambda", -10, 10);
 
-    vector<string> files;
+    std::vector<string> files;
     std::function<bool(const string &)> fileFilter = [](const string &fileName)
     {
       return Global::isSuffix(fileName, ".sgf");
@@ -277,9 +277,9 @@ void GameInitializer::initShared(ConfigParser &cfg, Logger &logger)
     hintPosCumProbs.clear();
     hintPosesProb = cfg.getDouble("hintPosesProb", 0.0, 1.0);
 
-    vector<string> dirs = Global::split(cfg.getString("hintPosesDir"), ',');
+    std::vector<string> dirs = Global::split(cfg.getString("hintPosesDir"), ',');
 
-    vector<string> files;
+    std::vector<string> files;
     std::function<bool(const string &)> fileFilter = [](const string &fileName)
     {
       return Global::isSuffix(fileName, ".hintposes.txt");
@@ -293,7 +293,7 @@ void GameInitializer::initShared(ConfigParser &cfg, Logger &logger)
 
     for (size_t i = 0; i < files.size(); i++)
     {
-      vector<string> lines = Global::readFileLines(files[i], '\n');
+      std::vector<string> lines = Global::readFileLines(files[i], '\n');
       for (size_t j = 0; j < lines.size(); j++)
       {
         string line = Global::trim(lines[j]);
@@ -593,23 +593,23 @@ void GameInitializer::createGameSharedUnsynchronized(
 MatchPairer::MatchPairer(
     ConfigParser &cfg,
     int nBots,
-    const vector<string> &bNames,
-    const vector<NNEvaluator *> &nEvals,
-    const vector<SearchParams> &bParamss,
+    const std::vector<string> &bNames,
+    const std::vector<NNEvaluator *> &nEvals,
+    const std::vector<SearchParams> &bParamss,
     bool forSelfPlay,
-    bool forGateKeeper) : MatchPairer(cfg, nBots, bNames, nEvals, bParamss, forSelfPlay, forGateKeeper, vector<bool>(nBots))
+    bool forGateKeeper) : MatchPairer(cfg, nBots, bNames, nEvals, bParamss, forSelfPlay, forGateKeeper, std::vector<bool>(nBots))
 {
 }
 
 MatchPairer::MatchPairer(
     ConfigParser &cfg,
     int nBots,
-    const vector<string> &bNames,
-    const vector<NNEvaluator *> &nEvals,
-    const vector<SearchParams> &bParamss,
+    const std::vector<string> &bNames,
+    const std::vector<NNEvaluator *> &nEvals,
+    const std::vector<SearchParams> &bParamss,
     bool forSelfPlay,
     bool forGateKeeper,
-    const vector<bool> &exclude)
+    const std::vector<bool> &exclude)
     : numBots(nBots),
       botNames(bNames),
       nnEvals(nEvals),
@@ -858,12 +858,12 @@ static Move chooseRandomForkingMove(const NNOutput *nnOutput, const Board &board
 }
 
 static void extractPolicyTarget(
-    vector<PolicyTargetMove> &buf,
+    std::vector<PolicyTargetMove> &buf,
     const Search *toMoveBot,
     const SearchNode *node,
-    vector<Loc> &FromlocsBuf,
-    vector<Loc> &TolocsBuf,
-    vector<double> &playSelectionValuesBuf)
+    std::vector<Loc> &FromlocsBuf,
+    std::vector<Loc> &TolocsBuf,
+    std::vector<double> &playSelectionValuesBuf)
 {
   double scaleMaxToAtLeast = 10.0;
 
@@ -945,8 +945,8 @@ static void recordTreePositionsRec(
     const SearchNode *node, int depth, int maxDepth, bool plaAlwaysBest, bool oppAlwaysBest,
     int64_t minVisitsAtNode, float recordTreeTargetWeight,
     int numNeuralNetChangesSoFar,
-    vector<Loc> &FromlocsBuf,
-    vector<Loc> &TolocsBuf, vector<double> &playSelectionValuesBuf,
+    std::vector<Loc> &FromlocsBuf,
+    std::vector<Loc> &TolocsBuf, std::vector<double> &playSelectionValuesBuf,
     Move excludeLoc0, Move excludeLoc1)
 {
   if (node->numChildren <= 0)
@@ -1026,8 +1026,8 @@ static void recordTreePositions(
     const Search *toMoveBot,
     int64_t minVisitsAtNode, float recordTreeTargetWeight,
     int numNeuralNetChangesSoFar,
-    vector<Loc> &FromlocsBuf,
-    vector<Loc> &TolocsBuf, vector<double> &playSelectionValuesBuf,
+    std::vector<Loc> &FromlocsBuf,
+    std::vector<Loc> &TolocsBuf, std::vector<double> &playSelectionValuesBuf,
     Move excludeLoc0, Move excludeLoc1)
 {
   assert(toMoveBot->rootBoard.pos_hash == board.pos_hash);
@@ -1066,7 +1066,7 @@ struct SearchLimitsThisMove
 
 static SearchLimitsThisMove getSearchLimitsThisMove(
     const Search *toMoveBot, Player pla, const PlaySettings &playSettings, Rand &gameRand,
-    const vector<double> &historicalMctsWinLossValues,
+    const std::vector<double> &historicalMctsWinLossValues,
     bool clearBotBeforeSearch,
     const OtherGameProperties &otherGameProps)
 {
@@ -1523,17 +1523,17 @@ FinishedGameData *Play::runGame(
   if (botB != botW)
     botW->setPosition(pla, board, hist);
 
-  vector<Loc> FromlocsBuf;
-  vector<Loc> TolocsBuf;
-  vector<double> playSelectionValuesBuf;
+  std::vector<Loc> FromlocsBuf;
+  std::vector<Loc> TolocsBuf;
+  std::vector<double> playSelectionValuesBuf;
 
-  vector<SidePosition *> sidePositionsToSearch;
+  std::vector<SidePosition *> sidePositionsToSearch;
 
-  vector<double> historicalMctsWinLossValues;
-  vector<double> historicalMctsLeads;
-  vector<double> historicalMctsScoreStdevs;
-  vector<double> policySurpriseByTurn;
-  vector<ReportedSearchValues> rawNNValues;
+  std::vector<double> historicalMctsWinLossValues;
+  std::vector<double> historicalMctsLeads;
+  std::vector<double> historicalMctsScoreStdevs;
+  std::vector<double> policySurpriseByTurn;
+  std::vector<ReportedSearchValues> rawNNValues;
 
   //Main play loop
   for (int i = 0; i < maxMovesPerGame; i++)
@@ -1568,7 +1568,7 @@ FinishedGameData *Play::runGame(
     }
     else
     {
-      vector<PolicyTargetMove> *policyTarget = new vector<PolicyTargetMove>();
+      std::vector<PolicyTargetMove> *policyTarget = new std::vector<PolicyTargetMove>();
       int64_t unreducedNumVisits = toMoveBot->getRootVisits();
       extractPolicyTarget(*policyTarget, toMoveBot, toMoveBot->rootNode, FromlocsBuf, TolocsBuf, playSelectionValuesBuf);
       gameData->policyTargetsByTurn.push_back(PolicyTarget(policyTarget, unreducedNumVisits));
@@ -1760,9 +1760,9 @@ FinishedGameData *Play::runGame(
 
     gameData->hasFullData = true;
 
-    vector<double> valueSurpriseByTurn;
+    std::vector<double> valueSurpriseByTurn;
     {
-      const vector<ValueTargets> &whiteValueTargetsByTurn = gameData->whiteValueTargetsByTurn;
+      const std::vector<ValueTargets> &whiteValueTargetsByTurn = gameData->whiteValueTargetsByTurn;
       assert(whiteValueTargetsByTurn.size() == gameData->targetWeightByTurn.size() + 1);
       assert(rawNNValues.size() == gameData->targetWeightByTurn.size());
       valueSurpriseByTurn.resize(rawNNValues.size());

@@ -69,11 +69,11 @@ static void mallocOnDevice(const string& name, int numWeights, void*& deviceBuf,
   }
 }
 
-static void mallocAndCopyToDevice(const string& name, const vector<float>& weights, void*& deviceBuf, bool useFP16) {
+static void mallocAndCopyToDevice(const string& name, const std::vector<float>& weights, void*& deviceBuf, bool useFP16) {
   size_t numWeights = weights.size();
   if(useFP16) {
     size_t halfBytes = numWeights * sizeof(half);
-    vector<half_t> weightsHalf(weights.size());
+    std::vector<half_t> weightsHalf(weights.size());
     for(size_t i = 0; i<weights.size(); i++)
       weightsHalf[i] = half_float::half_cast<half_t>(weights[i]);
     CUDA_ERR(name.c_str(),cudaMalloc(&deviceBuf, halfBytes));
@@ -89,7 +89,7 @@ static void mallocAndCopyToDevice(const string& name, const vector<float>& weigh
 static void mallocAndCopyToDevice(const string& name, const float* weights, int numWeights, void*& deviceBuf, bool useFP16) {
   if(useFP16) {
     size_t halfBytes = numWeights * sizeof(half);
-    vector<half_t> weightsHalf(numWeights);
+    std::vector<half_t> weightsHalf(numWeights);
     for(int i = 0; i<numWeights; i++)
       weightsHalf[i] = half_float::half_cast<half_t>(weights[i]);
     CUDA_ERR(name.c_str(),cudaMalloc(&deviceBuf, halfBytes));
@@ -105,7 +105,7 @@ static void mallocAndCopyToDevice(const string& name, const float* weights, int 
 //Only use in testing, allocates an intermediate buffer in the case of FP16 which will be very slow.
 static void expensiveCopyFromDevice(const string& name, float* weights, int numWeights, const void* deviceBuf, bool useFP16) {
   if(useFP16) {
-    vector<half_t> weightsHalf(numWeights);
+    std::vector<half_t> weightsHalf(numWeights);
     size_t halfBytes = numWeights * sizeof(half);
     CUDA_ERR(name.c_str(),cudaMemcpy(weightsHalf.data(), deviceBuf, halfBytes, cudaMemcpyDeviceToHost));
     for(int i = 0; i<numWeights; i++)
@@ -119,7 +119,7 @@ static void expensiveCopyFromDevice(const string& name, float* weights, int numW
 
 #ifdef DEBUG_INTERMEDIATE_VALUES
 static void debugPrint2D(const string& name, const void* deviceBuf, int batchSize, int cSize, bool useFP16) {
-  vector<float> values(batchSize * cSize);
+  std::vector<float> values(batchSize * cSize);
   expensiveCopyFromDevice(name, values.data(), values.size(), deviceBuf, useFP16);
   cout << "=========================================================" << endl;
   cout << name << endl;
@@ -135,7 +135,7 @@ static void debugPrint2D(const string& name, const void* deviceBuf, int batchSiz
 }
 
 static void debugPrint4D(const string& name, const void* deviceBuf, int batchSize, int cSize, int xSize, int ySize, bool useNHWC, bool useFP16) {
-  vector<float> values(batchSize * cSize * xSize * ySize);
+  std::vector<float> values(batchSize * cSize * xSize * ySize);
   expensiveCopyFromDevice(name, values.data(), values.size(), deviceBuf, useFP16);
   cout << "=========================================================" << endl;
   cout << name << endl;
@@ -305,7 +305,7 @@ struct ConvLayer {
     assert(desc->weights.size() == convYSize * convXSize * inChannels * outChannels);
 
     if(filterNHWC) {
-      vector<float> weightsTransposed(desc->weights.size());
+      std::vector<float> weightsTransposed(desc->weights.size());
       for(int y = 0; y < convYSize; y++) {
         for(int x = 0; x < convXSize; x++) {
           for(int ic = 0; ic < inChannels; ic++) {
@@ -477,8 +477,8 @@ struct BatchNormLayer {
     assert(desc->bias.size() == numChannels);
     mallocAndCopyToDevice(name,desc->bias,biasBuf,useFP16);
 
-    vector<float> mergedScale(numChannels);
-    vector<float> mergedBias(numChannels);
+    std::vector<float> mergedScale(numChannels);
+    std::vector<float> mergedBias(numChannels);
     for(int i = 0; i<numChannels; i++) {
       mergedScale[i] = desc->scale[i] / sqrt(desc->variance[i] + epsilon);
       mergedBias[i] = desc->bias[i] - mergedScale[i] * desc->mean[i];
@@ -1120,7 +1120,7 @@ struct Trunk {
 
   std::unique_ptr<ConvLayer> initialConv;
   std::unique_ptr<MatMulLayer> initialMatMul;
-  vector<pair<int,unique_ptr_void>> blocks;
+  std::vector<pair<int,unique_ptr_void>> blocks;
   std::unique_ptr<BatchNormLayer> trunkTipBN;
   std::unique_ptr<ActivationLayer> trunkTipActivation;
 
@@ -2799,7 +2799,7 @@ void NeuralNet::getOutput(
   InputBuffers* inputBuffers,
   int numBatchEltsFilled,
   NNResultBuf** inputBufs,
-  vector<NNOutput*>& outputs
+  std::vector<NNOutput*>& outputs
 ) {
   assert(numBatchEltsFilled <= inputBuffers->maxBatchSize);
   assert(numBatchEltsFilled > 0);
@@ -3011,8 +3011,8 @@ bool NeuralNet::testEvaluateConv(
   int nnYLen,
   bool useFP16,
   bool useNHWC,
-  const vector<float>& inputBuffer,
-  vector<float>& outputBuffer
+  const std::vector<float>& inputBuffer,
+  std::vector<float>& outputBuffer
 ) {
   cudaDeviceSynchronize();
   CudaHandles* cudaHandles = CudaHandles::cudaHandlesTesting();
@@ -3107,9 +3107,9 @@ bool NeuralNet::testEvaluateBatchNorm(
   int nnYLen,
   bool useFP16,
   bool useNHWC,
-  const vector<float>& inputBuffer,
-  const vector<float>& maskBuffer,
-  vector<float>& outputBuffer
+  const std::vector<float>& inputBuffer,
+  const std::vector<float>& maskBuffer,
+  std::vector<float>& outputBuffer
 ) {
   cudaDeviceSynchronize();
   CudaHandles* cudaHandles = CudaHandles::cudaHandlesTesting();
@@ -3165,9 +3165,9 @@ bool NeuralNet::testEvaluateResidualBlock(
   int nnYLen,
   bool useFP16,
   bool useNHWC,
-  const vector<float>& inputBuffer,
-  const vector<float>& maskBuffer,
-  vector<float>& outputBuffer
+  const std::vector<float>& inputBuffer,
+  const std::vector<float>& maskBuffer,
+  std::vector<float>& outputBuffer
 ) {
   cudaDeviceSynchronize();
   CudaHandles* cudaHandles = CudaHandles::cudaHandlesTesting();
@@ -3274,9 +3274,9 @@ bool NeuralNet::testEvaluateGlobalPoolingResidualBlock(
   int nnYLen,
   bool useFP16,
   bool useNHWC,
-  const vector<float>& inputBuffer,
-  const vector<float>& maskBuffer,
-  vector<float>& outputBuffer
+  const std::vector<float>& inputBuffer,
+  const std::vector<float>& maskBuffer,
+  std::vector<float>& outputBuffer
 ) {
   cudaDeviceSynchronize();
   CudaHandles* cudaHandles = CudaHandles::cudaHandlesTesting();

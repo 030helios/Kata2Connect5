@@ -397,7 +397,7 @@ class Arg
 typedef std::list<Arg*>::iterator ArgListIterator;
 
 /**
- * Typedef of an Arg vector iterator.
+ * Typedef of an Arg std::vector iterator.
  */
 typedef std::vector<Arg*>::iterator ArgVectorIterator;
 

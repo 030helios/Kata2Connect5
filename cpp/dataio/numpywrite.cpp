@@ -13,88 +13,88 @@ using namespace std;
 #endif
 
 template <>
-NumpyBuffer<uint8_t>::NumpyBuffer(const vector<int64_t>& shp)
+NumpyBuffer<uint8_t>::NumpyBuffer(const std::vector<int64_t>& shp)
   : NumpyBuffer(shp,"|u1")
 {}
 template <>
-NumpyBuffer<int8_t>::NumpyBuffer(const vector<int64_t>& shp)
+NumpyBuffer<int8_t>::NumpyBuffer(const std::vector<int64_t>& shp)
   : NumpyBuffer(shp,"|i1")
 {}
 template <>
-NumpyBuffer<bool>::NumpyBuffer(const vector<int64_t>& shp)
+NumpyBuffer<bool>::NumpyBuffer(const std::vector<int64_t>& shp)
   : NumpyBuffer(shp,"|b1")
 {}
 
 #if BYTE_ORDER == LITTLE_ENDIAN
 template <>
-NumpyBuffer<float>::NumpyBuffer(const vector<int64_t>& shp)
+NumpyBuffer<float>::NumpyBuffer(const std::vector<int64_t>& shp)
   : NumpyBuffer(shp,"<f4")
 {}
 template <>
-NumpyBuffer<double>::NumpyBuffer(const vector<int64_t>& shp)
+NumpyBuffer<double>::NumpyBuffer(const std::vector<int64_t>& shp)
   : NumpyBuffer(shp,"<f8")
 {}
 template <>
-NumpyBuffer<uint16_t>::NumpyBuffer(const vector<int64_t>& shp)
+NumpyBuffer<uint16_t>::NumpyBuffer(const std::vector<int64_t>& shp)
   : NumpyBuffer(shp,"<u2")
 {}
 template <>
-NumpyBuffer<int16_t>::NumpyBuffer(const vector<int64_t>& shp)
+NumpyBuffer<int16_t>::NumpyBuffer(const std::vector<int64_t>& shp)
   : NumpyBuffer(shp,"<i2")
 {}
 template <>
-NumpyBuffer<uint32_t>::NumpyBuffer(const vector<int64_t>& shp)
+NumpyBuffer<uint32_t>::NumpyBuffer(const std::vector<int64_t>& shp)
   : NumpyBuffer(shp,"<u4")
 {}
 template <>
-NumpyBuffer<int32_t>::NumpyBuffer(const vector<int64_t>& shp)
+NumpyBuffer<int32_t>::NumpyBuffer(const std::vector<int64_t>& shp)
   : NumpyBuffer(shp,"<i4")
 {}
 template <>
-NumpyBuffer<uint64_t>::NumpyBuffer(const vector<int64_t>& shp)
+NumpyBuffer<uint64_t>::NumpyBuffer(const std::vector<int64_t>& shp)
   : NumpyBuffer(shp,"<u8")
 {}
 template <>
-NumpyBuffer<int64_t>::NumpyBuffer(const vector<int64_t>& shp)
+NumpyBuffer<int64_t>::NumpyBuffer(const std::vector<int64_t>& shp)
   : NumpyBuffer(shp,"<i8")
 {}
 #else
 template <>
-NumpyBuffer<float>::NumpyBuffer(const vector<int64_t>& shp)
+NumpyBuffer<float>::NumpyBuffer(const std::vector<int64_t>& shp)
   : NumpyBuffer(shp,">f4")
 {}
 template <>
-NumpyBuffer<double>::NumpyBuffer(const vector<int64_t>& shp)
+NumpyBuffer<double>::NumpyBuffer(const std::vector<int64_t>& shp)
   : NumpyBuffer(shp,">f8")
 {}
 template <>
-NumpyBuffer<uint16_t>::NumpyBuffer(const vector<int64_t>& shp)
+NumpyBuffer<uint16_t>::NumpyBuffer(const std::vector<int64_t>& shp)
   : NumpyBuffer(shp,">u2")
 {}
 template <>
-NumpyBuffer<int16_t>::NumpyBuffer(const vector<int64_t>& shp)
+NumpyBuffer<int16_t>::NumpyBuffer(const std::vector<int64_t>& shp)
   : NumpyBuffer(shp,">i2")
 {}
 template <>
-NumpyBuffer<uint32_t>::NumpyBuffer(const vector<int64_t>& shp)
+NumpyBuffer<uint32_t>::NumpyBuffer(const std::vector<int64_t>& shp)
   : NumpyBuffer(shp,">u4")
 {}
 template <>
-NumpyBuffer<int32_t>::NumpyBuffer(const vector<int64_t>& shp)
+NumpyBuffer<int32_t>::NumpyBuffer(const std::vector<int64_t>& shp)
   : NumpyBuffer(shp,">i4")
 {}
 template <>
-NumpyBuffer<uint64_t>::NumpyBuffer(const vector<int64_t>& shp)
+NumpyBuffer<uint64_t>::NumpyBuffer(const std::vector<int64_t>& shp)
   : NumpyBuffer(shp,">u8")
 {}
 template <>
-NumpyBuffer<int64_t>::NumpyBuffer(const vector<int64_t>& shp)
+NumpyBuffer<int64_t>::NumpyBuffer(const std::vector<int64_t>& shp)
   : NumpyBuffer(shp,">i8")
 {}
 #endif
 
 template <typename T>
-NumpyBuffer<T>::NumpyBuffer(const vector<int64_t>& shp, const char* dt)
+NumpyBuffer<T>::NumpyBuffer(const std::vector<int64_t>& shp, const char* dt)
   : shape(shp),dtype(dt)
 {
   dataLen = 1;

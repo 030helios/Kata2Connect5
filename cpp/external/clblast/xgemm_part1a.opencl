@@ -78,10 +78,10 @@ R"(
   #define KWI 1      // Unroll factor of the KWG loop (smaller or equal than KWG)
 #endif
 #ifndef VWM
-  #define VWM 1      // Vector width of matrices A and C
+  #define VWM 1      // std::vector width of matrices A and C
 #endif
 #ifndef VWN
-  #define VWN 1      // Vector width of matrix B
+  #define VWN 1      // std::vector width of matrix B
 #endif
 #ifndef STRM
   #define STRM 0     // Use strided access within a thread in the M-dimension (1) or not (0) (kernel 0 only)
@@ -111,7 +111,7 @@ R"(
 
 // Settings
 #ifndef USE_VECTOR_MAD
-  #define USE_VECTOR_MAD 0      // Unroll (0) or don't (1) unroll the vector MAD manually
+  #define USE_VECTOR_MAD 0      // Unroll (0) or don't (1) unroll the std::vector MAD manually
 #endif
 #ifndef GLOBAL_MEM_FENCE
   #define GLOBAL_MEM_FENCE 0    // Global synchronisation barrier for potential better performance

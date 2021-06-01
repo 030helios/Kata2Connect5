@@ -155,11 +155,11 @@ namespace {
     string resultsDir;
 
     int numBots;
-    vector<string> botNames;
-    vector<string> nnModelFiles;
-    vector<SearchParams> baseParamss;
+    std::vector<string> botNames;
+    std::vector<string> nnModelFiles;
+    std::vector<SearchParams> baseParamss;
 
-    vector<NextMatchup> nextMatchups;
+    std::vector<NextMatchup> nextMatchups;
     Rand rand;
 
     int matchRepFactor;
@@ -174,9 +174,9 @@ namespace {
       ConfigParser& cfg,
       const string& resDir,
       int nBots,
-      const vector<string>& bNames,
-      const vector<string>& nFiles,
-      const vector<SearchParams>& bParamss
+      const std::vector<string>& bNames,
+      const std::vector<string>& nFiles,
+      const std::vector<SearchParams>& bParamss
     )
       :resultsDir(resDir),
        numBots(nBots),
@@ -260,12 +260,12 @@ namespace {
           continue;
         string file = dirPath.string();
         if(Global::isSuffix(file,".results.csv")) {
-          vector<string> lines = Global::readFileLines(file,'\n');
+          std::vector<string> lines = Global::readFileLines(file,'\n');
           for(int i = 0; i<lines.size(); i++) {
             string s = Global::trim(lines[i]);
             if(s.length() == 0)
               continue;
-            vector<string> pieces = Global::split(s,',');
+            std::vector<string> pieces = Global::split(s,',');
             if(pieces.size() != 4)
               continue;
 
@@ -296,8 +296,8 @@ namespace {
       int maxIters = 20000;
       double tolerance = 0.000001;
 
-      vector<double> elos = ComputeElos::computeElos(winMatrix,numBots,priorWL,maxIters,tolerance,NULL);
-      vector<double> eloStdevs = ComputeElos::computeApproxEloStdevs(elos,winMatrix,numBots,priorWL);
+      std::vector<double> elos = ComputeElos::computeElos(winMatrix,numBots,priorWL,maxIters,tolerance,NULL);
+      std::vector<double> eloStdevs = ComputeElos::computeApproxEloStdevs(elos,winMatrix,numBots,priorWL);
 
       {
         ostringstream out;
@@ -308,7 +308,7 @@ namespace {
         logger.write(out.str());
       }
 
-      vector<int> botIdxsShuffled(numBots);
+      std::vector<int> botIdxsShuffled(numBots);
       for(int i = 0; i<numBots; i++)
         botIdxsShuffled[i] = i;
       for(int i = numBots-1; i>0; i--) {
@@ -332,7 +332,7 @@ namespace {
         }
         assert(bestBot >= 0);
 
-        vector<double> relProbs(numBots);
+        std::vector<double> relProbs(numBots);
         double probSum = 0.0;
         for(int b = 0; b<numBots; b++) {
           if(b == bestBot)
@@ -442,13 +442,13 @@ int MainCmds::matchauto(int argc, const char* const* argv) {
   logger.write(string("Git revision: ") + Version::getGitRevision());
 
   //Load per-bot search config, first, which also tells us how many bots we're running
-  vector<SearchParams> paramss = Setup::loadParams(cfg,Setup::SETUP_FOR_MATCH);
+  std::vector<SearchParams> paramss = Setup::loadParams(cfg,Setup::SETUP_FOR_MATCH);
   assert(paramss.size() > 0);
   int numBots = (int)paramss.size();
 
   //Load the names of the bots and which model each bot is using
-  vector<string> nnModelFilesByBot;
-  vector<string> botNames;
+  std::vector<string> nnModelFilesByBot;
+  std::vector<string> botNames;
   for(int i = 0; i<numBots; i++) {
     string idxStr = Global::intToString(i);
 
@@ -582,7 +582,7 @@ int MainCmds::matchauto(int argc, const char* const* argv) {
   };
 
   Rand hashRand;
-  vector<std::thread> threads;
+  std::vector<std::thread> threads;
   for(int i = 0; i<numGameThreads; i++) {
     threads.push_back(std::thread(runMatchLoop, hashRand.nextUInt64()));
   }

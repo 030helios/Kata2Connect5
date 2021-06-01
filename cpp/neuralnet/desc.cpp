@@ -34,7 +34,7 @@ static float readFloatFast(istream& in, string& tmp) {
   return x;
 }
 
-static void readFloats(istream& in, size_t numFloats, bool binaryFloats, const string& name, vector<float>& buf) {
+static void readFloats(istream& in, size_t numFloats, bool binaryFloats, const string& name, std::vector<float>& buf) {
   buf.resize(numFloats);
   if(!binaryFloats) {
     string tmp;
@@ -119,7 +119,7 @@ ConvLayerDesc::ConvLayerDesc(istream& in, bool binaryFloats) {
   int yStride = convXSize;
   int xStride = 1;
 
-  vector<float> floats;
+  std::vector<float> floats;
   readFloats(in, (size_t)convYSize * convXSize * inChannels * outChannels, binaryFloats, name, floats);
   size_t idx = 0;
   for(int y = 0; y < convYSize; y++) {
@@ -171,7 +171,7 @@ BatchNormLayerDesc::BatchNormLayerDesc(istream& in, bool binaryFloats) {
   if(epsilon <= 0)
     throw StringError(name + ": epsilon (" + Global::floatToString(epsilon) + ") <= 0");
 
-  vector<float> floats;
+  std::vector<float> floats;
   readFloats(in, (size_t)numChannels, binaryFloats, name, floats);
   mean = floats;
   readFloats(in, (size_t)numChannels, binaryFloats, name, floats);
@@ -257,7 +257,7 @@ MatMulLayerDesc::MatMulLayerDesc(istream& in, bool binaryFloats) {
   int icStride = outChannels;
   int ocStride = 1;
 
-  vector<float> floats;
+  std::vector<float> floats;
   readFloats(in, (size_t)inChannels * outChannels, binaryFloats, name, floats);
   size_t idx = 0;
   for(int ic = 0; ic < inChannels; ic++) {
@@ -297,7 +297,7 @@ MatBiasLayerDesc::MatBiasLayerDesc(istream& in, bool binaryFloats) {
 
   weights.resize(numChannels);
 
-  vector<float> floats;
+  std::vector<float> floats;
   readFloats(in, (size_t)numChannels, binaryFloats, name, floats);
   weights = floats;
 

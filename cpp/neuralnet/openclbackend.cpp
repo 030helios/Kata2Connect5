@@ -159,7 +159,7 @@ struct CompiledPrograms {
 
   CompiledPrograms(
     const cl_context& context,
-    const vector<cl_device_id>& deviceIdsToUse,
+    const std::vector<cl_device_id>& deviceIdsToUse,
     const OpenCLTuneParams& tParams,
     bool useFP16Storage,
     bool useFP16Compute,
@@ -299,7 +299,7 @@ struct ComputeContext {
 #endif
 
   ComputeContext(
-    const vector<int>& gIdxs,
+    const std::vector<int>& gIdxs,
     Logger* logger,
     int nnX,
     int nnY,
@@ -312,13 +312,13 @@ struct ComputeContext {
     usingFP16Mode = useFP16Mode;
     usingNHWCMode = useNHWCMode;
 
-    vector<DeviceInfo> allDeviceInfos = DeviceInfo::getAllDeviceInfosOnSystem(logger);
+    std::vector<DeviceInfo> allDeviceInfos = DeviceInfo::getAllDeviceInfosOnSystem(logger);
     devicesContext = new DevicesContext(allDeviceInfos,gIdxs,logger,liveProfilingKernels);
 
     for(int i = 0; i<devicesContext->devicesToUse.size(); i++) {
       const InitializedDevice* device = devicesContext->devicesToUse[i];
       const string& name = device->info.name;
-      vector<cl_device_id> deviceIds = { device->info.deviceId };
+      std::vector<cl_device_id> deviceIds = { device->info.deviceId };
 
       OpenCLTuneParams tuneParams = getParamsForDeviceName(name, device->info.gpuIdx);
 
@@ -446,9 +446,9 @@ struct ComputeHandleInternal {
   CLKernel xgemmDirectStridedBatchedNNKernel;
   CLKernel xgemmBatchedNNKernel;
 
-  vector<cl_event> profileEvents;
-  vector<std::function<void()>> profileCallbacks;
-  vector<std::function<void()>> profileResultPrinters;
+  std::vector<cl_event> profileEvents;
+  std::vector<std::function<void()>> profileCallbacks;
+  std::vector<std::function<void()>> profileResultPrinters;
 
   ComputeHandleInternal(ComputeContext* ctx, int gpuIdx, bool inputsUseNHWC, bool useNHWC) {
     computeContext = ctx;
@@ -541,9 +541,9 @@ struct ComputeHandleInternal {
 
 };
 
-static cl_mem createReadOnlyBuffer(ComputeHandleInternal* handle, vector<float>& data, bool useFP16) {
+static cl_mem createReadOnlyBuffer(ComputeHandleInternal* handle, std::vector<float>& data, bool useFP16) {
   if(useFP16) {
-    vector<half_t> dataHalf(data.size());
+    std::vector<half_t> dataHalf(data.size());
     for(size_t i = 0; i<data.size(); i++)
       dataHalf[i] = half_float::half_cast<half_t>(data[i]);
     return createReadOnlyBuffer(handle->clContext,dataHalf);
@@ -551,9 +551,9 @@ static cl_mem createReadOnlyBuffer(ComputeHandleInternal* handle, vector<float>&
   else
     return createReadOnlyBuffer(handle->clContext,data);
 }
-static cl_mem createReadWriteBuffer(ComputeHandleInternal* handle, vector<float>& data, bool useFP16) {
+static cl_mem createReadWriteBuffer(ComputeHandleInternal* handle, std::vector<float>& data, bool useFP16) {
   if(useFP16) {
-    vector<half_t> dataHalf(data.size());
+    std::vector<half_t> dataHalf(data.size());
     for(size_t i = 0; i<data.size(); i++)
       dataHalf[i] = half_float::half_cast<half_t>(data[i]);
     return createReadWriteBuffer(handle->clContext,dataHalf);
@@ -643,7 +643,7 @@ static void performValueHeadPool(ComputeHandleInternal* handle, int batchSize, i
 
 #ifdef DEBUG_INTERMEDIATE_VALUES
 static void debugPrint2D(const string& name, ComputeHandleInternal* handle, cl_mem deviceBuf, int batchSize, int cSize) {
-  vector<float> values;
+  std::vector<float> values;
   blockingReadBuffer(handle->commandQueue, deviceBuf, batchSize * cSize, values);
   cout << "=========================================================" << endl;
   cout << name << endl;
@@ -659,7 +659,7 @@ static void debugPrint2D(const string& name, ComputeHandleInternal* handle, cl_m
 }
 
 static void debugPrint4D(const string& name, ComputeHandleInternal* handle, cl_mem deviceBuf, int batchSize, int cSize, int xSize, int ySize, bool useNHWC) {
-  vector<float> values;
+  std::vector<float> values;
   blockingReadBuffer(handle->commandQueue, deviceBuf, batchSize * cSize * xSize * ySize, values);
   cout << "=========================================================" << endl;
   cout << name << endl;
@@ -739,8 +739,8 @@ struct BatchNormLayer {
     assert(desc->scale.size() == numChannels);
     assert(desc->bias.size() == numChannels);
 
-    vector<float> mergedScale(numChannels);
-    vector<float> mergedBias(numChannels);
+    std::vector<float> mergedScale(numChannels);
+    std::vector<float> mergedBias(numChannels);
     for(int i = 0; i<numChannels; i++) {
       mergedScale[i] = desc->scale[i] / sqrt(desc->variance[i] + epsilon);
       mergedBias[i] = desc->bias[i] - mergedScale[i] * desc->mean[i];
@@ -841,7 +841,7 @@ struct ConvLayer {
 
     if(convXSize == 1 && convYSize == 1) {
       //ic,oc
-      vector<float> transWeights(inChannels * outChannels);
+      std::vector<float> transWeights(inChannels * outChannels);
       for(int oc = 0; oc < outChannels; oc++) {
         for(int ic = 0; ic < inChannels; ic++) {
           transWeights[ic * outChannels + oc] = desc->weights[oc * inChannels + ic];
@@ -870,7 +870,7 @@ struct ConvLayer {
       assert((convXSize == 5 && convYSize == 5) ? (inTileYSize == 6 && outTileYSize == 2) : true);
 
       //INTILE_YSIZE, INTILE_XSIZE, ic, oc
-      vector<float> transWeights(inTileXYSize * inChannelsPadded * outChannelsPadded);
+      std::vector<float> transWeights(inTileXYSize * inChannelsPadded * outChannelsPadded);
       auto transform3x3_4 = [](float& a0, float& a1, float& a2, float& a3) {
         float z0 = a0; float z1 = a1; float z2 = a2;
         a0 = z0;
@@ -954,7 +954,7 @@ struct ConvLayer {
       filter = createReadOnlyBuffer(handle,transWeights,useFP16);
     }
     else {
-      vector<float> weights = desc->weights;
+      std::vector<float> weights = desc->weights;
       filter = createReadOnlyBuffer(handle,weights,useFP16);
     }
   }
@@ -1241,7 +1241,7 @@ struct MatMulLayer {
     outChannels = desc->outChannels;
 
     assert(desc->weights.size() == inChannels * outChannels);
-    vector<float> weights(desc->weights.size());
+    std::vector<float> weights(desc->weights.size());
     //Transpose weights, we implemented the opencl kernel to expect oc,ic
     for(int oc = 0; oc < outChannels; oc++) {
       for(int ic = 0; ic < inChannels; ic++) {
@@ -1292,7 +1292,7 @@ struct MatBiasLayer {
     numChannels = desc->numChannels;
 
     assert(desc->weights.size() == numChannels);
-    vector<float> weights = desc->weights;
+    std::vector<float> weights = desc->weights;
     //See notes about FP16 conventions at the top of file
     bool useFP16 = false;
     biasBuf = createReadOnlyBuffer(handle,weights,useFP16);
@@ -1471,7 +1471,7 @@ struct GlobalPoolingResidualBlock {
     gpoolToBiasMul.apply(handle,batchSize,gpoolConcat,gpoolBias);
     addChannelBiases(handle, mid, gpoolBias, batchSize * regularChannels, nnXYLen);
 
-    // vector<float> tmp(batchSize*regularChannels);
+    // std::vector<float> tmp(batchSize*regularChannels);
     // clEnqueueReadBuffer(handle->commandQueue, gpoolBias, CL_TRUE, 0, byteSizeofVectorContents(tmp), tmp.data(), 0, NULL, NULL);
     // cout << "TEST" << endl;
     // for(int i = 0; i<tmp.size(); i++)
@@ -1510,7 +1510,7 @@ struct Trunk {
 
   std::unique_ptr<ConvLayer> initialConv;
   std::unique_ptr<MatMulLayer> initialMatMul;
-  vector<pair<int,unique_ptr_void>> blocks;
+  std::vector<pair<int,unique_ptr_void>> blocks;
   std::unique_ptr<BatchNormLayer> trunkTipBN;
 
   Trunk() = delete;
@@ -2334,7 +2334,7 @@ void NeuralNet::freeComputeHandle(ComputeHandle* handle) {
 //------------------------------------------------------------------------------
 
 void NeuralNet::printDevices() {
-  vector<DeviceInfo> devices = DeviceInfo::getAllDeviceInfosOnSystem(NULL);
+  std::vector<DeviceInfo> devices = DeviceInfo::getAllDeviceInfosOnSystem(NULL);
   for(int i = 0; i<devices.size(); i++) {
     const DeviceInfo& device = devices[i];
     string msg =
@@ -2450,7 +2450,7 @@ void NeuralNet::getOutput(
   InputBuffers* inputBuffers,
   int numBatchEltsFilled,
   NNResultBuf** inputBufs,
-  vector<NNOutput*>& outputs
+  std::vector<NNOutput*>& outputs
 ) {
   assert(numBatchEltsFilled <= inputBuffers->maxBatchSize);
   assert(numBatchEltsFilled > 0);
@@ -2756,7 +2756,7 @@ bool NeuralNet::testEvaluateConv(
     throw StringError("testEvaluateConv: unexpected input buffer size");
   outputBuffer.resize(numOutputFloats);
 
-  vector<float> inputTmp = inputBuffer;
+  std::vector<float> inputTmp = inputBuffer;
   cl_mem input = createReadOnlyBuffer(handle,inputTmp,useFP16);
   ConvWorkspaceEltsNeeded convWorkspaceElts = layer->requiredConvWorkspaceElts(handle,batchSize);
   cl_mem convWorkspace = createReadWriteBuffer(handle, convWorkspaceElts.size1, useFP16);
@@ -2809,8 +2809,8 @@ bool NeuralNet::testEvaluateBatchNorm(
     throw StringError("testEvaluateBatchNorm: unexpected input buffer size");
   outputBuffer.resize(numOutputFloats);
 
-  vector<float> inputTmp = inputBuffer;
-  vector<float> maskTmp = maskBuffer;
+  std::vector<float> inputTmp = inputBuffer;
+  std::vector<float> maskTmp = maskBuffer;
   cl_mem input = createReadOnlyBuffer(handle,inputTmp,useFP16);
   cl_mem mask = createReadOnlyBuffer(handle,maskTmp,useFP16);
 
@@ -2862,8 +2862,8 @@ bool NeuralNet::testEvaluateResidualBlock(
     throw StringError("testEvaluateResidualBlock: unexpected mask buffer size");
   outputBuffer.resize(numTrunkFloats);
 
-  vector<float> inputTmp = inputBuffer;
-  vector<float> maskTmp = maskBuffer;
+  std::vector<float> inputTmp = inputBuffer;
+  std::vector<float> maskTmp = maskBuffer;
   cl_mem trunk = createReadWriteBuffer(handle,inputTmp,useFP16);
   cl_mem mask = createReadOnlyBuffer(handle,maskTmp,useFP16);
   cl_mem trunkScratch = createReadWriteBuffer(handle,numTrunkFloats,useFP16);
@@ -2926,8 +2926,8 @@ bool NeuralNet::testEvaluateGlobalPoolingResidualBlock(
     throw StringError("testEvaluateResidualBlock: unexpected mask buffer size");
   outputBuffer.resize(numTrunkFloats);
 
-  vector<float> inputTmp = inputBuffer;
-  vector<float> maskTmp = maskBuffer;
+  std::vector<float> inputTmp = inputBuffer;
+  std::vector<float> maskTmp = maskBuffer;
   cl_mem trunk = createReadWriteBuffer(handle,inputTmp,useFP16);
   cl_mem mask = createReadOnlyBuffer(handle,maskTmp,useFP16);
   cl_mem maskSum = createReadWriteBuffer(handle,numMaskSumFloats,false);

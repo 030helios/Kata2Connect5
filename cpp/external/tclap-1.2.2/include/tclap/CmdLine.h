@@ -243,7 +243,7 @@ private:
 
 		/**
 		 * Parses the command line.
-		 * \param args - A vector of strings representing the args.
+		 * \param args - A std::vector of strings representing the args.
 		 * args[0] is still the program name.
 		 */
 		void parse(std::vector<std::string>& args);

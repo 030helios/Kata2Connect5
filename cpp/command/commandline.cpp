@@ -26,8 +26,8 @@ static bool doesPathExist(const string& path) {
 static string getDefaultConfigPathForHelp(const string& defaultConfigFileName) {
   return HomeData::getDefaultFilesDirForHelpMessage() + "/" + defaultConfigFileName;
 }
-static vector<string> getDefaultConfigPaths(const string& defaultConfigFileName) {
-  vector<string> v = HomeData::getDefaultFilesDirs();
+static std::vector<string> getDefaultConfigPaths(const string& defaultConfigFileName) {
+  std::vector<string> v = HomeData::getDefaultFilesDirs();
   for(int i = 0; i<v.size(); i++) {
     v[i] = v[i] + "/" + defaultConfigFileName;
   }
@@ -38,9 +38,9 @@ static string getDefaultModelPathForHelp() {
   return HomeData::getDefaultFilesDirForHelpMessage() + "/" + "default_model.bin.gz";
 }
 
-static vector<string> getDefaultModelPaths() {
-  vector<string> dirs = HomeData::getDefaultFilesDirs();
-  vector<string> ret;
+static std::vector<string> getDefaultModelPaths() {
+  std::vector<string> dirs = HomeData::getDefaultFilesDirs();
+  std::vector<string> ret;
   for(int i = 0; i<dirs.size(); i++) {
     ret.push_back(dirs[i] + "/" + "default_model.bin.gz");
     ret.push_back(dirs[i] + "/" + "default_model.txt.gz");
@@ -87,10 +87,10 @@ class KataHelpOutput : public TCLAP::StdOutput
   {
     using namespace TCLAP;
     list<Arg*> argList = _cmd.getArgList();
-    vector<Arg*> argVec = vector<Arg*>(argList.begin(),argList.end());
+    std::vector<Arg*> argVec = std::vector<Arg*>(argList.begin(),argList.end());
     string progName = _cmd.getProgramName();
     XorHandler xorHandler = _cmd.getXorHandler();
-    vector<vector<Arg*>> xorList = xorHandler.getXorList();
+    std::vector<vector<Arg*>> xorList = xorHandler.getXorList();
 
     string s = progName + " ";
 
@@ -127,9 +127,9 @@ class KataHelpOutput : public TCLAP::StdOutput
   {
     using namespace TCLAP;
     list<Arg*> argList = _cmd.getArgList();
-    vector<Arg*> argVec = vector<Arg*>(argList.begin(),argList.end());
+    std::vector<Arg*> argVec = std::vector<Arg*>(argList.begin(),argList.end());
     XorHandler xorHandler = _cmd.getXorHandler();
-    vector<vector<Arg*>> xorList = xorHandler.getXorList();
+    std::vector<vector<Arg*>> xorList = xorHandler.getXorList();
 
     // first the xor
     for(int i = 0; static_cast<unsigned int>(i) < xorList.size(); i++)
@@ -257,7 +257,7 @@ string KataGoCommandLine::getModelFile() const {
   if(modelFile.empty()) {
     string pathForErrMsg;
     try {
-      vector<string> paths = getDefaultModelPaths();
+      std::vector<string> paths = getDefaultModelPaths();
       if(paths.size() > 0)
         pathForErrMsg = paths[0];
       for(const string& path: paths)
@@ -284,7 +284,7 @@ string KataGoCommandLine::getConfigFile() const {
   if(configFile.empty() && !defaultConfigFileName.empty()) {
     string pathForErrMsg;
     try {
-      vector<string> paths = getDefaultConfigPaths(defaultConfigFileName);
+      std::vector<string> paths = getDefaultConfigPaths(defaultConfigFileName);
       if(paths.size() > 0)
         pathForErrMsg = paths[0];
       for(const string& path: paths)
@@ -303,12 +303,12 @@ string KataGoCommandLine::getConfigFile() const {
 
 void KataGoCommandLine::maybeApplyOverrideConfigArg(ConfigParser& cfg) const {
   if(overrideConfigArg != NULL) {
-    vector<string> overrideConfigs = overrideConfigArg->getValue();
+    std::vector<string> overrideConfigs = overrideConfigArg->getValue();
     for(const string& overrideConfig : overrideConfigs) {
       if(overrideConfig != "") {
         map<string,string> newkvs = ConfigParser::parseCommaSeparated(overrideConfig);
         //HACK to avoid a common possible conflict - if we specify some of the rules options on one side, the other side should be erased.
-        vector<pair<set<string>,set<string>>> mutexKeySets = Setup::getMutexKeySets();
+        std::vector<pair<set<string>,set<string>>> mutexKeySets = Setup::getMutexKeySets();
         cfg.overrideKeys(newkvs,mutexKeySets);
       }
     }
@@ -317,7 +317,7 @@ void KataGoCommandLine::maybeApplyOverrideConfigArg(ConfigParser& cfg) const {
 
 void KataGoCommandLine::logOverrides(Logger& logger) const {
   if(overrideConfigArg != NULL) {
-    vector<string> overrideConfigs = overrideConfigArg->getValue();
+    std::vector<string> overrideConfigs = overrideConfigArg->getValue();
     for(const string& overrideConfig : overrideConfigs) {
       if(overrideConfig != "") {
         map<string,string> newkvs = ConfigParser::parseCommaSeparated(overrideConfig);

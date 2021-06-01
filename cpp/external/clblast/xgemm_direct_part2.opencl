@@ -167,7 +167,7 @@ INLINE_FUNC void GlobalToLocalDirectB(const __global realstoreND* restrict bgm, 
 
 // Caches global off-chip memory into local (shared) memory on-chip. This function is specific for
 // caching the A input matrix. In contrast to the functions above, this function performs doesn't
-// use the vector data-types.
+// use the std::vector data-types.
 INLINE_FUNC void GlobalToLocalScalarA(const __global realstore* restrict agms, LOCAL_PTR real* alm,
                                       const int a_ld, const int a_offset, const int kwg,
                                       const int a_transpose, const int a_conjugate) {
@@ -233,7 +233,7 @@ INLINE_FUNC void GlobalToLocalScalarB(const __global realstore* restrict bgms, L
 
 // Caches global off-chip memory into local (shared) memory on-chip. This function is specific for
 // caching the A input matrix. In contrast to the functions above, this function performs bounds
-// checks and doesn't use the vector data-types.
+// checks and doesn't use the std::vector data-types.
 INLINE_FUNC void GlobalToLocalCheckedA(const __global realstore* restrict agms, LOCAL_PTR real* alm,
                                        const int a_ld, const int a_offset, const int kwg,
                                        const int a_transpose, const int a_conjugate,

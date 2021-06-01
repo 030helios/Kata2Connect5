@@ -127,7 +127,7 @@ void FinishedGameData::printDebug(ostream& out) const {
     out << "policyTargetsByTurn " << i << " ";
     out << "unreducedNumVisits " << policyTargetsByTurn[i].unreducedNumVisits << " ";
     if(policyTargetsByTurn[i].policyTargets != NULL) {
-      const vector<PolicyTargetMove>& target = *(policyTargetsByTurn[i].policyTargets);
+      const std::vector<PolicyTargetMove>& target = *(policyTargetsByTurn[i].policyTargets);
       for(int j = 0; j<target.size(); j++)
         out << Location::toString(target[j].fromLoc,startBoard) << " "<< Location::toString(target[j].toLoc,startBoard) << " " << target[j].policyTarget << " ";
     }
@@ -264,7 +264,7 @@ static void uniformPolicyTarget(int policySize, int16_t* target) {
 }
 
 //Copy playouts into target, expanding out the sparse representation into a full plane.
-static void fillPolicyTarget(const vector<PolicyTargetMove>& policyTargetMoves, int policySize, int dataXLen, int dataYLen, int boardXSize, int16_t* target) {
+static void fillPolicyTarget(const std::vector<PolicyTargetMove>& policyTargetMoves, int policySize, int dataXLen, int dataYLen, int boardXSize, int16_t* target) {
   zeroPolicyTarget(policySize,target);
   size_t size = policyTargetMoves.size();
   for(size_t i = 0; i<size; i++) {
@@ -296,7 +296,7 @@ static int8_t convertRadiusOneToRadius120(float x, Rand& rand) {
 
 
 
-static void fillValueTDTargets(const vector<ValueTargets>& whiteValueTargetsByTurn, int idx, Player nextPlayer, double nowFactor, float* buf) {
+static void fillValueTDTargets(const std::vector<ValueTargets>& whiteValueTargetsByTurn, int idx, Player nextPlayer, double nowFactor, float* buf) {
   double winValue = 0.0;
   double lossValue = 0.0;
   double noResultValue = 0.0;
@@ -332,16 +332,16 @@ void TrainingWriteBuffers::addRow(
   int turnIdx,
   float targetWeight,
   int64_t unreducedNumVisits,
-  const vector<PolicyTargetMove>* policyTarget0, //can be null
-  const vector<PolicyTargetMove>* policyTarget1, //can be null
-  const vector<ValueTargets>& whiteValueTargets,
+  const std::vector<PolicyTargetMove>* policyTarget0, //can be null
+  const std::vector<PolicyTargetMove>* policyTarget1, //can be null
+  const std::vector<ValueTargets>& whiteValueTargets,
   int whiteValueTargetsIdx, //index in whiteValueTargets corresponding to this turn.
   const NNRawStats& nnRawStats,
   const Board* finalBoard,
   Color* finalFullArea,
   Color* finalOwnership,
   float* finalWhiteScoring,
-  const vector<Board>* posHistForFutureBoards, //can be null
+  const std::vector<Board>* posHistForFutureBoards, //can be null
   bool isSidePosition,
   int numNeuralNetsBehindLatest,
   const FinishedGameData& data,
@@ -579,7 +579,7 @@ void TrainingWriteBuffers::addRow(
       }
     }*/
 
-    //Fill score vector "onehot"-like
+    //Fill score std::vector "onehot"-like
     for(int i = 0; i<scoreDistrLen; i++)
       rowScoreDistr[i] = 0;
     int centerScore = (int)round(score);
@@ -605,7 +605,7 @@ void TrainingWriteBuffers::addRow(
     }
   }
   else {
-    const vector<Board>& boards = *posHistForFutureBoards;
+    const std::vector<Board>& boards = *posHistForFutureBoards;
     assert(boards.size() == whiteValueTargets.size());
     assert(boards.size() > 0);
 
@@ -904,7 +904,7 @@ void TrainingDataWriter::writeGame(const FinishedGameData& data) {
   #endif
 
   //Play out all the moves in a single pass first to compute all the future board states
-  vector<Board> posHistForFutureBoards;
+  std::vector<Board> posHistForFutureBoards;
   {
     Board board(data.startBoard);
     BoardHistory hist(data.startHist);
@@ -935,8 +935,8 @@ void TrainingDataWriter::writeGame(const FinishedGameData& data) {
     int turnIdx = turnAfterStart + startTurnIdx;
 
     int64_t unreducedNumVisits = data.policyTargetsByTurn[turnAfterStart].unreducedNumVisits;
-    const vector<PolicyTargetMove>* policyTarget0 = data.policyTargetsByTurn[turnAfterStart].policyTargets;
-    const vector<PolicyTargetMove>* policyTarget1 = (turnAfterStart + 1 < numMoves) ? data.policyTargetsByTurn[turnAfterStart+1].policyTargets : NULL;
+    const std::vector<PolicyTargetMove>* policyTarget0 = data.policyTargetsByTurn[turnAfterStart].policyTargets;
+    const std::vector<PolicyTargetMove>* policyTarget1 = (turnAfterStart + 1 < numMoves) ? data.policyTargetsByTurn[turnAfterStart+1].policyTargets : NULL;
     bool isSidePosition = false;
 
     int numNeuralNetsBehindLatest = 0;
@@ -985,7 +985,7 @@ void TrainingDataWriter::writeGame(const FinishedGameData& data) {
   }
 
   //Write side rows
-  vector<ValueTargets> whiteValueTargetsBuf(1);
+  std::vector<ValueTargets> whiteValueTargetsBuf(1);
   for(int i = 0; i<data.sidePositions.size(); i++) {
     SidePosition* sp = data.sidePositions[i];
 

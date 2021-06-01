@@ -39,7 +39,7 @@ void Tests::runOwnershipTests(const string& configFile, const string& modelFile)
     Player nextPla = P_BLACK;
     BoardHistory hist(board,nextPla,rules,0);
     int64_t numVisits = 100;
-    vector<double> ownership = PlayUtils::computeOwnership(bot,board,hist,nextPla,numVisits,logger);
+    std::vector<double> ownership = PlayUtils::computeOwnership(bot,board,hist,nextPla,numVisits,logger);
     cout << "=================================================================================" << endl;
     cout << rules << endl;
     cout << board << endl;

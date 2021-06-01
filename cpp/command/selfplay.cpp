@@ -339,7 +339,7 @@ int MainCmds::selfplay(int argc, const char* const* argv) {
     Logger::logThreadUncaught("model load loop", &logger, modelLoadLoop);
   };
 
-  vector<std::thread> threads;
+  std::vector<std::thread> threads;
   for(int i = 0; i<numGameThreads; i++) {
     threads.push_back(std::thread(gameLoopProtected,i));
   }

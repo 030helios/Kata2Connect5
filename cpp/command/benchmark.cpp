@@ -22,17 +22,17 @@ using namespace std;
 
 static NNEvaluator* createNNEval(int maxNumThreads, CompactSgf* sgf, const string& modelFile, Logger& logger, ConfigParser& cfg, const SearchParams& params);
 
-static vector<PlayUtils::BenchmarkResults> doFixedTuneThreads(
+static std::vector<PlayUtils::BenchmarkResults> doFixedTuneThreads(
   const SearchParams& params,
   const CompactSgf* sgf,
   int numPositionsPerGame,
   NNEvaluator*& nnEval,
   Logger& logger,
   double secondsPerGameMove,
-  vector<int> numThreadsToTest,
+  std::vector<int> numThreadsToTest,
   bool printElo
 );
-static vector<PlayUtils::BenchmarkResults> doAutoTuneThreads(
+static std::vector<PlayUtils::BenchmarkResults> doAutoTuneThreads(
   const SearchParams& params,
   const CompactSgf* sgf,
   int numPositionsPerGame,
@@ -60,7 +60,7 @@ int MainCmds::benchmark(int argc, const char* const* argv) {
   string sgfFile;
   int boardSize;
   int64_t maxVisits;
-  vector<int> numThreadsToTest;
+  std::vector<int> numThreadsToTest;
   int numPositionsPerGame;
   bool autoTuneThreads;
   double secondsPerGameMove;
@@ -117,7 +117,7 @@ int MainCmds::benchmark(int argc, const char* const* argv) {
       autoTuneThreads = true;
 
     if(!autoTuneThreads) {
-      vector<string> desiredThreadsPieces = Global::split(desiredThreadsStr,',');
+      std::vector<string> desiredThreadsPieces = Global::split(desiredThreadsStr,',');
       for(int i = 0; i<desiredThreadsPieces.size(); i++) {
         string s = Global::trim(desiredThreadsPieces[i]);
         if(s == "")
@@ -215,7 +215,7 @@ int MainCmds::benchmark(int argc, const char* const* argv) {
   cout << endl;
   cout << "Your GTP config is currently set to use numSearchThreads = " << params.numThreads << endl;
 
-  vector<PlayUtils::BenchmarkResults> results;
+  std::vector<PlayUtils::BenchmarkResults> results;
   if(!autoTuneThreads) {
     results = doFixedTuneThreads(params,sgf,numPositionsPerGame,nnEval,logger,secondsPerGameMove,numThreadsToTest,true);
   }
@@ -320,17 +320,17 @@ static void setNumThreads(SearchParams& params, NNEvaluator* nnEval, Logger& log
 #endif
 }
 
-static vector<PlayUtils::BenchmarkResults> doFixedTuneThreads(
+static std::vector<PlayUtils::BenchmarkResults> doFixedTuneThreads(
   const SearchParams& params,
   const CompactSgf* sgf,
   int numPositionsPerGame,
   NNEvaluator*& nnEval,
   Logger& logger,
   double secondsPerGameMove,
-  vector<int> numThreadsToTest,
+  std::vector<int> numThreadsToTest,
   bool printElo
 ) {
-  vector<PlayUtils::BenchmarkResults> results;
+  std::vector<PlayUtils::BenchmarkResults> results;
 
   if(numThreadsToTest.size() > 1)
     cout << "Testing different numbers of threads: " << endl;
@@ -355,7 +355,7 @@ static vector<PlayUtils::BenchmarkResults> doFixedTuneThreads(
   return results;
 }
 
-static vector<PlayUtils::BenchmarkResults> doAutoTuneThreads(
+static std::vector<PlayUtils::BenchmarkResults> doAutoTuneThreads(
   const SearchParams& params,
   const CompactSgf* sgf,
   int numPositionsPerGame,
@@ -364,7 +364,7 @@ static vector<PlayUtils::BenchmarkResults> doAutoTuneThreads(
   double secondsPerGameMove,
   std::function<void(int)> reallocateNNEvalWithEnoughBatchSize
 ) {
-  vector<PlayUtils::BenchmarkResults> results;
+  std::vector<PlayUtils::BenchmarkResults> results;
 
   cout << "Automatically trying different numbers of threads to home in on the best: " << endl;
   cout << endl;
@@ -397,10 +397,10 @@ static vector<PlayUtils::BenchmarkResults> doAutoTuneThreads(
   // we will use the traditional ternary search.
 
   // Restrict to thread counts that are {1,2,3,4,5} * power of 2
-  vector<int> possibleNumbersOfThreads;
+  std::vector<int> possibleNumbersOfThreads;
   int twopow = 1;
   for(int i = 0; i < 20; i++) {
-    // 5 * (2 ** 17) is way more than enough; 17 because we only add odd multiples to the vector, evens are just other powers of two.
+    // 5 * (2 ** 17) is way more than enough; 17 because we only add odd multiples to the std::vector, evens are just other powers of two.
     possibleNumbersOfThreads.push_back(twopow);
     possibleNumbersOfThreads.push_back(twopow * 3);
     possibleNumbersOfThreads.push_back(twopow * 5);
@@ -565,7 +565,7 @@ int MainCmds::genconfig(int argc, const char* const* argv, const char* firstComm
   int64_t configMaxPlayouts = ((int64_t)1) << 50;
   double configMaxTime = 1e20;
   double configMaxPonderTime = -1.0;
-  vector<int> configDeviceIdxs;
+  std::vector<int> configDeviceIdxs;
   int configNNCacheSizePowerOfTwo = 20;
   int configNNMutexPoolSizePowerOfTwo = 16;
   int configNumSearchThreads = 6;
@@ -708,7 +708,7 @@ int MainCmds::genconfig(int argc, const char* const* argv, const char* firstComm
     string prompt =
       "Specify devices/GPUs to use (for example \"0,1,2\" to use devices 0, 1, and 2). Leave blank for a default SINGLE-GPU config:\n";
     promptAndParseInput(prompt, [&](const string& line) {
-        vector<string> pieces = Global::split(line,',');
+        std::vector<string> pieces = Global::split(line,',');
         configDeviceIdxs.clear();
         for(size_t i = 0; i<pieces.size(); i++) {
           string piece = Global::trim(pieces[i]);
@@ -866,9 +866,9 @@ int MainCmds::genconfig(int argc, const char* const* argv, const char* firstComm
     }
     else {
       cout << "Running quick initial benchmark at 16 threads!" << endl;
-      vector<int> numThreads = {16};
+      std::vector<int> numThreads = {16};
       reallocateNNEvalWithEnoughBatchSize(std::max(16,ternarySearchInitialMax));
-      vector<PlayUtils::BenchmarkResults> results = doFixedTuneThreads(params,sgf,3,nnEval,logger,secondsPerGameMove,numThreads,false);
+      std::vector<PlayUtils::BenchmarkResults> results = doFixedTuneThreads(params,sgf,3,nnEval,logger,secondsPerGameMove,numThreads,false);
       double visitsPerSecond = results[0].totalVisits / (results[0].totalSeconds + 0.00001);
       //Make tests use about 2 seconds each
       maxVisits = (int64_t)round(2.0 * visitsPerSecond/100.0) * 100;
@@ -885,7 +885,7 @@ int MainCmds::genconfig(int argc, const char* const* argv, const char* firstComm
     cout << "TUNING NOW" << endl;
     cout << "Tuning using " << maxVisits << " visits." << endl;
 
-    vector<PlayUtils::BenchmarkResults> results;
+    std::vector<PlayUtils::BenchmarkResults> results;
     results = doAutoTuneThreads(params,sgf,numPositionsPerGame,nnEval,logger,secondsPerGameMove,reallocateNNEvalWithEnoughBatchSize);
 
     PlayUtils::BenchmarkResults::printEloComparison(results,secondsPerGameMove);

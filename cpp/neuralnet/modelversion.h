@@ -15,7 +15,7 @@ namespace NNModelVersion {
   int getInputsVersion(int modelVersion);
 
   // Convenience functions, feeds forward the number of features and the size of
-  // the row vector that the net takes as input
+  // the row std::vector that the net takes as input
   int getNumSpatialFeatures(int modelVersion);
   int getNumGlobalFeatures(int modelVersion);
 

@@ -189,7 +189,7 @@ size_t SelfplayManager::numModels() const {
 
 vector<string> SelfplayManager::modelNames() const {
   std::lock_guard<std::mutex> lock(managerMutex);
-  vector<string> names;
+  std::vector<string> names;
   for(size_t i = 0; i<modelDatas.size(); i++)
     names.push_back(modelDatas[i]->modelName);
   return names;

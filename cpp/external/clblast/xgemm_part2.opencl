@@ -19,7 +19,7 @@
 // literal). Comment-out this line for syntax-highlighting when developing.
 R"(
 
-// The vectorised multiply-add function
+// The std::vectorised multiply-add function
 INLINE_FUNC realM MultiplyAddVector(realM cvec, const realM avec, const real bval) {
   #if USE_VECTOR_MAD == 1
     cvec += avec * bval;

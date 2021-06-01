@@ -50,7 +50,7 @@ using namespace std;
 //   bool doRandomize = true;
 //   string randSeed = "abc";
 //   int defaultSymmetry = 0;
-//   vector<int> gpuIdxByServerThread = {0};
+//   std::vector<int> gpuIdxByServerThread = {0};
 //   bool useFP16 = false;
 //   bool useNHWC = false;
 //   nnEval->spawnServerThreads(
@@ -284,7 +284,7 @@ int MainCmds::sandbox() {
 //     //   NNInputs::fillRowV1(board3, hist3, pla, row);
 //   }
 
-//   vector<NNOutput*> outputs;
+//   std::vector<NNOutput*> outputs;
 //   for(int row = 0; row<batchSize; row++) {
 //     NNOutput* emptyOutput = new NNOutput();
 //     emptyOutput->nnXLen = nnXLen;
@@ -1473,7 +1473,7 @@ int MainCmds::sandbox() {
 //   bool doRandomize = true;
 //   string randSeed = "abc";
 //   int defaultSymmetry = 0;
-//   vector<std::thread*> nnServerThreads = nnEval->spawnServerThreads(numNNServerThreads,doRandomize,randSeed,defaultSymmetry,logger);
+//   std::vector<std::thread*> nnServerThreads = nnEval->spawnServerThreads(numNNServerThreads,doRandomize,randSeed,defaultSymmetry,logger);
 
 //   Rules rules;
 //   rules.koRule = Rules::KO_POSITIONAL;
@@ -1752,7 +1752,7 @@ int MainCmds::sandbox() {
 //   BoardHistory hist2(board2,nextPlayer,rules);
 
 //   auto runInputsInLoop = [&](vector<float>* res, int which) {
-//     vector<float>& results = *res;
+//     std::vector<float>& results = *res;
 
 //     Tensor inputs(DT_FLOAT,inputsShape);
 //     Tensor symmetries(DT_BOOL,symmetriesShape);
@@ -1768,12 +1768,12 @@ int MainCmds::sandbox() {
 
 //     // Tensor sliced = inputs.Slice(0,1);
 
-//     vector<pair<string,Tensor>> inputsList1 = {
+//     std::vector<pair<string,Tensor>> inputsList1 = {
 //       {"g1/inputs",inputs},
 //       {"g1/symmetries",symmetries},
 //       {"g1/is_training",isTraining},
 //     };
-//     vector<pair<string,Tensor>> inputsList2 = {
+//     std::vector<pair<string,Tensor>> inputsList2 = {
 //       {"g2/inputs",inputs},
 //       {"g2/symmetries",symmetries},
 //       {"g2/is_training",isTraining},
@@ -1789,7 +1789,7 @@ int MainCmds::sandbox() {
 //       NNInputs::fillRowV1(board1, hist1, nextPlayer, row + NNInputs::ROW_SIZE_V1*2);
 //       NNInputs::fillRowV1(board2, hist2, nextPlayer, row + NNInputs::ROW_SIZE_V1*3);
 
-//       vector<Tensor> outputs;
+//       std::vector<Tensor> outputs;
 //       // cout << "Running" << endl;
 //       if(which == 1)
 //         status = session->Run(inputsList1, {"g1/policy_output","g1/value_output"}, {}, &outputs);
@@ -1843,10 +1843,10 @@ int MainCmds::sandbox() {
 
 //   int numThreads = 4;
 
-//   vector<std::thread> threads;
-//   vector<float> results[numThreads];
+//   std::vector<std::thread> threads;
+//   std::vector<float> results[numThreads];
 //   for(int i = 0; i<numThreads; i++)
-//     results[i] = vector<float>();
+//     results[i] = std::vector<float>();
 
 //   for(int i = 0; i<numThreads; i++) {
 //     if(i % 2 == 0)
@@ -1991,13 +1991,13 @@ int MainCmds::sandbox() {
 //   cout << "ISALIGNED " << sliced.IsAligned() << endl;
 //   int outputBatchSize = 1;
 
-//   vector<pair<string,Tensor>> inputsList = {
+//   std::vector<pair<string,Tensor>> inputsList = {
 //     {"inputs",sliced},
 //     {"symmetries",symmetries},
 //     {"is_training",isTraining},
 //   };
 
-//   vector<Tensor> outputs;
+//   std::vector<Tensor> outputs;
 
 //   status = session->Run(inputsList, {"policy_output","value_output"}, {}, &outputs);
 //   checkStatus(status,"running inference");

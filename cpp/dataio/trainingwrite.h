@@ -81,7 +81,7 @@ struct FinishedGameData
   //whole +1 thing, skipping 1H.
   int handicapForSgf;
 
-  //If false, then we don't have these below vectors and ownership information
+  //If false, then we don't have these below std::vectors and ownership information
   bool hasFullData;
   std::vector<float> targetWeightByTurn;
   std::vector<float> targetWeightByTurnUnrounded;

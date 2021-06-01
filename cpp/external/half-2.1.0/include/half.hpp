@@ -1576,7 +1576,7 @@ namespace half_float
 		}
 
 		/// Fixed point arc tangent.
-		/// This uses the CORDIC algorithm in vectoring mode.
+		/// This uses the CORDIC algorithm in std::vectoring mode.
 		/// \param my y coordinate as Q0.30
 		/// \param mx x coordinate as Q0.30
 		/// \param n number of iterations (at most 31)

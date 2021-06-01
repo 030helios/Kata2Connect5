@@ -70,7 +70,7 @@ NNEvaluator::NNEvaluator(
   enabled_t useFP16Mode,
   enabled_t useNHWCMode,
   int numThr,
-  const vector<int>& gpuIdxByServerThr,
+  const std::vector<int>& gpuIdxByServerThr,
   const string& rSeed,
   bool doRandomize,
   int defaultSymmetry)
@@ -134,7 +134,7 @@ NNEvaluator::NNEvaluator(
     nnCacheTable = new NNCacheTable(nnCacheSizePowerOfTwo, nnMutexPoolSizePowerofTwo);
 
   if(!debugSkipNeuralNet) {
-    vector<int> gpuIdxs = gpuIdxByServerThread;
+    std::vector<int> gpuIdxs = gpuIdxByServerThread;
     std::sort(gpuIdxs.begin(), gpuIdxs.end());
     std::unique(gpuIdxs.begin(), gpuIdxs.end());
     loadedModel = NeuralNet::loadModelFile(modelFileName, expectedSha256);
@@ -305,7 +305,7 @@ static void serveEvals(
   delete buf;
 }
 
-void NNEvaluator::setNumThreads(const vector<int>& gpuIdxByServerThr) {
+void NNEvaluator::setNumThreads(const std::vector<int>& gpuIdxByServerThr) {
   if(serverThreads.size() != 0)
     throw StringError("NNEvaluator::setNumThreads called when threads were already running!");
   numThreads = (int)gpuIdxByServerThr.size();
@@ -366,7 +366,7 @@ void NNEvaluator::serve(NNServerBuf& buf, Rand& rand, int gpuIdxForThisThread, i
       mainThreadWaitingForSpawn.notify_all();
   }
 
-  vector<NNOutput*> outputBuf;
+  std::vector<NNOutput*> outputBuf;
 
   unique_lock<std::mutex> lock(bufferMutex, std::defer_lock);
   while(true) {

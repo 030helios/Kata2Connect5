@@ -25,7 +25,7 @@ int MainCmds::tuner(int argc, const char* const* argv) {
   string modelFile;
   string outputFile;
   string gpuIdxsStr;
-  vector<int> gpuIdxs;
+  std::vector<int> gpuIdxs;
   int nnXLen;
   int nnYLen;
   string testFP16Str;
@@ -110,7 +110,7 @@ int MainCmds::tuner(int argc, const char* const* argv) {
     }
 
     if(gpuIdxsStr.size() > 0) {
-      vector<string> pieces = Global::split(gpuIdxsStr,',');
+      std::vector<string> pieces = Global::split(gpuIdxsStr,',');
       int parsed;
       for(int i = 0; i<pieces.size(); i++) {
         bool suc = Global::tryStringToInt(Global::trim(pieces[i]),parsed);
@@ -149,7 +149,7 @@ int MainCmds::tuner(int argc, const char* const* argv) {
   OpenCLTuner::ModelInfoForTuning modelInfo = OpenCLTuner::ModelInfoForTuning::ofDesc(&modelDesc);
 
   logger.write("Querying system devices...");
-  vector<DeviceInfo> allDeviceInfos = DeviceInfo::getAllDeviceInfosOnSystem(&logger);
+  std::vector<DeviceInfo> allDeviceInfos = DeviceInfo::getAllDeviceInfosOnSystem(&logger);
 
   //If none provided, by default tune everything
   if(gpuIdxs.size() == 0) {

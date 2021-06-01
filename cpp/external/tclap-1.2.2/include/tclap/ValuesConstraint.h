@@ -46,7 +46,7 @@ class ValuesConstraint : public Constraint<T>
 
 		/**
 		 * Constructor. 
-		 * \param allowed - vector of allowed values. 
+		 * \param allowed - std::vector of allowed values. 
 		 */
 		ValuesConstraint(std::vector<T>& allowed);	
 

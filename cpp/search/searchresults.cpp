@@ -16,8 +16,8 @@ using nlohmann::json;
 static const int64_t MIN_VISITS_FOR_LCB = 3;
 
 bool Search::getPlaySelectionValues(
-    vector<Loc> &fromLocs,
-    vector<Loc> &toLocs, vector<double> &playSelectionValues, double scaleMaxToAtLeast)
+    std::vector<Loc> &fromLocs,
+    std::vector<Loc> &toLocs, std::vector<double> &playSelectionValues, double scaleMaxToAtLeast)
     const
 {
   if (rootNode == NULL)
@@ -32,10 +32,10 @@ bool Search::getPlaySelectionValues(
 }
 
 bool Search::getPlaySelectionValues(
-    vector<Loc> &fromLocs,
-    vector<Loc> &toLocs,
-    vector<double> &playSelectionValues,
-    vector<double> *retVisitCounts,
+    std::vector<Loc> &fromLocs,
+    std::vector<Loc> &toLocs,
+    std::vector<double> &playSelectionValues,
+    std::vector<double> *retVisitCounts,
     double scaleMaxToAtLeast) const
 {
   if (rootNode == NULL)
@@ -54,10 +54,10 @@ bool Search::getPlaySelectionValues(
 
 bool Search::getPlaySelectionValues(
     const SearchNode &node,
-    vector<Loc> &fromLocs,
-    vector<Loc> &toLocs,
-    vector<double> &playSelectionValues,
-    vector<double> *retVisitCounts,
+    std::vector<Loc> &fromLocs,
+    std::vector<Loc> &toLocs,
+    std::vector<double> &playSelectionValues,
+    std::vector<double> *retVisitCounts,
     double scaleMaxToAtLeast,
     bool allowDirectPolicyMoves) const
 {
@@ -82,10 +82,10 @@ bool Search::getPlaySelectionValues(
 
 bool Search::getPlaySelectionValuesAlreadyLocked(
     const SearchNode &node,
-    vector<Loc> &fromLocs,
-    vector<Loc> &toLocs,
-    vector<double> &playSelectionValues,
-    vector<double> *retVisitCounts,
+    std::vector<Loc> &fromLocs,
+    std::vector<Loc> &toLocs,
+    std::vector<double> &playSelectionValues,
+    std::vector<double> *retVisitCounts,
     double scaleMaxToAtLeast,
     bool allowDirectPolicyMoves,
     bool alwaysComputeLcb,
@@ -500,9 +500,9 @@ Move Search::getChosenMoveLoc()
   if (rootNode == NULL)
     return Move(0, 0, 0);
 
-  vector<Loc> fromLocs;
-  vector<Loc> toLocs;
-  vector<double> playSelectionValues;
+  std::vector<Loc> fromLocs;
+  std::vector<Loc> toLocs;
+  std::vector<double> playSelectionValues;
   bool suc = getPlaySelectionValues(fromLocs, toLocs, playSelectionValues, 0.0);
   if (!suc)
     return Move(0, 0, 0);
@@ -557,9 +557,9 @@ bool Search::getPolicySurpriseAndEntropy(double &surpriseRet, double &searchEntr
 
   NNOutput &nnOutput = *(rootNode->nnOutput);
 
-  vector<Loc> fromLocs;
-  vector<Loc> toLocs;
-  vector<double> playSelectionValues;
+  std::vector<Loc> fromLocs;
+  std::vector<Loc> toLocs;
+  std::vector<double> playSelectionValues;
   bool allowDirectPolicyMoves = true;
   bool alwaysComputeLcb = false;
   double lcbBuf[NNPos::MAX_NN_POLICY_SIZE];
@@ -719,10 +719,10 @@ void Search::printRootEndingScoreValueBonus(ostream &out) const
 void Search::appendPV(
     std::vector<Loc> &FromBuf,
     std::vector<Loc> &ToBuf,
-    vector<int64_t> &visitsBuf,
-    vector<Loc> &fromLocs,
-    vector<Loc> &toLocs,
-    vector<double> &scratchValues,
+    std::vector<int64_t> &visitsBuf,
+    std::vector<Loc> &fromLocs,
+    std::vector<Loc> &toLocs,
+    std::vector<double> &scratchValues,
     const SearchNode *n,
     int maxDepth) const
 {
@@ -732,10 +732,10 @@ void Search::appendPV(
 void Search::appendPVForMove(
     std::vector<Loc> &FromBuf,
     std::vector<Loc> &ToBuf,
-    vector<int64_t> &visitsBuf,
-    vector<Loc> &fromLocs,
-    vector<Loc> &toLocs,
-    vector<double> &scratchValues,
+    std::vector<int64_t> &visitsBuf,
+    std::vector<Loc> &fromLocs,
+    std::vector<Loc> &toLocs,
+    std::vector<double> &scratchValues,
     const SearchNode *n,
     Loc fromMove,
     Loc toMove,
@@ -805,15 +805,15 @@ void Search::printPV(ostream &out, const SearchNode *n, int maxDepth) const
 {
   std::vector<Loc> FromBuf;
   std::vector<Loc> ToBuf;
-  vector<Loc> fromLocs;
-  vector<Loc> toLocs;
-  vector<int64_t> visitsBuf;
-  vector<double> scratchValues;
+  std::vector<Loc> fromLocs;
+  std::vector<Loc> toLocs;
+  std::vector<int64_t> visitsBuf;
+  std::vector<double> scratchValues;
   appendPV(FromBuf, ToBuf, visitsBuf, fromLocs, toLocs, scratchValues, n, maxDepth);
   printPV(out, FromBuf, ToBuf);
 }
 
-void Search::printPV(ostream &out, const vector<Loc> &FromBuf, const vector<Loc> &ToBuf) const
+void Search::printPV(ostream &out, const std::vector<Loc> &FromBuf, const std::vector<Loc> &ToBuf) const
 {
   bool printedAnything = false;
   for (int i = 0; i < FromBuf.size(); i++)
@@ -831,9 +831,9 @@ void Search::printPV(ostream &out, const vector<Loc> &FromBuf, const vector<Loc>
 // Child should NOT be locked.
 AnalysisData Search::getAnalysisDataOfSingleChild(
     const SearchNode *child,
-    vector<Loc> &fromLocs,
-    vector<Loc> &toLocs,
-    vector<double> &scratchValues,
+    std::vector<Loc> &fromLocs,
+    std::vector<Loc> &toLocs,
+    std::vector<double> &scratchValues,
     Loc fromLoc,
     Loc toLoc,
     double policyProb,
@@ -924,7 +924,7 @@ AnalysisData Search::getAnalysisDataOfSingleChild(
 }
 
 void Search::getAnalysisData(
-    vector<AnalysisData> &buf,
+    std::vector<AnalysisData> &buf,
     int minMovesToTryToGet,
     bool includeWeightFactors,
     int maxPVDepth) const
@@ -937,19 +937,19 @@ void Search::getAnalysisData(
 
 void Search::getAnalysisData(
     const SearchNode &node,
-    vector<AnalysisData> &buf,
+    std::vector<AnalysisData> &buf,
     int minMovesToTryToGet,
     bool includeWeightFactors,
     int maxPVDepth) const
 {
   buf.clear();
-  vector<SearchNode *> children;
+  std::vector<SearchNode *> children;
   children.reserve(rootBoard.x_size * rootBoard.y_size + 1);
 
   int numChildren;
-  vector<Loc> fromLocs;
-  vector<Loc> toLocs;
-  vector<double> scratchValues;
+  std::vector<Loc> fromLocs;
+  std::vector<Loc> toLocs;
+  std::vector<double> scratchValues;
   double lcbBuf[NNPos::MAX_NN_POLICY_SIZE];
   double radiusBuf[NNPos::MAX_NN_POLICY_SIZE];
   float policyProbs[NNPos::MAX_NN_POLICY_SIZE];
@@ -977,7 +977,7 @@ void Search::getAnalysisData(
   }
 
   // Copy to make sure we keep these values so we can reuse scratch later for PV
-  vector<double> playSelectionValues = scratchValues;
+  std::vector<double> playSelectionValues = scratchValues;
 
   double policyProbMassVisited = 0.0;
   {
@@ -1050,8 +1050,8 @@ void Search::getAnalysisData(
   // Find all children and compute weighting of the children based on their values
   if (includeWeightFactors)
   {
-    vector<double> selfUtilityBuf;
-    vector<int64_t> visitsBuf;
+    std::vector<double> selfUtilityBuf;
+    std::vector<int64_t> visitsBuf;
     int64_t visitsSum = 0;
     for (int i = 0; i < numChildren; i++)
     {
@@ -1130,12 +1130,12 @@ void Search::getAnalysisData(
 
 void Search::printPVForMove(ostream &out, const SearchNode *n, Loc fromMove, Loc toMove, int maxDepth) const
 {
-  vector<Loc> fromLocs;
-  vector<Loc> toLocs;
-  vector<int64_t> visitsBuf;
-  vector<Loc> scratchLocsfrom;
-  vector<Loc> scratchLocsto;
-  vector<double> scratchValues;
+  std::vector<Loc> fromLocs;
+  std::vector<Loc> toLocs;
+  std::vector<int64_t> visitsBuf;
+  std::vector<Loc> scratchLocsfrom;
+  std::vector<Loc> scratchLocsto;
+  std::vector<double> scratchValues;
   appendPVForMove(fromLocs, toLocs, visitsBuf, scratchLocsfrom, scratchLocsto, scratchValues, n, fromMove, toMove, maxDepth);
   for (int i = 0; i < fromLocs.size(); i++)
   {
@@ -1153,9 +1153,9 @@ void Search::printTree(ostream &out, const SearchNode *node, PrintTreeOptions op
   string prefix;
   AnalysisData data;
   {
-    vector<Loc> fromLocs;
-    vector<Loc> toLocs;
-    vector<double> scratchValues;
+    std::vector<Loc> fromLocs;
+    std::vector<Loc> toLocs;
+    std::vector<double> scratchValues;
     // Use dummy values for parent
     double policyProb = NAN;
     double fpuValue = 0;
@@ -1311,7 +1311,7 @@ void Search::printTreeHelper(
         << ")---" << endl;
   }
 
-  vector<AnalysisData> analysisData;
+  std::vector<AnalysisData> analysisData;
   getAnalysisData(node, analysisData, 0, true, options.maxPVDepth_);
 
   int numChildren = analysisData.size();
@@ -1366,13 +1366,13 @@ vector<double> Search::getAverageTreeOwnership(int64_t minVisits, const SearchNo
     node = rootNode;
   if (!alwaysIncludeOwnerMap)
     throw StringError("Called Search::getAverageTreeOwnership when alwaysIncludeOwnerMap is false");
-  vector<double> vec(nnXLen * nnYLen, 0.0);
+  std::vector<double> vec(nnXLen * nnYLen, 0.0);
   getAverageTreeOwnershipHelper(vec, minVisits, 1.0, node);
   return vec;
 }
 
 double Search::getAverageTreeOwnershipHelper(
-    vector<double> &accum,
+    std::vector<double> &accum,
     int64_t minVisits,
     double desiredWeight,
     const SearchNode *node) const
@@ -1388,14 +1388,14 @@ double Search::getAverageTreeOwnershipHelper(
   shared_ptr<NNOutput> nnOutput = node->nnOutput;
 
   int numChildren = node->numChildren;
-  vector<const SearchNode *> children(numChildren);
+  std::vector<const SearchNode *> children(numChildren);
   for (int i = 0; i < numChildren; i++)
     children[i] = node->children[i];
 
   // We can unlock now - during a search, children are never deallocated
   lock.unlock();
 
-  vector<int64_t> visitsBuf(numChildren);
+  std::vector<int64_t> visitsBuf(numChildren);
   for (int i = 0; i < numChildren; i++)
   {
     const SearchNode *child = children[i];
@@ -1446,7 +1446,7 @@ json Search::getJsonOwnershipMap(
     const SearchNode *node,
     int ownershipMinVisits) const
 {
-  vector<double> ownership = getAverageTreeOwnership(ownershipMinVisits, node);
+  std::vector<double> ownership = getAverageTreeOwnership(ownershipMinVisits, node);
   json ownerships = json::array();
   for (int y = 0; y < board.y_size; y++)
   {
@@ -1485,7 +1485,7 @@ bool Search::getAnalysisJson(
     bool includePVVisits,
     json &ret) const
 {
-  vector<AnalysisData> buf;
+  std::vector<AnalysisData> buf;
   static constexpr int minMoves = 0;
 
   getAnalysisData(buf, minMoves, false, analysisPVLen);

@@ -274,7 +274,7 @@ struct Search
     // Choose a move at the root of the tree, with randomization, if possible.
     // Might return Board::NULL_LOC if there is no root.
     Move getChosenMoveLoc();
-    // Get the vector of values (e.g. modified visit counts) used to select a move.
+    // Get the std::vector of values (e.g. modified visit counts) used to select a move.
     // Does take into account chosenMoveSubtract but does NOT apply temperature.
     // If somehow the max value is less than scaleMaxToAtLeast, scale it to at least that value.
     bool getPlaySelectionValues(
@@ -558,7 +558,7 @@ private:
         double parentLead,
         int maxPVDepth) const;
 
-    void printPV(std::ostream &out, const std::vector<Loc> &FromBuf, const vector<Loc> &ToBuf) const;
+    void printPV(std::ostream &out, const std::vector<Loc> &FromBuf, const std::vector<Loc> &ToBuf) const;
 
     void printTreeHelper(
         std::ostream &out,

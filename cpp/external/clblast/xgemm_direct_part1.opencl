@@ -42,10 +42,10 @@ R"(
   #define KWID 1      // Unroll factor of the WGD loop (smaller or equal than WGD)
 #endif
 #ifndef VWMD
-  #define VWMD 1      // Vector width of matrices A and C
+  #define VWMD 1      // std::vector width of matrices A and C
 #endif
 #ifndef VWND
-  #define VWND 1      // Vector width of matrix B
+  #define VWND 1      // std::vector width of matrix B
 #endif
 #ifndef PADA
   #define PADA 1      // Local memory padding for matrix A

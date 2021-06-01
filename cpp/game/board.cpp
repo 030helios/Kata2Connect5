@@ -415,7 +415,7 @@ int Location::euclideanDistanceSquared(Loc loc0, Loc loc1, int x_size) {
 
 void Board::checkConsistency() const {
   const string errLabel = string("Board::checkConsistency(): ");
-  vector<Loc> buf;
+  std::vector<Loc> buf;
   Hash128 tmp_pos_hash = ZOBRIST_SIZE_X_HASH[x_size] ^ ZOBRIST_SIZE_Y_HASH[y_size];
   int emptyCount = 0;
   for(Loc loc = 0; loc < MAX_ARR_SIZE; loc++) {
@@ -597,7 +597,7 @@ bool Location::tryOfString(const string& str, int x_size, int y_size, Loc& resul
     if(s[s.length()-1] != ')')
       return false;
     s = s.substr(1,s.length()-2);
-    vector<string> pieces = Global::split(s,',');
+    std::vector<string> pieces = Global::split(s,',');
     if(pieces.size() != 2)
       return false;
     int x;
@@ -654,8 +654,8 @@ Loc Location::ofString(const string& str, const Board& b) {
 }
 
 vector<Loc> Location::parseSequence(const string& str, const Board& board) {
-  vector<string> pieces = Global::split(Global::trim(str),' ');
-  vector<Loc> locs;
+  std::vector<string> pieces = Global::split(Global::trim(str),' ');
+  std::vector<Loc> locs;
   for(size_t i = 0; i<pieces.size(); i++) {
     string piece = Global::trim(pieces[i]);
     if(piece.length() <= 0)
@@ -665,7 +665,7 @@ vector<Loc> Location::parseSequence(const string& str, const Board& board) {
   return locs;
 }
 
-void Board::printBoard(ostream& out, const Board& board, Loc markLoc, const vector<Move>* hist) {
+void Board::printBoard(ostream& out, const Board& board, Loc markLoc, const std::vector<Move>* hist) {
   if(hist != NULL)
     out << "MoveNum: " << hist->size() << " ";
   out << "HASH: " << board.pos_hash << "\n";
@@ -745,7 +745,7 @@ Board Board::parseBoard(int xSize, int ySize, const string& s) {
 
 Board Board::parseBoard(int xSize, int ySize, const string& s, char lineDelimiter) {
   Board board(xSize,ySize);
-  vector<string> lines = Global::split(Global::trim(s),lineDelimiter);
+  std::vector<string> lines = Global::split(Global::trim(s),lineDelimiter);
 
   //Throw away coordinate labels line if it exists
   if(lines.size() == ySize+1 && Global::isPrefix(lines[0],"A"))

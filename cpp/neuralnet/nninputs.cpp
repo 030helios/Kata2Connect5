@@ -341,7 +341,7 @@ NNOutput::NNOutput(const NNOutput& other) {
   std::copy(other.policyProbs, other.policyProbs + NNPos::MAX_NN_POLICY_SIZE, policyProbs);
 }
 
-NNOutput::NNOutput(const vector<shared_ptr<NNOutput>>& others) {
+NNOutput::NNOutput(const std::vector<shared_ptr<NNOutput>>& others) {
   assert(others.size() < 1000000);
   int len = (int)others.size();
   float floatLen = (float)len;

@@ -152,7 +152,7 @@ int MainCmds::evalsgf(int argc, const char *const *argv)
   auto setUpBoardUsingRules = [&board, &nextPla, &hist, overrideKomi, moveNum, &sgf, &extraMoves](const Rules &initialRules)
   {
     sgf->setupInitialBoardAndHist(initialRules, board, nextPla, hist);
-    vector<Move> &moves = sgf->moves;
+    std::vector<Move> &moves = sgf->moves;
 
     if (moveNum < 0)
       throw StringError("Move num " + Global::intToString(moveNum) + " requested but must be non-negative");
@@ -161,7 +161,7 @@ int MainCmds::evalsgf(int argc, const char *const *argv)
 
     sgf->playMovesTolerant(board, nextPla, hist, moveNum, false);
     /*
-    vector<Loc> extraMoveLocs = Location::parseSequence(extraMoves,board);
+    std::vector<Loc> extraMoveLocs = Location::parseSequence(extraMoves,board);
     for(size_t i = 0; i<extraMoveLocs.size(); i++) {
       Loc loc = extraMoveLocs[i];
       if(!hist.isLegal(board,loc,nextPla)) {

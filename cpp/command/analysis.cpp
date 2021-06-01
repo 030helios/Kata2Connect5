@@ -36,8 +36,8 @@ struct AnalyzeRequest {
   bool reportDuringSearch;
   double reportDuringSearchEvery;
 
-  vector<int> avoidMoveUntilByLocBlack;
-  vector<int> avoidMoveUntilByLocWhite;
+  std::vector<int> avoidMoveUntilByLocBlack;
+  std::vector<int> avoidMoveUntilByLocWhite;
 
   //Starts with STATUS_IN_QUEUE.
   //Thread that grabs it from queue it changes it to STATUS_POPPED
@@ -347,9 +347,9 @@ int MainCmds::analysis(int argc, const char* const* argv) {
     Logger::logThreadUncaught("analysis loop", &logger, [&](){ analysisLoop(bot, threadIdx); });
   };
 
-  vector<std::thread> threads;
+  std::vector<std::thread> threads;
   std::thread write_thread = std::thread(writeLoop);
-  vector<AsyncBot*> bots;
+  std::vector<AsyncBot*> bots;
   for(int threadIdx = 0; threadIdx<numAnalysisThreads; threadIdx++) {
     string searchRandSeed = Global::uint64ToHexString(seedRand.nextUInt64()) + Global::uint64ToHexString(seedRand.nextUInt64());
     AsyncBot* bot = new AsyncBot(defaultParams, nnEval, &logger, searchRandSeed);
@@ -422,7 +422,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
           }
 
           bool hasTurnNumbers = false;
-          vector<int> turnNumbers;
+          std::vector<int> turnNumbers;
           if(input.find("turnNumbers") != input.end()) {
             try {
               turnNumbers = input["turnNumbers"].get<vector<int> >();
@@ -588,7 +588,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
         boardYSize = (int)yBuf;
       }
 
-      auto parseBoardLocs = [boardXSize,boardYSize,&rbase,&reportErrorForId](const json& dict, const char* field, vector<Loc>& buf, bool allowPass) {
+      auto parseBoardLocs = [boardXSize,boardYSize,&rbase,&reportErrorForId](const json& dict, const char* field, std::vector<Loc>& buf, bool allowPass) {
         buf.clear();
         if(!dict[field].is_array()) {
           reportErrorForId(rbase.id, field, "Must be an array of GTP board vertices");
@@ -617,7 +617,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
         return true;
       };
 
-      auto parseBoardMoves = [boardXSize,boardYSize,&rbase,&reportErrorForId](const json& dict, const char* field, vector<Move>& buf, bool allowPass) {
+      auto parseBoardMoves = [boardXSize,boardYSize,&rbase,&reportErrorForId](const json& dict, const char* field, std::vector<Move>& buf, bool allowPass) {
         buf.clear();
         if(!dict[field].is_array()) {
           reportErrorForId(rbase.id, field, "Must be an array of pairs of the form: [\"b\" or \"w\", GTP board vertex]");
@@ -666,12 +666,12 @@ int MainCmds::analysis(int argc, const char* const* argv) {
         return true;
       };
       /*
-      vector<Move> placements;
+      std::vector<Move> placements;
       if(input.find("initialStones") != input.end()) {
         if(!parseBoardMoves(input, "initialStones", placements, false))
           continue;
       }*/
-      vector<Move> moveHistory;
+      std::vector<Move> moveHistory;
       if(input.find("moves") != input.end()) {
         if(!parseBoardMoves(input, "moves", moveHistory, true))
           continue;
@@ -687,9 +687,9 @@ int MainCmds::analysis(int argc, const char* const* argv) {
           continue;
       }
 
-      vector<bool> shouldAnalyze(moveHistory.size()+1,false);
+      std::vector<bool> shouldAnalyze(moveHistory.size()+1,false);
       if(input.find("analyzeTurns") != input.end()) {
-        vector<int> analyzeTurns;
+        std::vector<int> analyzeTurns;
         try {
           analyzeTurns = input["analyzeTurns"].get<vector<int> >();
         }
@@ -717,7 +717,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
 
       std::map<int,int64_t> priorities;
       if(input.find("priorities") != input.end()) {
-        vector<int64_t> prioritiesVec;
+        std::vector<int64_t> prioritiesVec;
         try {
           prioritiesVec = input["priorities"].get<vector<int64_t> >();
         }
@@ -729,7 +729,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
           reportErrorForId(rbase.id, "priorities", "Can only specify when also specifying analyzeTurns");
           continue;
         }
-        vector<int> analyzeTurns = input["analyzeTurns"].get<vector<int> >();
+        std::vector<int> analyzeTurns = input["analyzeTurns"].get<vector<int> >();
         if(prioritiesVec.size() != analyzeTurns.size()) {
           reportErrorForId(rbase.id, "priorities", "Must be of matching length to analyzeTurns");
           continue;
@@ -830,7 +830,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
             loadParams(localCfg, rbase.params, rbase.perspective, defaultPerspective);
             SearchParams::failIfParamsDifferOnUnchangeableParameter(defaultParams,rbase.params);
             //Hard failure on unused override keys newly present in the config
-            vector<string> unusedKeys = localCfg.unusedKeys();
+            std::vector<string> unusedKeys = localCfg.unusedKeys();
             if(unusedKeys.size() > 0) {
               reportErrorForId(rbase.id, "overrideSettings", string("Unknown config params: ") + Global::concat(unusedKeys,","));
               continue;
@@ -936,7 +936,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
           }
 
           Player avoidPla;
-          vector<Loc> parsedLocs;
+          std::vector<Loc> parsedLocs;
           int64_t untilDepth;
           bool suc;
           suc = parsePlayer(avoidParams, "player", avoidPla);
@@ -946,7 +946,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
           suc = parseInteger(avoidParams, "untilDepth", untilDepth, 1, 1000000000, "Must be a positive integer");
           if(!suc) { failed = true; break; }
 
-          vector<int>& avoidMoveUntilByLoc = avoidPla == P_BLACK ? rbase.avoidMoveUntilByLocBlack : rbase.avoidMoveUntilByLocWhite;
+          std::vector<int>& avoidMoveUntilByLoc = avoidPla == P_BLACK ? rbase.avoidMoveUntilByLocBlack : rbase.avoidMoveUntilByLocWhite;
           avoidMoveUntilByLoc.resize(Board::MAX_ARR_SIZE);
           if(hasAllowMoves) {
             std::fill(avoidMoveUntilByLoc.begin(),avoidMoveUntilByLoc.end(),(int)untilDepth);
@@ -990,7 +990,7 @@ int MainCmds::analysis(int argc, const char* const* argv) {
       BoardHistory hist(board,nextPla,rules,0);
 
       //Build and enqueue requests
-      vector<AnalyzeRequest*> newRequests;
+      std::vector<AnalyzeRequest*> newRequests;
       bool foundIllegalMove =  false;
       for(int turnNumber = 0; turnNumber <= moveHistory.size(); turnNumber++) {
         if(shouldAnalyze[turnNumber]) {

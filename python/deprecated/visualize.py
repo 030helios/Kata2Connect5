@@ -171,8 +171,8 @@ with tf.Session(config=tfconfig) as session:
     #convolutions for that weight. These dictionaries all take the var name as a key.
     norms = {}
     #And these are the same matrix, but normalized so that the rows, or the columns, have norm 1.
-    input_normalized_norms = {}  #Normalized so that each input (axis 0) maps to an output vector of norm 1
-    output_normalized_norms = {} #Normalized so that each output (axis 1) maps to an input vector of norm 1
+    input_normalized_norms = {}  #Normalized so that each input (axis 0) maps to an output std::vector of norm 1
+    output_normalized_norms = {} #Normalized so that each output (axis 1) maps to an input std::vector of norm 1
     for var_name in conv_norm_by_channel.split(","):
       variable = variables[var_name]
 

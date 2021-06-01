@@ -380,13 +380,13 @@ int MainCmds::contribute(int argc, const char* const* argv) {
   if(overrideUserConfig != "") {
     map<string,string> newkvs = ConfigParser::parseCommaSeparated(overrideUserConfig);
     //HACK to avoid a common possible conflict - if we specify some of the rules options on one side, the other side should be erased.
-    vector<pair<set<string>,set<string>>> mutexKeySets = Setup::getMutexKeySets();
+    std::vector<pair<set<string>,set<string>>> mutexKeySets = Setup::getMutexKeySets();
     userCfg->overrideKeys(newkvs,mutexKeySets);
   }
 
   if(caCertsFile == "") {
-    vector<string> defaultFilesDirs = HomeData::getDefaultFilesDirs();
-    vector<string> cacertSearchDirs = defaultFilesDirs;
+    std::vector<string> defaultFilesDirs = HomeData::getDefaultFilesDirs();
+    std::vector<string> cacertSearchDirs = defaultFilesDirs;
 
     //Also look for some system locations
 #ifdef OS_IS_UNIX_OR_APPLE
@@ -398,7 +398,7 @@ int MainCmds::contribute(int argc, const char* const* argv) {
     cacertSearchDirs.push_back("/etc/certs");
 #endif
 
-    vector<string> possiblePaths;
+    std::vector<string> possiblePaths;
     for(const string& dir: cacertSearchDirs) {
       possiblePaths.push_back(dir + "/cacert.pem");
       possiblePaths.push_back(dir + "/cacert.crt");
@@ -788,7 +788,7 @@ int MainCmds::contribute(int argc, const char* const* argv) {
 
   //Start game loop threads! Yay!
   //Just start based on selfplay games, rating games will poke in as needed
-  vector<std::thread> gameThreads;
+  std::vector<std::thread> gameThreads;
   for(int i = 0; i<maxSimultaneousGames; i++) {
     gameThreads.push_back(std::thread(runGameLoopProtected,i));
   }
@@ -1054,7 +1054,7 @@ int MainCmds::contribute(int argc, const char* const* argv) {
   };
 
   int numTaskLoopThreads = 4;
-  vector<std::thread> taskLoopThreads;
+  std::vector<std::thread> taskLoopThreads;
   for(int i = 0; i<numTaskLoopThreads; i++) {
     taskLoopThreads.push_back(std::thread(taskLoopProtected));
   }

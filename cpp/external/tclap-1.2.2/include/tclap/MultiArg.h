@@ -32,7 +32,7 @@
 namespace TCLAP {
 /**
  * An argument that allows multiple values of type T to be specified.  Very
- * similar to a ValueArg, except a vector of values will be returned
+ * similar to a ValueArg, except a std::vector of values will be returned
  * instead of just one.
  */
 template<class T>
@@ -182,7 +182,7 @@ public:
 	virtual bool processArg(int* i, std::vector<std::string>& args); 
 
 	/**
-	 * Returns a vector of type T containing the values parsed from
+	 * Returns a std::vector of type T containing the values parsed from
 	 * the command line.
 	 */
 	const std::vector<T>& getValue();

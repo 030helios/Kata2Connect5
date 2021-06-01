@@ -16,7 +16,7 @@ static bool approxEqual(float x, float y, bool useFP16) {
 
 static void checkApproxEqual(
   const string& label,
-  const vector<float>& vec, const vector<float>& expected, int nSize, int cSize, int ySize, int xSize, bool useFP16,
+  const std::vector<float>& vec, const std::vector<float>& expected, int nSize, int cSize, int ySize, int xSize, bool useFP16,
   const char* file, const char* func, int line
 ) {
   int cyxSize = cSize * ySize * xSize;
@@ -86,8 +86,8 @@ static void checkApproxEqual(
 #define CHECK_APPROX_EQUAL(label,vec,expected,n,c,h,w,useFP16) (checkApproxEqual((label),(vec),(expected),(n),(c),(h),(w),(useFP16),__FILE__,#vec,__LINE__))
 
 
-static vector<float> NCHWtoNHWC(const vector<float>& vec, int nSize, int cSize, int ySize, int xSize) {
-  vector<float> ret(vec.size());
+static std::vector<float> NCHWtoNHWC(const std::vector<float>& vec, int nSize, int cSize, int ySize, int xSize) {
+  std::vector<float> ret(vec.size());
   int cyxSize = cSize * ySize * xSize;
   int yxSize = ySize * xSize;
   int xcSize = xSize * cSize;
@@ -109,14 +109,14 @@ static void testConvLayer(int64_t& numTestsRun) {
   auto testConfigurations = [&](
     const string& label,
     int batchSize, int nnXLen, int nnYLen,
-    const ConvLayerDesc& desc, const vector<float>& input, const vector<float>& expected
+    const ConvLayerDesc& desc, const std::vector<float>& input, const std::vector<float>& expected
   ) {
     for(int useNHWC = 0; useNHWC <= 1; useNHWC++) {
       for(int useFP16 = 0; useFP16 <= 1; useFP16++) {
-        vector<float> inputThisLoop = useNHWC ? NCHWtoNHWC(input,batchSize,desc.inChannels,nnYLen,nnXLen) : input;
-        vector<float> expectedThisLoop = useNHWC ? NCHWtoNHWC(expected,batchSize,desc.outChannels,nnYLen,nnXLen) : expected;
+        std::vector<float> inputThisLoop = useNHWC ? NCHWtoNHWC(input,batchSize,desc.inChannels,nnYLen,nnXLen) : input;
+        std::vector<float> expectedThisLoop = useNHWC ? NCHWtoNHWC(expected,batchSize,desc.outChannels,nnYLen,nnXLen) : expected;
 
-        vector<float> outputThisLoop;
+        std::vector<float> outputThisLoop;
         bool supported = NeuralNet::testEvaluateConv(
           &desc,batchSize,nnXLen,nnYLen,useFP16,useNHWC,inputThisLoop,outputThisLoop
         );
@@ -140,7 +140,7 @@ static void testConvLayer(int64_t& numTestsRun) {
     int nnXLen = 4;
 
     //NCHW
-    vector<float> input({
+    std::vector<float> input({
       5,5,4,4,
       5,5,4,4,
       1,1,8,8,
@@ -162,13 +162,13 @@ static void testConvLayer(int64_t& numTestsRun) {
       string label("1x1 convolution");
 
       //oc,ic,y,x
-      vector<float> convWeights({
+      std::vector<float> convWeights({
           0.0f,1.0f,
           1.0f,-1.0f,
           10.0f,0.1f,
       });
       //NCHW
-      vector<float> expected({
+      std::vector<float> expected({
         0.0f, 1.0f, 2.0f, 3.0f,
         3.0f, 4.0f, 5.0f, 6.0f,
         8.0f, 7.0f, 6.0f, 5.0f,
@@ -210,7 +210,7 @@ static void testConvLayer(int64_t& numTestsRun) {
       string label("3x3 convolution");
 
       //oc,ic,y,x
-      vector<float> convWeights({
+      std::vector<float> convWeights({
           1,0,0,
           0,0,0,
           0,0,0,
@@ -236,7 +236,7 @@ static void testConvLayer(int64_t& numTestsRun) {
           0,0,2,
       });
       //NCHW
-      vector<float> expected({
+      std::vector<float> expected({
         0, 0, 0, 0,
         0, 5, 5, 4,
         0, 5, 5, 4,
@@ -278,7 +278,7 @@ static void testConvLayer(int64_t& numTestsRun) {
       string label("5x5 convolution");
 
       //oc,ic,y,x
-      vector<float> convWeights({
+      std::vector<float> convWeights({
           0,0,0,0,1,
           0,0,0,1,0,
           0,0,1,0,0,
@@ -305,7 +305,7 @@ static void testConvLayer(int64_t& numTestsRun) {
       });
 
       //NCHW
-      vector<float> expected({
+      std::vector<float> expected({
         5, 9,18,19,
        13,21,20,16,
        18,16,18,13,
@@ -346,15 +346,15 @@ static void testBatchNormLayer(int64_t& numTestsRun) {
   auto testConfigurations = [&](
     const string& label,
     int batchSize, int nnXLen, int nnYLen,
-    const BatchNormLayerDesc& desc, const vector<float>& input, const vector<float>& mask, const vector<float>& expected
+    const BatchNormLayerDesc& desc, const std::vector<float>& input, const std::vector<float>& mask, const std::vector<float>& expected
   ) {
     for(int useNHWC = 0; useNHWC <= 1; useNHWC++) {
       for(int useFP16 = 0; useFP16 <= 1; useFP16++) {
-        vector<float> inputThisLoop = useNHWC ? NCHWtoNHWC(input,batchSize,desc.numChannels,nnYLen,nnXLen) : input;
-        vector<float> maskThisLoop = mask;
-        vector<float> expectedThisLoop = useNHWC ? NCHWtoNHWC(expected,batchSize,desc.numChannels,nnYLen,nnXLen) : expected;
+        std::vector<float> inputThisLoop = useNHWC ? NCHWtoNHWC(input,batchSize,desc.numChannels,nnYLen,nnXLen) : input;
+        std::vector<float> maskThisLoop = mask;
+        std::vector<float> expectedThisLoop = useNHWC ? NCHWtoNHWC(expected,batchSize,desc.numChannels,nnYLen,nnXLen) : expected;
 
-        vector<float> outputThisLoop;
+        std::vector<float> outputThisLoop;
         bool supported = NeuralNet::testEvaluateBatchNorm(
           &desc,batchSize,nnXLen,nnYLen,useFP16,useNHWC,inputThisLoop,maskThisLoop,outputThisLoop
         );
@@ -378,7 +378,7 @@ static void testBatchNormLayer(int64_t& numTestsRun) {
     int nnXLen = 5;
 
     //NCHW
-    vector<float> input({
+    std::vector<float> input({
         5,5,4,4,9,
         1,1,8,8,9,
 
@@ -400,12 +400,12 @@ static void testBatchNormLayer(int64_t& numTestsRun) {
       desc.epsilon = 0.1f;
       desc.hasScale = true;
       desc.hasBias = true;
-      desc.mean = vector<float>({0.0f,2.0f});
-      desc.variance = vector<float>({3.9f,0.15f});
-      desc.scale = vector<float>({0.1f,1.0f});
-      desc.bias = vector<float>({10.0f,0.0f});
+      desc.mean = std::vector<float>({0.0f,2.0f});
+      desc.variance = std::vector<float>({3.9f,0.15f});
+      desc.scale = std::vector<float>({0.1f,1.0f});
+      desc.bias = std::vector<float>({10.0f,0.0f});
 
-      vector<float> mask({
+      std::vector<float> mask({
         1,1,1,1,1,
         1,1,1,1,1,
 
@@ -414,7 +414,7 @@ static void testBatchNormLayer(int64_t& numTestsRun) {
       });
 
       //NCHW
-      vector<float> expected({
+      std::vector<float> expected({
           10.25f, 10.25f, 10.2f, 10.2f, 10.45f,
           10.05f, 10.05f, 10.4f, 10.4f, 10.45f,
 
@@ -438,12 +438,12 @@ static void testBatchNormLayer(int64_t& numTestsRun) {
       desc.epsilon = 0.1f;
       desc.hasScale = false;
       desc.hasBias = true;
-      desc.mean = vector<float>({0.0f,2.0f});
-      desc.variance = vector<float>({3.9f,0.15f});
-      desc.scale = vector<float>({1.0f,1.0f});
-      desc.bias = vector<float>({10.0f,0.0f});
+      desc.mean = std::vector<float>({0.0f,2.0f});
+      desc.variance = std::vector<float>({3.9f,0.15f});
+      desc.scale = std::vector<float>({1.0f,1.0f});
+      desc.bias = std::vector<float>({10.0f,0.0f});
 
-      vector<float> mask({
+      std::vector<float> mask({
         1,1,1,0,0,
         1,1,1,0,0,
 
@@ -452,7 +452,7 @@ static void testBatchNormLayer(int64_t& numTestsRun) {
       });
 
       //NCHW
-      vector<float> expected({
+      std::vector<float> expected({
           12.5, 12.5, 12, 0, 0,
           10.5, 10.5, 14, 0, 0,
 
@@ -479,15 +479,15 @@ static void testResidualBlock(int64_t& numTestsRun) {
   auto testConfigurations = [&](
     const string& label,
     int batchSize, int nnXLen, int nnYLen,
-    const ResidualBlockDesc& desc, const vector<float>& input, const vector<float>& mask, const vector<float>& expected
+    const ResidualBlockDesc& desc, const std::vector<float>& input, const std::vector<float>& mask, const std::vector<float>& expected
   ) {
     for(int useNHWC = 0; useNHWC <= 1; useNHWC++) {
       for(int useFP16 = 0; useFP16 <= 1; useFP16++) {
-        vector<float> inputThisLoop = useNHWC ? NCHWtoNHWC(input,batchSize,desc.preBN.numChannels,nnYLen,nnXLen) : input;
-        vector<float> maskThisLoop = mask;
-        vector<float> expectedThisLoop = useNHWC ? NCHWtoNHWC(expected,batchSize,desc.preBN.numChannels,nnYLen,nnXLen) : expected;
+        std::vector<float> inputThisLoop = useNHWC ? NCHWtoNHWC(input,batchSize,desc.preBN.numChannels,nnYLen,nnXLen) : input;
+        std::vector<float> maskThisLoop = mask;
+        std::vector<float> expectedThisLoop = useNHWC ? NCHWtoNHWC(expected,batchSize,desc.preBN.numChannels,nnYLen,nnXLen) : expected;
 
-        vector<float> outputThisLoop;
+        std::vector<float> outputThisLoop;
         bool supported = NeuralNet::testEvaluateResidualBlock(
           &desc,batchSize,nnXLen,nnYLen,useFP16,useNHWC,inputThisLoop,maskThisLoop,outputThisLoop
         );
@@ -514,7 +514,7 @@ static void testResidualBlock(int64_t& numTestsRun) {
     int nnXLen = 4;
 
     //NCHW
-    vector<float> input({
+    std::vector<float> input({
       1,0,0,0,
       0,2,2,0,
       0,0,0,1,
@@ -525,7 +525,7 @@ static void testResidualBlock(int64_t& numTestsRun) {
     });
 
     //Also, mask out some values
-    vector<float> mask({
+    std::vector<float> mask({
       1,1,0,1,
       1,1,1,1,
       1,1,0,1,
@@ -543,10 +543,10 @@ static void testResidualBlock(int64_t& numTestsRun) {
     desc.preBN.epsilon = 0.1f;
     desc.preBN.hasScale = true;
     desc.preBN.hasBias = true;
-    desc.preBN.mean = vector<float>({0});
-    desc.preBN.variance = vector<float>({0.9f});
-    desc.preBN.scale = vector<float>({2});
-    desc.preBN.bias = vector<float>({0});
+    desc.preBN.mean = std::vector<float>({0});
+    desc.preBN.variance = std::vector<float>({0.9f});
+    desc.preBN.scale = std::vector<float>({2});
+    desc.preBN.bias = std::vector<float>({0});
 
     //ReLU gets applied, smooshing negatives
     //2,0,0,3,
@@ -565,7 +565,7 @@ static void testResidualBlock(int64_t& numTestsRun) {
     desc.regularConv.outChannels = midChannels;
     desc.regularConv.dilationY = 1;
     desc.regularConv.dilationX = 1;
-    desc.regularConv.weights = vector<float>({
+    desc.regularConv.weights = std::vector<float>({
         0,1,0,
         0,0,0,
         0,0,0,
@@ -596,10 +596,10 @@ static void testResidualBlock(int64_t& numTestsRun) {
     desc.midBN.epsilon = 0.1f;
     desc.midBN.hasScale = false;
     desc.midBN.hasBias = false;
-    desc.midBN.mean = vector<float>({3,0});
-    desc.midBN.variance = vector<float>({0.9f,0.9f});
-    desc.midBN.scale = vector<float>({1,1});
-    desc.midBN.bias = vector<float>({0,0});
+    desc.midBN.mean = std::vector<float>({3,0});
+    desc.midBN.variance = std::vector<float>({0.9f,0.9f});
+    desc.midBN.scale = std::vector<float>({1,1});
+    desc.midBN.bias = std::vector<float>({0,0});
 
     //ReLU gets applied, smooshing negatives
     //0,0,0,0,
@@ -627,7 +627,7 @@ static void testResidualBlock(int64_t& numTestsRun) {
     desc.finalConv.outChannels = trunkChannels;
     desc.finalConv.dilationY = 1;
     desc.finalConv.dilationX = 1;
-    desc.finalConv.weights = vector<float>({
+    desc.finalConv.weights = std::vector<float>({
         1,1
     });
 
@@ -661,7 +661,7 @@ static void testResidualBlock(int64_t& numTestsRun) {
 
 
     //NCHW
-    vector<float> expected({
+    std::vector<float> expected({
         1, 4, 0, 0,
         0, 2, 2, 2,
         0, 1, 0, 1,
@@ -681,15 +681,15 @@ static void testGlobalPoolingResidualBlock(int64_t& numTestsRun) {
   auto testConfigurations = [&](
     const string& label,
     int batchSize, int nnXLen, int nnYLen,
-    const GlobalPoolingResidualBlockDesc& desc, const vector<float>& input, const vector<float>& mask, const vector<float>& expected
+    const GlobalPoolingResidualBlockDesc& desc, const std::vector<float>& input, const std::vector<float>& mask, const std::vector<float>& expected
   ) {
     for(int useNHWC = 0; useNHWC <= 1; useNHWC++) {
       for(int useFP16 = 0; useFP16 <= 1; useFP16++) {
-        vector<float> inputThisLoop = useNHWC ? NCHWtoNHWC(input,batchSize,desc.preBN.numChannels,nnYLen,nnXLen) : input;
-        vector<float> maskThisLoop = mask;
-        vector<float> expectedThisLoop = useNHWC ? NCHWtoNHWC(expected,batchSize,desc.preBN.numChannels,nnYLen,nnXLen) : expected;
+        std::vector<float> inputThisLoop = useNHWC ? NCHWtoNHWC(input,batchSize,desc.preBN.numChannels,nnYLen,nnXLen) : input;
+        std::vector<float> maskThisLoop = mask;
+        std::vector<float> expectedThisLoop = useNHWC ? NCHWtoNHWC(expected,batchSize,desc.preBN.numChannels,nnYLen,nnXLen) : expected;
 
-        vector<float> outputThisLoop;
+        std::vector<float> outputThisLoop;
         bool supported = NeuralNet::testEvaluateGlobalPoolingResidualBlock(
           &desc,batchSize,nnXLen,nnYLen,useFP16,useNHWC,inputThisLoop,maskThisLoop,outputThisLoop
         );
@@ -717,7 +717,7 @@ static void testGlobalPoolingResidualBlock(int64_t& numTestsRun) {
     int nnXLen = 4;
 
     //NCHW
-    vector<float> input({
+    std::vector<float> input({
       1,2,0,0,
       0,3,4,0,
       0,0,5,0,
@@ -727,7 +727,7 @@ static void testGlobalPoolingResidualBlock(int64_t& numTestsRun) {
       0,-1,1,1,
     });
 
-    vector<float> mask({
+    std::vector<float> mask({
       1,1,1,0,
       1,1,1,0,
       1,1,1,0,
@@ -745,10 +745,10 @@ static void testGlobalPoolingResidualBlock(int64_t& numTestsRun) {
     desc.preBN.epsilon = 0.1f;
     desc.preBN.hasScale = true;
     desc.preBN.hasBias = true;
-    desc.preBN.mean = vector<float>({0});
-    desc.preBN.variance = vector<float>({0.9f});
-    desc.preBN.scale = vector<float>({1});
-    desc.preBN.bias = vector<float>({0});
+    desc.preBN.mean = std::vector<float>({0});
+    desc.preBN.variance = std::vector<float>({0.9f});
+    desc.preBN.scale = std::vector<float>({1});
+    desc.preBN.bias = std::vector<float>({0});
 
     //ReLU gets applied, smooshing negatives
     //1,2,0,0,
@@ -767,7 +767,7 @@ static void testGlobalPoolingResidualBlock(int64_t& numTestsRun) {
     desc.regularConv.outChannels = regularChannels;
     desc.regularConv.dilationY = 1;
     desc.regularConv.dilationX = 1;
-    desc.regularConv.weights = vector<float>({
+    desc.regularConv.weights = std::vector<float>({
         2
     });
     //2,4,0,0,
@@ -786,7 +786,7 @@ static void testGlobalPoolingResidualBlock(int64_t& numTestsRun) {
     desc.gpoolConv.outChannels = gpoolChannels;
     desc.gpoolConv.dilationY = 1;
     desc.gpoolConv.dilationX = 1;
-    desc.gpoolConv.weights = vector<float>({
+    desc.gpoolConv.weights = std::vector<float>({
         0,0,0,
         0,0,1,
         0,0,0,
@@ -817,10 +817,10 @@ static void testGlobalPoolingResidualBlock(int64_t& numTestsRun) {
     desc.gpoolBN.epsilon = 0.1f;
     desc.gpoolBN.hasScale = false;
     desc.gpoolBN.hasBias = false;
-    desc.gpoolBN.mean = vector<float>({0,0});
-    desc.gpoolBN.variance = vector<float>({0.9f,0.9f});
-    desc.gpoolBN.scale = vector<float>({1,1});
-    desc.gpoolBN.bias = vector<float>({0,-2});
+    desc.gpoolBN.mean = std::vector<float>({0,0});
+    desc.gpoolBN.variance = std::vector<float>({0.9f,0.9f});
+    desc.gpoolBN.scale = std::vector<float>({1,1});
+    desc.gpoolBN.bias = std::vector<float>({0,-2});
 
     //And apply RELU
 
@@ -851,7 +851,7 @@ static void testGlobalPoolingResidualBlock(int64_t& numTestsRun) {
     //Recombine values
     desc.gpoolToBiasMul.inChannels = 6;
     desc.gpoolToBiasMul.outChannels = regularChannels;
-    desc.gpoolToBiasMul.weights = vector<float>({36,36, 18,18, 1,1});
+    desc.gpoolToBiasMul.weights = std::vector<float>({36,36, 18,18, 1,1});
 
     //56 + 28*(-11)*0.1 + 5 +
     //4 + 2*(-11)*0.1 + 1
@@ -865,10 +865,10 @@ static void testGlobalPoolingResidualBlock(int64_t& numTestsRun) {
     desc.midBN.epsilon = 0.1f;
     desc.midBN.hasScale = false;
     desc.midBN.hasBias = false;
-    desc.midBN.mean = vector<float>({0});
-    desc.midBN.variance = vector<float>({0.9f});
-    desc.midBN.scale = vector<float>({1});
-    desc.midBN.bias = vector<float>({0});
+    desc.midBN.mean = std::vector<float>({0});
+    desc.midBN.variance = std::vector<float>({0.9f});
+    desc.midBN.scale = std::vector<float>({1});
+    desc.midBN.bias = std::vector<float>({0});
 
     //Relu gets applied, should hit nothing in this case
 
@@ -880,11 +880,11 @@ static void testGlobalPoolingResidualBlock(int64_t& numTestsRun) {
     desc.finalConv.outChannels = trunkChannels;
     desc.finalConv.dilationY = 1;
     desc.finalConv.dilationX = 1;
-    desc.finalConv.weights = vector<float>({
+    desc.finalConv.weights = std::vector<float>({
         1
     });
 
-    vector<float> expected({
+    std::vector<float> expected({
       3,6,0,0,
       0,9,12,0,
       0,0,15,0,
@@ -932,12 +932,12 @@ void Tests::runNNSymmetryTests() {
   auto testConfigurations = [&](
     const string& label,
     int batchSize, int numChannels, int nnXLen, int nnYLen,
-    const vector<float>& input
+    const std::vector<float>& input
   ) {
     for(int useNHWC = 0; useNHWC <= 1; useNHWC++) {
       for(int symmetry = 0; symmetry < 8; symmetry++) {
-        vector<float> inputThisLoop = useNHWC ? NCHWtoNHWC(input,batchSize,numChannels,nnYLen,nnXLen) : input;
-        vector<float> outputThisLoop(inputThisLoop.size());
+        std::vector<float> inputThisLoop = useNHWC ? NCHWtoNHWC(input,batchSize,numChannels,nnYLen,nnXLen) : input;
+        std::vector<float> outputThisLoop(inputThisLoop.size());
         SymmetryHelpers::copyInputsWithSymmetry(
           inputThisLoop.data(),outputThisLoop.data(),batchSize,nnXLen,nnYLen,numChannels,useNHWC,symmetry
         );
@@ -948,8 +948,8 @@ void Tests::runNNSymmetryTests() {
       }
     }
     for(int symmetry = 0; symmetry < 8; symmetry++) {
-      vector<float> inputThisLoop = input;
-      vector<float> outputThisLoop(inputThisLoop.size());
+      std::vector<float> inputThisLoop = input;
+      std::vector<float> outputThisLoop(inputThisLoop.size());
       SymmetryHelpers::copyOutputsWithSymmetry(
         inputThisLoop.data(),outputThisLoop.data(),batchSize*numChannels,nnXLen,nnYLen,symmetry
       );
@@ -963,7 +963,7 @@ void Tests::runNNSymmetryTests() {
   {
     {
       //NCHW
-      vector<float> input({
+      std::vector<float> input({
         0,1,2,
         3,4,5,
         6,7,8,
@@ -982,7 +982,7 @@ void Tests::runNNSymmetryTests() {
 
     {
       //NCHW
-      vector<float> input({
+      std::vector<float> input({
         0,1,2,3,
         4,5,6,7,
         8,9,10,11,

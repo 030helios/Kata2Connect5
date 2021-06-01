@@ -66,14 +66,14 @@ int MainCmds::match(int argc, const char* const* argv) {
   logger.write(string("Git revision: ") + Version::getGitRevision());
 
   //Load per-bot search config, first, which also tells us how many bots we're running
-  vector<SearchParams> paramss = Setup::loadParams(cfg,Setup::SETUP_FOR_MATCH);
+  std::vector<SearchParams> paramss = Setup::loadParams(cfg,Setup::SETUP_FOR_MATCH);
   assert(paramss.size() > 0);
   int numBots = (int)paramss.size();
 
   //Load a filter on what bots we actually want to run
-  vector<bool> excludeBot(numBots);
+  std::vector<bool> excludeBot(numBots);
   if(cfg.contains("includeBots")) {
-    vector<int> includeBots = cfg.getInts("includeBots",0,Setup::MAX_BOT_PARAMS_FROM_CFG);
+    std::vector<int> includeBots = cfg.getInts("includeBots",0,Setup::MAX_BOT_PARAMS_FROM_CFG);
     for(int i = 0; i<numBots; i++) {
       if(!contains(includeBots,i))
         excludeBot[i] = true;
@@ -81,8 +81,8 @@ int MainCmds::match(int argc, const char* const* argv) {
   }
 
   //Load the names of the bots and which model each bot is using
-  vector<string> nnModelFilesByBot(numBots);
-  vector<string> botNames(numBots);
+  std::vector<string> nnModelFilesByBot(numBots);
+  std::vector<string> botNames(numBots);
   for(int i = 0; i<numBots; i++) {
     string idxStr = Global::intToString(i);
 
@@ -100,8 +100,8 @@ int MainCmds::match(int argc, const char* const* argv) {
   }
 
   //Dedup and load each necessary model exactly once
-  vector<string> nnModelFiles;
-  vector<int> whichNNModel(numBots);
+  std::vector<string> nnModelFiles;
+  std::vector<int> whichNNModel(numBots);
   for(int i = 0; i<numBots; i++) {
     if(excludeBot[i])
       continue;
@@ -146,7 +146,7 @@ int MainCmds::match(int argc, const char* const* argv) {
   GameRunner* gameRunner = new GameRunner(cfg, playSettings, logger);
   int maxBoardSizeUsed = 0;
   {
-    vector<int> allowedBSizes = gameRunner->getGameInitializer()->getAllowedBSizes();
+    std::vector<int> allowedBSizes = gameRunner->getGameInitializer()->getAllowedBSizes();
     for(size_t i = 0; i<allowedBSizes.size(); i++) {
       if(maxBoardSizeUsed < allowedBSizes[i])
         maxBoardSizeUsed = allowedBSizes[i];
@@ -163,17 +163,17 @@ int MainCmds::match(int argc, const char* const* argv) {
 
   //Initialize neural net inference engine globals, and load models
   Setup::initializeSession(cfg);
-  const vector<string>& nnModelNames = nnModelFiles;
+  const std::vector<string>& nnModelNames = nnModelFiles;
   int defaultMaxBatchSize = -1;
-  const vector<string> expectedSha256s;
-  vector<NNEvaluator*> nnEvals = Setup::initializeNNEvaluators(
+  const std::vector<string> expectedSha256s;
+  std::vector<NNEvaluator*> nnEvals = Setup::initializeNNEvaluators(
     nnModelNames,nnModelFiles,expectedSha256s,cfg,logger,seedRand,maxConcurrentEvals,expectedConcurrentEvals,
     maxBoardSizeUsed,maxBoardSizeUsed,defaultMaxBatchSize,
     Setup::SETUP_FOR_MATCH
   );
   logger.write("Loaded neural net");
 
-  vector<NNEvaluator*> nnEvalsByBot(numBots);
+  std::vector<NNEvaluator*> nnEvalsByBot(numBots);
   for(int i = 0; i<numBots; i++) {
     if(excludeBot[i])
       continue;
@@ -255,7 +255,7 @@ int MainCmds::match(int argc, const char* const* argv) {
 
 
   Rand hashRand;
-  vector<std::thread> threads;
+  std::vector<std::thread> threads;
   for(int i = 0; i<numGameThreads; i++) {
     threads.push_back(std::thread(runMatchLoopProtected, hashRand.nextUInt64()));
   }

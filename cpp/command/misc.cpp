@@ -29,7 +29,7 @@ static void signalHandler(int signal)
 
 static void writeLine(
     const Search *search, const BoardHistory &baseHist,
-    const vector<double> &winLossHistory, const vector<double> &scoreHistory, const vector<double> &scoreStdevHistory)
+    const std::vector<double> &winLossHistory, const std::vector<double> &scoreHistory, const std::vector<double> &scoreStdevHistory)
 {
   const Board board = search->getRootBoard();
   int nnXLen = search->nnXLen;
@@ -85,7 +85,7 @@ static void writeLine(
   }
   cout << " ";
 
-  vector<AnalysisData> buf;
+  std::vector<AnalysisData> buf;
   if (!baseHist.isGameFinished)
   {
     int minMovesToTryToGet = 0; //just get the default number
@@ -130,7 +130,7 @@ static void initializeDemoGame(Board &board, BoardHistory &hist, Player &pla, Ra
   bot->setPosition(pla, board, hist);
 
   bot->clearSearch();
-  writeLine(bot->getSearch(), hist, vector<double>(), vector<double>(), vector<double>());
+  writeLine(bot->getSearch(), hist, std::vector<double>(), std::vector<double>(), std::vector<double>());
   std::this_thread::sleep_for(std::chrono::duration<double>(2.0));
 }
 
@@ -219,9 +219,9 @@ int MainCmds::demoplay(int argc, const char *const *argv)
 
     bot->setPosition(pla, baseBoard, baseHist);
 
-    vector<double> recentWinLossValues;
-    vector<double> recentScores;
-    vector<double> recentScoreStdevs;
+    std::vector<double> recentWinLossValues;
+    std::vector<double> recentScores;
+    std::vector<double> recentScoreStdevs;
 
     double callbackPeriod = 0.05;
 
@@ -356,9 +356,9 @@ int MainCmds::samplesgfs(int argc, const char *const *argv)
   ScoreValue::initTables();
   Rand seedRand;
 
-  vector<string> sgfDirs;
+  std::vector<string> sgfDirs;
   string outDir;
-  vector<string> excludeHashesFiles;
+  std::vector<string> excludeHashesFiles;
   double sampleProb;
   double turnWeightLambda;
   int64_t maxDepth;
@@ -436,7 +436,7 @@ int MainCmds::samplesgfs(int argc, const char *const *argv)
   {
     return Global::isSuffix(name, sgfSuffix) || Global::isSuffix(name, sgfSuffix2);
   };
-  vector<string> sgfFiles;
+  std::vector<string> sgfFiles;
   for (int i = 0; i < sgfDirs.size(); i++)
     Global::collectFiles(sgfDirs[i], sgfFilter, sgfFiles);
   logger.write("Found " + Global::int64ToString((int64_t)sgfFiles.size()) + " sgf files!");
@@ -689,10 +689,10 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
 
   ConfigParser cfg;
   string nnModelFile;
-  vector<string> sgfDirs;
+  std::vector<string> sgfDirs;
   string outDir;
   int numProcessThreads;
-  vector<string> excludeHashesFiles;
+  std::vector<string> excludeHashesFiles;
   bool gameMode;
   bool treeMode;
   bool autoKomi;
@@ -847,12 +847,12 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
   {
     return Global::isSuffix(name, sgfSuffix) || Global::isSuffix(name, sgfSuffix2);
   };
-  vector<string> sgfFiles;
+  std::vector<string> sgfFiles;
   for (int i = 0; i < sgfDirs.size(); i++)
     Global::collectFiles(sgfDirs[i], sgfFilter, sgfFiles);
   logger.write("Found " + Global::int64ToString((int64_t)sgfFiles.size()) + " sgf files!");
 
-  vector<size_t> permutation(sgfFiles.size());
+  std::vector<size_t> permutation(sgfFiles.size());
   for (size_t i = 0; i < sgfFiles.size(); i++)
     permutation[i] = i;
   for (size_t i = 1; i < sgfFiles.size(); i++)
@@ -1103,7 +1103,7 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
     }
 
     const bool preventEncore = true;
-    const vector<Move> &sgfMoves = sgf->moves;
+    const std::vector<Move> &sgfMoves = sgf->moves;
 
     if (sgfMoves.size() > maxDepth)
     {
@@ -1111,15 +1111,15 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
       return;
     }
 
-    vector<Board> boards;
-    vector<BoardHistory> hists;
-    vector<Player> nextPlas;
-    vector<shared_ptr<NNOutput>> nnOutputs;
-    vector<double> winLossValues;
-    vector<double> scoreLeads;
+    std::vector<Board> boards;
+    std::vector<BoardHistory> hists;
+    std::vector<Player> nextPlas;
+    std::vector<shared_ptr<NNOutput>> nnOutputs;
+    std::vector<double> winLossValues;
+    std::vector<double> scoreLeads;
 
-    vector<Move> moves;
-    vector<double> policyPriors;
+    std::vector<Move> moves;
+    std::vector<double> policyPriors;
 
     for (int m = 0; m < sgfMoves.size() + 1; m++)
     {
@@ -1185,10 +1185,10 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
     if (shouldStop.load(std::memory_order_acquire))
       return;
 
-    vector<double> futureValue(winLossValues.size() + 1);
-    vector<double> futureLead(winLossValues.size() + 1);
-    vector<double> pastValue(winLossValues.size());
-    vector<double> pastLead(winLossValues.size());
+    std::vector<double> futureValue(winLossValues.size() + 1);
+    std::vector<double> futureLead(winLossValues.size() + 1);
+    std::vector<double> pastValue(winLossValues.size());
+    std::vector<double> pastLead(winLossValues.size());
     futureValue[winLossValues.size()] = winLossValues[winLossValues.size() - 1];
     futureLead[winLossValues.size()] = scoreLeads[winLossValues.size()];
     for (int i = (int)winLossValues.size() - 1; i >= 0; i--)
@@ -1456,7 +1456,7 @@ int MainCmds::dataminesgfs(int argc, const char *const *argv)
   //Begin writing
   std::thread writeLoopThread(writeLoop);
 
-  vector<std::thread> threads;
+  std::vector<std::thread> threads;
   for (int i = 0; i < numProcessThreads; i++)
   {
     if (gameMode)
@@ -1617,7 +1617,7 @@ int MainCmds::trystartposes(int argc, const char *const *argv)
 
   ConfigParser cfg;
   string nnModelFile;
-  vector<string> startPosesFiles;
+  std::vector<string> startPosesFiles;
   double minWeight;
   try
   {
@@ -1673,11 +1673,11 @@ int MainCmds::trystartposes(int argc, const char *const *argv)
   }
   logger.write("Loaded neural net");
 
-  vector<Sgf::PositionSample> startPoses;
+  std::vector<Sgf::PositionSample> startPoses;
   for (size_t i = 0; i < startPosesFiles.size(); i++)
   {
     const string &startPosesFile = startPosesFiles[i];
-    vector<string> lines = Global::readFileLines(startPosesFile, '\n');
+    std::vector<string> lines = Global::readFileLines(startPosesFile, '\n');
     for (size_t j = 0; j < lines.size(); j++)
     {
       string line = Global::trim(lines[j]);
@@ -1791,7 +1791,7 @@ int MainCmds::viewstartposes(int argc, const char *const *argv)
 
   ConfigParser cfg;
   string modelFile;
-  vector<string> startPosesFiles;
+  std::vector<string> startPosesFiles;
   double minWeight;
   try
   {
@@ -1851,11 +1851,11 @@ int MainCmds::viewstartposes(int argc, const char *const *argv)
     bot = new AsyncBot(params, nnEval, &logger, searchRandSeed);
   }
 
-  vector<Sgf::PositionSample> startPoses;
+  std::vector<Sgf::PositionSample> startPoses;
   for (size_t i = 0; i < startPosesFiles.size(); i++)
   {
     const string &startPosesFile = startPosesFiles[i];
-    vector<string> lines = Global::readFileLines(startPosesFile, '\n');
+    std::vector<string> lines = Global::readFileLines(startPosesFile, '\n');
     for (size_t j = 0; j < lines.size(); j++)
     {
       string line = Global::trim(lines[j]);

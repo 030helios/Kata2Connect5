@@ -14,7 +14,7 @@ static NNEvaluator* startNNEval(
   int defaultSymmetry, bool inputsUseNHWC, bool useNHWC, bool useFP16
 ) {
   const string& modelName = modelFile;
-  vector<int> gpuIdxByServerThread = {0};
+  std::vector<int> gpuIdxByServerThread = {0};
   int maxBatchSize = 16;
   int maxConcurrentEvals = 1024;
   int nnXLen = NNPos::MAX_BOARD_LEN;
@@ -1863,7 +1863,7 @@ void Tests::runSekiTrainWriteTests(const string& modelFile) {
     cout << endl;
   };
 
-  vector<Rules> ruless = {
+  std::vector<Rules> ruless = {
     Rules(Rules::KO_SIMPLE, Rules::SCORING_AREA, Rules::TAX_NONE, false, false, Rules::WHB_ZERO, false, 0.0f),
     Rules(Rules::KO_SIMPLE, Rules::SCORING_TERRITORY, Rules::TAX_NONE, false, false, Rules::WHB_ZERO, false, 0.0f),
     Rules(Rules::KO_SIMPLE, Rules::SCORING_AREA, Rules::TAX_SEKI, false, false, Rules::WHB_ZERO, false, 0.0f),
@@ -1893,9 +1893,9 @@ void Tests::runSekiTrainWriteTests(const string& modelFile) {
 
     auto testStatuses = [&nnEval,&bot,&logger](const Board& board, const BoardHistory& hist, Player pla) {
       int numVisits = 50;
-      vector<double> ownership = PlayUtils::computeOwnership(bot,board,hist,pla,numVisits,logger);
-      vector<double> buf;
-      vector<bool> isAlive = PlayUtils::computeAnticipatedStatusesWithOwnership(bot,board,hist,pla,numVisits,logger,buf);
+      std::vector<double> ownership = PlayUtils::computeOwnership(bot,board,hist,pla,numVisits,logger);
+      std::vector<double> buf;
+      std::vector<bool> isAlive = PlayUtils::computeAnticipatedStatusesWithOwnership(bot,board,hist,pla,numVisits,logger,buf);
       testAssert(bot->alwaysIncludeOwnerMap == false);
       cout << "Search assumes " << PlayerIO::playerToString(pla) << " first" << endl;
       cout << "Rules " << hist.rules << endl;

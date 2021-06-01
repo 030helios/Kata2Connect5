@@ -17,8 +17,8 @@ namespace TestCommon {
     using namespace std;
     string a = Global::trim(actual);
     string e = Global::trim(expected);
-    vector<string> alines = Global::split(a,'\n');
-    vector<string> elines = Global::split(e,'\n');
+    std::vector<string> alines = Global::split(a,'\n');
+    std::vector<string> elines = Global::split(e,'\n');
 
     bool matches = true;
     int firstLineDiff = 0;

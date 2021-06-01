@@ -13,7 +13,7 @@
 
 using namespace std;
 
-static const vector<string> knownCommands = {
+static const std::vector<string> knownCommands = {
     //Basic GTP commands
     "protocol_version",
     "name",
@@ -111,7 +111,7 @@ static bool timeIsValidAllowNegative(const double &time)
   return true;
 }
 
-static double parseTime(const vector<string> &args, int argIdx, const string &description)
+static double parseTime(const std::vector<string> &args, int argIdx, const string &description)
 {
   double time = 0.0;
   if (args.size() <= argIdx || !Global::tryStringToDouble(args[argIdx], time))
@@ -120,7 +120,7 @@ static double parseTime(const vector<string> &args, int argIdx, const string &de
     throw StringError(description + " is an invalid value: " + args[argIdx]);
   return time;
 }
-static double parseTimeAllowNegative(const vector<string> &args, int argIdx, const string &description)
+static double parseTimeAllowNegative(const std::vector<string> &args, int argIdx, const string &description)
 {
   double time = 0.0;
   if (args.size() <= argIdx || !Global::tryStringToDouble(args[argIdx], time))
@@ -129,7 +129,7 @@ static double parseTimeAllowNegative(const vector<string> &args, int argIdx, con
     throw StringError(description + " is an invalid value: " + args[argIdx]);
   return time;
 }
-static int parseByoYomiStones(const vector<string> &args, int argIdx)
+static int parseByoYomiStones(const std::vector<string> &args, int argIdx)
 {
   int byoYomiStones = 0;
   if (args.size() <= argIdx || !Global::tryStringToInt(args[argIdx], byoYomiStones))
@@ -138,7 +138,7 @@ static int parseByoYomiStones(const vector<string> &args, int argIdx)
     throw StringError("byo-yomi overtime stones is an invalid value: " + args[argIdx]);
   return byoYomiStones;
 }
-static int parseByoYomiPeriods(const vector<string> &args, int argIdx)
+static int parseByoYomiPeriods(const std::vector<string> &args, int argIdx)
 {
   int byoYomiPeriods = 0;
   if (args.size() <= argIdx || !Global::tryStringToInt(args[argIdx], byoYomiPeriods))
@@ -185,7 +185,7 @@ static bool noWhiteStonesOnBoard(const Board &board)
 static void updateDynamicPDAHelper(
     const Board &board, const BoardHistory &hist,
     const double dynamicPlayoutDoublingAdvantageCapPerOppLead,
-    const vector<double> &recentWinLossValues,
+    const std::vector<double> &recentWinLossValues,
     double &desiredDynamicPDAForWhite)
 {
   (void)board;
@@ -253,7 +253,7 @@ static bool shouldResign(
     const Board &board,
     const BoardHistory &hist,
     Player pla,
-    const vector<double> &recentWinLossValues,
+    const std::vector<double> &recentWinLossValues,
     double lead,
     const double resignThreshold,
     const int resignConsecTurns,
@@ -344,9 +344,9 @@ struct GTPEngine
   //for undo, whereas the one in search does.
   Board initialBoard;
   Player initialPla;
-  vector<Move> moveHistory;
+  std::vector<Move> moveHistory;
 
-  vector<double> recentWinLossValues;
+  std::vector<double> recentWinLossValues;
   double lastSearchFactor;
   double desiredDynamicPDAForWhite;
   bool avoidMYTDaggerHack;
@@ -476,12 +476,12 @@ struct GTPEngine
     Board board(boardXSize, boardYSize);
     Player pla = P_BLACK;
     BoardHistory hist(board, pla, currentRules, 0);
-    vector<Move> newMoveHistory;
+    std::vector<Move> newMoveHistory;
     setPositionAndRules(pla, board, hist, board, pla, newMoveHistory);
     clearStatsForNewGame();
   }
 
-  void setPositionAndRules(Player pla, const Board &board, const BoardHistory &h, const Board &newInitialBoard, Player newInitialPla, const vector<Move> newMoveHistory)
+  void setPositionAndRules(Player pla, const Board &board, const BoardHistory &h, const Board &newInitialBoard, Player newInitialPla, const std::vector<Move> newMoveHistory)
   {
     BoardHistory hist(h);
     //Ensure we always have this value correct
@@ -503,12 +503,12 @@ struct GTPEngine
     Board board(newXSize, newYSize);
     Player pla = P_BLACK;
     BoardHistory hist(board, pla, currentRules, 0);
-    vector<Move> newMoveHistory;
+    std::vector<Move> newMoveHistory;
     setPositionAndRules(pla, board, hist, board, pla, newMoveHistory);
     clearStatsForNewGame();
   }
 
-  bool setPosition(const vector<Move> &initialStones)
+  bool setPosition(const std::vector<Move> &initialStones)
   {
     assert(bot->getRootHist().rules == currentRules);
     int newXSize = bot->getRootBoard().x_size;
@@ -519,7 +519,7 @@ struct GTPEngine
     Player pla = P_BLACK;
     BoardHistory hist(board, pla, currentRules, 0);
     hist.setInitialTurnNumber(board.numStonesOnBoard()); //Heuristic to guess at what turn this is
-    vector<Move> newMoveHistory;
+    std::vector<Move> newMoveHistory;
     setPositionAndRules(pla, board, hist, board, pla, newMoveHistory);
     clearStatsForNewGame();
     return true;
@@ -576,12 +576,12 @@ struct GTPEngine
       return false;
     assert(bot->getRootHist().rules == currentRules);
 
-    vector<Move> moveHistoryCopy = moveHistory;
+    std::vector<Move> moveHistoryCopy = moveHistory;
 
     Board undoneBoard = initialBoard;
     BoardHistory undoneHist(undoneBoard, initialPla, currentRules, 0);
     undoneHist.setInitialTurnNumber(bot->getRootHist().initialTurnNumber);
-    vector<Move> emptyMoveHistory;
+    std::vector<Move> emptyMoveHistory;
     setPositionAndRules(initialPla, undoneBoard, undoneHist, initialBoard, initialPla, emptyMoveHistory);
 
     for (int i = 0; i < moveHistoryCopy.size() - 1; i++)
@@ -607,12 +607,12 @@ struct GTPEngine
       return false;
     }
 
-    vector<Move> moveHistoryCopy = moveHistory;
+    std::vector<Move> moveHistoryCopy = moveHistory;
 
     Board board = initialBoard;
     BoardHistory hist(board, initialPla, newRules, 0);
     hist.setInitialTurnNumber(bot->getRootHist().initialTurnNumber);
-    vector<Move> emptyMoveHistory;
+    std::vector<Move> emptyMoveHistory;
     setPositionAndRules(initialPla, board, hist, initialBoard, initialPla, emptyMoveHistory);
 
     for (int i = 0; i < moveHistoryCopy.size(); i++)
@@ -646,8 +646,8 @@ struct GTPEngine
     bool showOwnership = false;
     bool showPVVisits = false;
     double secondsPerReport = TimeControls::UNLIMITED_TIME_DEFAULT;
-    vector<int> avoidMoveUntilByLocBlack;
-    vector<int> avoidMoveUntilByLocWhite;
+    std::vector<int> avoidMoveUntilByLocBlack;
+    std::vector<int> avoidMoveUntilByLocWhite;
   };
 
   std::function<void(const Search *search)> getAnalyzeCallback(Player pla, AnalyzeArgs args)
@@ -660,7 +660,7 @@ struct GTPEngine
       //asynchronously and called after we return
       callback = [args, pla, this](const Search *search)
       {
-        vector<AnalysisData> buf;
+        std::vector<AnalysisData> buf;
         search->getAnalysisData(buf, args.minMoves, false, analysisPVLen);
         if (buf.size() > args.maxMoves)
           buf.resize(args.maxMoves);
@@ -710,14 +710,14 @@ struct GTPEngine
     {
       callback = [args, pla, this](const Search *search)
       {
-        vector<AnalysisData> buf;
+        std::vector<AnalysisData> buf;
         search->getAnalysisData(buf, args.minMoves, false, analysisPVLen);
         if (buf.size() > args.maxMoves)
           buf.resize(args.maxMoves);
         if (buf.size() <= 0)
           return;
 
-        vector<double> ownership;
+        std::vector<double> ownership;
         if (args.showOwnership)
         {
           static constexpr int64_t ownershipMinVisits = 3;
@@ -1012,7 +1012,7 @@ struct GTPEngine
     response = Global::trim(response);
     (void)responseIsError;
 
-    vector<Move> newMoveHistory;
+    std::vector<Move> newMoveHistory;
     setPositionAndRules(pla, board, hist, board, pla, newMoveHistory);
     clearStatsForNewGame();
   }
@@ -1056,7 +1056,7 @@ struct GTPEngine
     response = Global::trim(response);
     (void)responseIsError;
 
-    vector<Move> newMoveHistory;
+    std::vector<Move> newMoveHistory;
     setPositionAndRules(pla, board, hist, board, pla, newMoveHistory);
     clearStatsForNewGame();
   }
@@ -1138,7 +1138,7 @@ struct GTPEngine
     bot->setParams(params);
   }
 
-  vector<bool> computeAnticipatedStatuses(Logger &logger)
+  std::vector<bool> computeAnticipatedStatuses(Logger &logger)
   {
     stopAndWait();
 
@@ -1152,7 +1152,7 @@ struct GTPEngine
     Player pla = bot->getRootPla();
 
     int64_t numVisits = std::max(100, params.numThreads * 20);
-    vector<bool> isAlive;
+    std::vector<bool> isAlive;
     //Tromp-taylorish statuses, or finished territory game statuses (including noresult)
     if (hist.isGameFinished && ((hist.rules.scoringRule == Rules::SCORING_AREA && !hist.rules.friendlyPassOk) ||
                                 (hist.rules.scoringRule == Rules::SCORING_TERRITORY)))
@@ -1160,7 +1160,7 @@ struct GTPEngine
     //Human-friendly statuses or incomplete game status estimation
     else
     {
-      vector<double> ownershipsBuf;
+      std::vector<double> ownershipsBuf;
       isAlive = PlayUtils::computeAnticipatedStatusesWithOwnership(bot->getSearchStopAndWait(), board, hist, pla, numVisits, logger, ownershipsBuf);
     }
 
@@ -1261,7 +1261,7 @@ struct GTPEngine
 //User should pre-fill pla with a default value, as it will not get filled in if the parsed command doesn't specify
 static GTPEngine::AnalyzeArgs parseAnalyzeCommand(
     const string &command,
-    const vector<string> &pieces,
+    const std::vector<string> &pieces,
     Player &pla,
     bool &parseFailed,
     GTPEngine *engine)
@@ -1275,8 +1275,8 @@ static GTPEngine::AnalyzeArgs parseAnalyzeCommand(
   int maxMoves = 10000000;
   bool showOwnership = false;
   bool showPVVisits = false;
-  vector<int> avoidMoveUntilByLocBlack;
-  vector<int> avoidMoveUntilByLocWhite;
+  std::vector<int> avoidMoveUntilByLocBlack;
+  std::vector<int> avoidMoveUntilByLocWhite;
   bool gotAvoidMovesBlack = false;
   bool gotAllowMovesBlack = false;
   bool gotAvoidMovesWhite = false;
@@ -1350,8 +1350,8 @@ static GTPEngine::AnalyzeArgs parseAnalyzeCommand(
         parseFailed = true;
         break;
       }
-      vector<Loc> parsedLocs;
-      vector<string> locPieces = Global::split(movesStr, ',');
+      std::vector<Loc> parsedLocs;
+      std::vector<string> locPieces = Global::split(movesStr, ',');
       for (size_t i = 0; i < locPieces.size(); i++)
       {
         string s = Global::trim(locPieces[i]);
@@ -1369,7 +1369,7 @@ static GTPEngine::AnalyzeArgs parseAnalyzeCommand(
         break;
 
       //Make sure the same analyze command can't specify both avoid and allow, and allow at most one allow.
-      vector<int> &avoidMoveUntilByLoc = avoidPla == P_BLACK ? avoidMoveUntilByLocBlack : avoidMoveUntilByLocWhite;
+      std::vector<int> &avoidMoveUntilByLoc = avoidPla == P_BLACK ? avoidMoveUntilByLocBlack : avoidMoveUntilByLocWhite;
       bool &gotAvoidMoves = avoidPla == P_BLACK ? gotAvoidMovesBlack : gotAvoidMovesWhite;
       bool &gotAllowMoves = avoidPla == P_BLACK ? gotAllowMovesBlack : gotAllowMovesWhite;
       if ((key == "allow" && gotAvoidMoves) || (key == "allow" && gotAllowMoves) || (key == "avoid" && gotAllowMoves))
@@ -1618,7 +1618,7 @@ int MainCmds::gtp(int argc, const char *const *argv)
   {
     //Parse command, extracting out the command itself, the arguments, and any GTP id number for the command.
     string command;
-    vector<string> pieces;
+    std::vector<string> pieces;
     bool hasId = false;
     int id = 0;
     {
@@ -1758,7 +1758,7 @@ int MainCmds::gtp(int argc, const char *const *argv)
       {
         if (contains(pieces[0], ':'))
         {
-          vector<string> subpieces = Global::split(pieces[0], ':');
+          std::vector<string> subpieces = Global::split(pieces[0], ':');
           if (subpieces.size() == 2 && Global::tryStringToInt(subpieces[0], newXSize) && Global::tryStringToInt(subpieces[1], newYSize))
             suc = true;
         }
@@ -2407,7 +2407,7 @@ int MainCmds::gtp(int argc, const char *const *argv)
       }
       else
       {
-        vector<Move> initialStones;
+        std::vector<Move> initialStones;
         for (int i = 0; i < pieces.size(); i += 2)
         {
           Player pla;
@@ -2619,7 +2619,7 @@ int MainCmds::gtp(int argc, const char *const *argv)
       }
       else
       {
-        vector<Loc> locs;
+        std::vector<Loc> locs;
         int xSize = engine->bot->getRootBoard().x_size;
         int ySize = engine->bot->getRootBoard().y_size;
         Board board(xSize, ySize);
@@ -2640,7 +2640,7 @@ int MainCmds::gtp(int argc, const char *const *argv)
         Player pla = P_WHITE;
         BoardHistory hist(board, pla, engine->getCurrentRules(), 0);
         hist.setInitialTurnNumber(board.numStonesOnBoard()); //Should give more accurate temperaure and time control behavior
-        vector<Move> newMoveHistory;
+        std::vector<Move> newMoveHistory;
         engine->setPositionAndRules(pla, board, hist, board, pla, newMoveHistory);
       }
     }
@@ -2688,9 +2688,9 @@ int MainCmds::gtp(int argc, const char *const *argv)
 
         if (statusMode < 3)
         {
-          vector<bool> isAlive = engine->computeAnticipatedStatuses(logger);
+          std::vector<bool> isAlive = engine->computeAnticipatedStatuses(logger);
           Board board = engine->bot->getRootBoard();
-          vector<Loc> locsToReport;
+          std::vector<Loc> locsToReport;
 
           if (statusMode == 0)
           {

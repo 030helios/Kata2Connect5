@@ -38,7 +38,7 @@ R"(
     typedef half8 realstore8;
     typedef half16 realstore16;
   #else
-    //If we don't have true fp16 compute support, halfn vector types won't exist, so substitute
+    //If we don't have true fp16 compute support, halfn std::vector types won't exist, so substitute
     //another type with the same datawidth. The vload and vstore functions and such will still work.
     typedef short2 realstore2;
     typedef short4 realstore4;

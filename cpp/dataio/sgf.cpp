@@ -150,13 +150,13 @@ string SgfNode::getSingleProperty(const char* key) const {
     propertyFail("SGF does not contain property: " + string(key));
   if(!contains(*props,key))
     propertyFail("SGF does not contain property: " + string(key));
-  const vector<string>& prop = map_get(*props,key);
+  const std::vector<string>& prop = map_get(*props,key);
   if(prop.size() != 1)
     propertyFail("SGF property is not a singleton: " + string(key));
   return prop[0];
 }
 
-const vector<string> SgfNode::getProperties(const char* key) const {
+const std::vector<string> SgfNode::getProperties(const char* key) const {
   if(props == NULL)
     propertyFail("SGF does not contain property: " + string(key));
   if(!contains(*props,key))
@@ -173,7 +173,7 @@ void SgfNode::accumPlacements(vector<Move>& moves, int xSize, int ySize) const {
   if(props == NULL)
     return;
 
-  auto handleRectangleList = [&](const vector<string>& elts, Player color) {
+  auto handleRectangleList = [&](const std::vector<string>& elts, Player color) {
     size_t len = elts.size();
     for(size_t i = 0; i<len; i++) {
       int x1; int y1;
@@ -189,15 +189,15 @@ void SgfNode::accumPlacements(vector<Move>& moves, int xSize, int ySize) const {
   };
 
   if(contains(*props,"AB")) {
-    const vector<string>& ab = map_get(*props,"AB");
+    const std::vector<string>& ab = map_get(*props,"AB");
     handleRectangleList(ab,P_BLACK);
   }
   if(contains(*props,"AW")) {
-    const vector<string>& aw = map_get(*props,"AW");
+    const std::vector<string>& aw = map_get(*props,"AW");
     handleRectangleList(aw,P_WHITE);
   }
   if(contains(*props,"AE")) {
-    const vector<string>& ae = map_get(*props,"AE");
+    const std::vector<string>& ae = map_get(*props,"AE");
     handleRectangleList(ae,C_EMPTY);
   }*/
 }
@@ -214,7 +214,7 @@ void SgfNode::accumMoves(vector<Move>& moves, int xSize, int ySize) const {
     }
   }
   if(props != NULL && contains(*props,"B")) {
-    const vector<string>& b = map_get(*props,"B");
+    const std::vector<string>& b = map_get(*props,"B");
     size_t len = b.size();
     for(size_t i = 0; i<len; i++) {
       Loc loc = parseSgfLocOrPass(b[i],xSize,ySize);
@@ -231,7 +231,7 @@ void SgfNode::accumMoves(vector<Move>& moves, int xSize, int ySize) const {
     }
   }
   if(props != NULL && contains(*props,"W")) {
-    const vector<string>& w = map_get(*props,"W");
+    const std::vector<string>& w = map_get(*props,"W");
     size_t len = w.size();
     for(size_t i = 0; i<len; i++) {
       Loc loc = parseSgfLocOrPass(w[i],xSize,ySize);
@@ -313,7 +313,7 @@ int64_t Sgf::branchCount() const {
   return count;
 }
 
-static void checkNonEmpty(const vector<SgfNode*>& nodes) {
+static void checkNonEmpty(const std::vector<SgfNode*>& nodes) {
   if(nodes.size() <= 0)
     throw StringError("Empty sgf");
 }
@@ -327,7 +327,7 @@ XYSize Sgf::getXYSize() const {
 
   const string& s = nodes[0]->getSingleProperty("SZ");
   if(contains(s,':')) {
-    vector<string> pieces = Global::split(s,':');
+    std::vector<string> pieces = Global::split(s,':');
     if(pieces.size() != 2)
       propertyFail("Could not parse board size in sgf: " + s);
     bool suc = Global::tryStringToInt(pieces[0], xSize) && Global::tryStringToInt(pieces[1], ySize);
@@ -576,7 +576,7 @@ void Sgf::loadAllUniquePositions(
   bool hashParent,
   bool flipIfPassOrWFirst,
   Rand* rand,
-  vector<PositionSample>& samples
+  std::vector<PositionSample>& samples
 ) const {
   std::function<void(PositionSample&, const BoardHistory&, const string&)> f = [&samples](PositionSample& sample, const BoardHistory& hist, const string& comments) {
     (void)hist;
@@ -629,7 +629,7 @@ void Sgf::iterAllUniquePositionsHelper(
   std::function<void(PositionSample&,const BoardHistory&,const std::string&)> f
 ) const {
   /*
-  vector<Move> buf;
+  std::vector<Move> buf;
   for(size_t i = 0; i<nodes.size(); i++) {
 
     string comments;
@@ -817,13 +817,13 @@ static uint64_t parseHex64(const string& str) {
   return x;
 }
 
-set<Hash128> Sgf::readExcludes(const vector<string>& files) {
+set<Hash128> Sgf::readExcludes(const std::vector<string>& files) {
   set<Hash128> excludeHashes;
   for(int i = 0; i<files.size(); i++) {
     string excludeHashesFile = Global::trim(files[i]);
     if(excludeHashesFile.size() <= 0)
       continue;
-    vector<string> hashes = Global::readFileLines(excludeHashesFile,'\n');
+    std::vector<string> hashes = Global::readFileLines(excludeHashesFile,'\n');
     for(int64_t j = 0; j < hashes.size(); j++) {
       const string& hash128 = Global::trim(Global::stripComments(hashes[j]));
       if(hash128.length() <= 0)
@@ -846,8 +846,8 @@ string Sgf::PositionSample::toJsonLine(const Sgf::PositionSample& sample) {
   data["ySize"] = sample.board.y_size;
   data["board"] = Board::toStringSimple(sample.board,'/');
   data["nextPla"] = PlayerIO::playerToStringShort(sample.nextPla);
-  vector<string> moveLocs;
-  vector<string> movePlas;
+  std::vector<string> moveLocs;
+  std::vector<string> movePlas;
   for(size_t i = 0; i<sample.moves.size(); i++)
     moveLocs.push_back(Location::toString(sample.moves[i].loc,sample.board));
   for(size_t i = 0; i<sample.moves.size(); i++)
@@ -871,8 +871,8 @@ Sgf::PositionSample Sgf::PositionSample::ofJsonLine(const string& s) {
     int ySize = data["ySize"].get<int>();
     sample.board = Board::parseBoard(xSize,ySize,data["board"].get<string>(),'/');
     sample.nextPla = PlayerIO::parsePlayer(data["nextPla"].get<string>());
-    vector<string> moveLocs = data["moveLocs"].get<vector<string>>();
-    vector<string> movePlas = data["movePlas"].get<vector<string>>();
+    std::vector<string> moveLocs = data["moveLocs"].get<vector<string>>();
+    std::vector<string> movePlas = data["movePlas"].get<vector<string>>();
     if(moveLocs.size() != movePlas.size())
       throw StringError("moveLocs.size() != movePlas.size()");
     for(size_t i = 0; i<moveLocs.size(); i++) {
@@ -1059,7 +1059,7 @@ static bool maybeParseProperty(SgfNode* node, const string& str, int& pos) {
     else {
       if(node->props == NULL)
         node->props = new map<string,vector<string>>();
-      vector<string>& contents = (*(node->props))[key];
+      std::vector<string>& contents = (*(node->props))[key];
       string value = parseTextValue(str,pos);
       contents.push_back(value);
     }
@@ -1151,8 +1151,8 @@ Sgf* Sgf::loadFile(const string& file) {
   return sgf;
 }
 
-vector<Sgf*> Sgf::loadFiles(const vector<string>& files) {
-  vector<Sgf*> sgfs;
+vector<Sgf*> Sgf::loadFiles(const std::vector<string>& files) {
+  std::vector<Sgf*> sgfs;
   try {
     for(int i = 0; i<files.size(); i++) {
       if(i % 10000 == 0)
@@ -1176,8 +1176,8 @@ vector<Sgf*> Sgf::loadFiles(const vector<string>& files) {
 }
 
 vector<Sgf*> Sgf::loadSgfsFile(const string& file) {
-  vector<Sgf*> sgfs;
-  vector<string> lines = Global::readFileLines(file,'\n');
+  std::vector<Sgf*> sgfs;
+  std::vector<string> lines = Global::readFileLines(file,'\n');
   try {
     for(size_t i = 0; i<lines.size(); i++) {
       string line = Global::trim(lines[i]);
@@ -1198,14 +1198,14 @@ vector<Sgf*> Sgf::loadSgfsFile(const string& file) {
 }
 
 
-vector<Sgf*> Sgf::loadSgfsFiles(const vector<string>& files) {
-  vector<Sgf*> sgfs;
+vector<Sgf*> Sgf::loadSgfsFiles(const std::vector<string>& files) {
+  std::vector<Sgf*> sgfs;
   try {
     for(int i = 0; i<files.size(); i++) {
       if(i % 500 == 0)
         cout << "Loaded " << i << "/" << files.size() << " files" << endl;
       try {
-        vector<Sgf*> s = loadSgfsFile(files[i]);
+        std::vector<Sgf*> s = loadSgfsFile(files[i]);
         sgfs.insert(sgfs.end(),s.begin(),s.end());
       }
       catch(const IOError& e) {
@@ -1301,8 +1301,8 @@ CompactSgf* CompactSgf::loadFile(const string& file) {
   return compact;
 }
 
-vector<CompactSgf*> CompactSgf::loadFiles(const vector<string>& files) {
-  vector<CompactSgf*> sgfs;
+vector<CompactSgf*> CompactSgf::loadFiles(const std::vector<string>& files) {
+  std::vector<CompactSgf*> sgfs;
   try {
     for(int i = 0; i<files.size(); i++) {
       if(i % 10000 == 0)

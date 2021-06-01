@@ -302,7 +302,7 @@ vector<string> Global::split(const string& s)
 {
   istringstream in(s);
   string token;
-  vector<string> tokens;
+  std::vector<string> tokens;
   while(in >> token)
   {
     token = Global::trim(token);
@@ -332,12 +332,12 @@ string Global::concat(const char* const* strs, size_t len, const char* delim)
   return s;
 }
 
-string Global::concat(const vector<string>& strs, const char* delim)
+string Global::concat(const std::vector<string>& strs, const char* delim)
 {
   return concat(strs,delim,0,strs.size());
 }
 
-string Global::concat(const vector<string>& strs, const char* delim, size_t start, size_t end)
+string Global::concat(const std::vector<string>& strs, const char* delim, size_t start, size_t end)
 {
   size_t totalLen = 0;
   size_t delimLen = strlen(delim);
@@ -360,7 +360,7 @@ string Global::concat(const vector<string>& strs, const char* delim, size_t star
 
 string Global::concat(const set<string>& strs, const char* delim)
 {
-  vector<string> v;
+  std::vector<string> v;
   std::copy(strs.begin(), strs.end(), std::back_inserter(v));
   return concat(v,delim,0,v.size());
 }
@@ -369,7 +369,7 @@ vector<string> Global::split(const string& s, char delim)
 {
   istringstream in(s);
   string token;
-  vector<string> tokens;
+  std::vector<string> tokens;
   while(getline(in,token,delim))
     tokens.push_back(token);
   return tokens;
@@ -523,7 +523,7 @@ bool contains(const string& str, char c)
   return strchr(str.c_str(),c) != NULL;
 }
 
-bool contains(const vector<string>& vec, const char* elt)
+bool contains(const std::vector<string>& vec, const char* elt)
 {
   for(const string& x: vec)
     if(x == elt)
@@ -536,7 +536,7 @@ bool contains(const set<string>& set, const char* elt)
   return set.find(elt) != set.end();
 }
 
-size_t indexOf(const vector<string>& vec, const char* elt)
+size_t indexOf(const std::vector<string>& vec, const char* elt)
 {
   size_t size = vec.size();
   for(size_t i = 0; i<size; i++)
@@ -692,7 +692,7 @@ vector<string> Global::readFileLines(const char* filename, char delimiter)
   if(!ifs.good())
     throw IOError(string("File not found: ") + filename);
 
-  vector<string> vec;
+  std::vector<string> vec;
   string line;
   while(getline(ifs,line,delimiter))
     vec.push_back(line);
@@ -704,7 +704,7 @@ vector<string> Global::readFileLines(const string& filename, char delimiter)
   return readFileLines(filename.c_str(), delimiter);
 }
 
-void Global::collectFiles(const string& dirname, std::function<bool(const string&)> fileFilter, vector<string>& collected)
+void Global::collectFiles(const string& dirname, std::function<bool(const string&)> fileFilter, std::vector<string>& collected)
 {
   namespace gfs = ghc::filesystem;
   try {

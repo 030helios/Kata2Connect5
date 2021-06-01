@@ -45,7 +45,7 @@ SOFTWARE.
 #include <numeric> // accumulate
 #include <string> // string, stoi, to_string
 #include <utility> // declval, forward, move, pair, swap
-#include <vector> // vector
+#include <vector> // std::vector
 
 // #include <nlohmann/adl_serializer.hpp>
 
@@ -2236,14 +2236,14 @@ json.exception.parse_error.106 | parse error: array index '01' must not begin wi
 json.exception.parse_error.107 | parse error: JSON pointer must be empty or begin with '/' - was: 'foo' | A JSON Pointer must be a Unicode string containing a sequence of zero or more reference tokens, each prefixed by a `/` character.
 json.exception.parse_error.108 | parse error: escape character '~' must be followed with '0' or '1' | In a JSON Pointer, only `~0` and `~1` are valid escape sequences.
 json.exception.parse_error.109 | parse error: array index 'one' is not a number | A JSON Pointer array index must be a number.
-json.exception.parse_error.110 | parse error at 1: cannot read 2 bytes from vector | When parsing CBOR or MessagePack, the byte vector ends before the complete value has been read.
+json.exception.parse_error.110 | parse error at 1: cannot read 2 bytes from std::vector | When parsing CBOR or MessagePack, the byte std::vector ends before the complete value has been read.
 json.exception.parse_error.112 | parse error at 1: error reading CBOR; last byte: 0xF8 | Not all types of CBOR or MessagePack are supported. This exception occurs if an unsupported byte was read.
 json.exception.parse_error.113 | parse error at 2: expected a CBOR string; last byte: 0x98 | While parsing a map key, a value that is not a string has been read.
 json.exception.parse_error.114 | parse error: Unsupported BSON record type 0x0F | The parsing of the corresponding BSON record type is not implemented (yet).
 
 @note For an input with n bytes, 1 is the index of the first character and n+1
       is the index of the terminating null byte or the end of file. This also
-      holds true when reading a byte vector (CBOR or MessagePack).
+      holds true when reading a byte std::vector (CBOR or MessagePack).
 
 @liveexample{The following code shows how a `parse_error` exception can be
 caught.,parse_error}
@@ -2291,7 +2291,7 @@ class parse_error : public exception
 
     @note For an input with n bytes, 1 is the index of the first character and
           n+1 is the index of the terminating null byte or the end of file.
-          This also holds true when reading a byte vector (CBOR or MessagePack).
+          This also holds true when reading a byte std::vector (CBOR or MessagePack).
     */
     const std::size_t byte;
 
@@ -2717,7 +2717,7 @@ using is_detected_convertible =
 #include <map> // map
 #include <memory> // allocator
 #include <string> // string
-#include <vector> // vector
+#include <vector> // std::vector
 
 /*!
 @brief namespace for Niels Lohmann
@@ -3629,7 +3629,7 @@ constexpr const auto& from_json = detail::static_const<detail::from_json_fn>::va
 #include <type_traits> // is_same, is_constructible, is_floating_point, is_enum, underlying_type
 #include <utility> // move, forward, declval, pair
 #include <valarray> // valarray
-#include <vector> // vector
+#include <vector> // std::vector
 
 // #include <nlohmann/detail/boolean_operators.hpp>
 
@@ -4883,7 +4883,7 @@ class span_input_adapter
 #include <cstddef>
 #include <string> // string
 #include <utility> // move
-#include <vector> // vector
+#include <vector> // std::vector
 
 // #include <nlohmann/detail/exceptions.hpp>
 
@@ -8072,7 +8072,7 @@ class binary_reader
 #include <initializer_list> // initializer_list
 #include <string> // char_traits, string
 #include <utility> // move
-#include <vector> // vector
+#include <vector> // std::vector
 
 // #include <nlohmann/detail/input/input_adapters.hpp>
 
@@ -9604,7 +9604,7 @@ scan_number_done:
 #include <functional> // function
 #include <string> // string
 #include <utility> // move
-#include <vector> // vector
+#include <vector> // std::vector
 
 // #include <nlohmann/detail/exceptions.hpp>
 
@@ -11035,7 +11035,7 @@ class json_reverse_iterator : public std::reverse_iterator<Base>
 #include <numeric> // accumulate
 #include <string> // string
 #include <utility> // move
-#include <vector> // vector
+#include <vector> // std::vector
 
 // #include <nlohmann/detail/exceptions.hpp>
 
@@ -12105,7 +12105,7 @@ class json_ref
 #include <memory> // shared_ptr, make_shared
 #include <ostream> // basic_ostream
 #include <string> // basic_string
-#include <vector> // vector
+#include <vector> // std::vector
 // #include <nlohmann/detail/macro_scope.hpp>
 
 
@@ -12125,7 +12125,7 @@ template<typename CharType> struct output_adapter_protocol
 template<typename CharType>
 using output_adapter_t = std::shared_ptr<output_adapter_protocol<CharType>>;
 
-/// output adapter for byte vectors
+/// output adapter for byte std::vectors
 template<typename CharType>
 class output_vector_adapter : public output_adapter_protocol<CharType>
 {
@@ -20884,7 +20884,7 @@ class basic_json
     boolean     | `false`
     string      | `""`
     number      | `0`
-    binary      | An empty byte vector
+    binary      | An empty byte std::vector
     object      | `{}`
     array       | `[]`
 
@@ -22682,7 +22682,7 @@ class basic_json
     /*!
     @brief create a CBOR serialization of a given JSON value
 
-    Serializes a given JSON value @a j to a byte vector using the CBOR (Concise
+    Serializes a given JSON value @a j to a byte std::vector using the CBOR (Concise
     Binary Object Representation) serialization format. CBOR is a binary
     serialization format which aims to be more compact than JSON itself, yet
     more efficient to parse.
@@ -22757,12 +22757,12 @@ class basic_json
           - break (0xFF)
 
     @param[in] j  JSON value to serialize
-    @return CBOR serialization as byte vector
+    @return CBOR serialization as byte std::vector
 
     @complexity Linear in the size of the JSON value @a j.
 
     @liveexample{The example shows the serialization of a JSON value to a byte
-    vector in CBOR format.,to_cbor}
+    std::vector in CBOR format.,to_cbor}
 
     @sa http://cbor.io
     @sa @ref from_cbor(detail::input_adapter&&, const bool, const bool) for the
@@ -22794,7 +22794,7 @@ class basic_json
     /*!
     @brief create a MessagePack serialization of a given JSON value
 
-    Serializes a given JSON value @a j to a byte vector using the MessagePack
+    Serializes a given JSON value @a j to a byte std::vector using the MessagePack
     serialization format. MessagePack is a binary serialization format which
     aims to be more compact than JSON itself, yet more efficient to parse.
 
@@ -22856,12 +22856,12 @@ class basic_json
           function which serializes NaN or Infinity to `null`.
 
     @param[in] j  JSON value to serialize
-    @return MessagePack serialization as byte vector
+    @return MessagePack serialization as byte std::vector
 
     @complexity Linear in the size of the JSON value @a j.
 
     @liveexample{The example shows the serialization of a JSON value to a byte
-    vector in MessagePack format.,to_msgpack}
+    std::vector in MessagePack format.,to_msgpack}
 
     @sa http://msgpack.org
     @sa @ref from_msgpack for the analogous deserialization
@@ -22891,7 +22891,7 @@ class basic_json
     /*!
     @brief create a UBJSON serialization of a given JSON value
 
-    Serializes a given JSON value @a j to a byte vector using the UBJSON
+    Serializes a given JSON value @a j to a byte std::vector using the UBJSON
     (Universal Binary JSON) serialization format. UBJSON aims to be more compact
     than JSON itself, yet more efficient to parse.
 
@@ -22959,12 +22959,12 @@ class basic_json
     @param[in] use_size  whether to add size annotations to container types
     @param[in] use_type  whether to add type annotations to container types
                          (must be combined with @a use_size = true)
-    @return UBJSON serialization as byte vector
+    @return UBJSON serialization as byte std::vector
 
     @complexity Linear in the size of the JSON value @a j.
 
     @liveexample{The example shows the serialization of a JSON value to a byte
-    vector in UBJSON format.,to_ubjson}
+    std::vector in UBJSON format.,to_ubjson}
 
     @sa http://ubjson.org
     @sa @ref from_ubjson(detail::input_adapter&&, const bool, const bool) for the
@@ -22997,7 +22997,7 @@ class basic_json
 
 
     /*!
-    @brief Serializes the given JSON object `j` to BSON and returns a vector
+    @brief Serializes the given JSON object `j` to BSON and returns a std::vector
            containing the corresponding BSON-representation.
 
     BSON (Binary JSON) is a binary format in which zero or more ordered key/value pairs are
@@ -23037,12 +23037,12 @@ class basic_json
           by @ref from_bson.
 
     @param[in] j  JSON value to serialize
-    @return BSON serialization as byte vector
+    @return BSON serialization as byte std::vector
 
     @complexity Linear in the size of the JSON value @a j.
 
     @liveexample{The example shows the serialization of a JSON value to a byte
-    vector in BSON format.,to_bson}
+    std::vector in BSON format.,to_bson}
 
     @sa http://bsonspec.org/spec.html
     @sa @ref from_bson(detail::input_adapter&&, const bool strict) for the
@@ -23168,7 +23168,7 @@ class basic_json
 
     @complexity Linear in the size of the input @a i.
 
-    @liveexample{The example shows the deserialization of a byte vector in CBOR
+    @liveexample{The example shows the deserialization of a byte std::vector in CBOR
     format to a JSON value.,from_cbor}
 
     @sa http://cbor.io
@@ -23305,7 +23305,7 @@ class basic_json
 
     @complexity Linear in the size of the input @a i.
 
-    @liveexample{The example shows the deserialization of a byte vector in
+    @liveexample{The example shows the deserialization of a byte std::vector in
     MessagePack format to a JSON value.,from_msgpack}
 
     @sa http://msgpack.org
@@ -23422,7 +23422,7 @@ class basic_json
 
     @complexity Linear in the size of the input @a i.
 
-    @liveexample{The example shows the deserialization of a byte vector in
+    @liveexample{The example shows the deserialization of a byte std::vector in
     UBJSON format to a JSON value.,from_ubjson}
 
     @sa http://ubjson.org
@@ -23538,7 +23538,7 @@ class basic_json
 
     @complexity Linear in the size of the input @a i.
 
-    @liveexample{The example shows the deserialization of a byte vector in
+    @liveexample{The example shows the deserialization of a byte std::vector in
     BSON format to a JSON value.,from_bson}
 
     @sa http://bsonspec.org/spec.html

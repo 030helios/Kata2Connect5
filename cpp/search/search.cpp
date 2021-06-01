@@ -600,10 +600,10 @@ Search::recomputeSearchTimeLimit(const TimeControls &tc, double timeUsed, double
     double upperBoundVisitsLeftDueToTime = computeUpperBoundVisitsLeftDueToTime(rootVisits, timeUsed, tcRec);
     if (upperBoundVisitsLeftDueToTime < searchParams.futileVisitsThreshold * rootVisits)
     {
-      vector<Loc> fromLocs;
-      vector<Loc> toLocs;
-      vector<double> playSelectionValues;
-      vector<double> visitCounts;
+      std::vector<Loc> fromLocs;
+      std::vector<Loc> toLocs;
+      std::vector<double> playSelectionValues;
+      std::vector<double> visitCounts;
       bool suc = getPlaySelectionValues(fromLocs,toLocs, playSelectionValues, &visitCounts, 1.0);
       if (suc && playSelectionValues.size() > 0)
       {
@@ -973,7 +973,7 @@ void Search::recursivelyRemoveSubtreeValueBiasBeforeDeleteSynchronous(SearchNode
 void Search::recursivelyRecomputeStats(SearchNode &node, SearchThread &thread, bool isRoot)
 {
   // First, recompute all children.
-  vector<SearchNode *> children;
+  std::vector<SearchNode *> children;
   children.reserve(rootBoard.x_size * rootBoard.y_size + 1);
 
   int numChildren;
@@ -1272,9 +1272,9 @@ void Search::maybeAddPolicyNoiseAndTempAlreadyLocked(SearchThread &thread, Searc
 void Search::getValueChildWeights(
     int numChildren,
     // Unlike everywhere else where values are from white's perspective, values here are from one's own perspective
-    const vector<double> &childSelfValuesBuf,
-    const vector<int64_t> &childVisitsBuf,
-    vector<double> &resultBuf) const
+    const std::vector<double> &childSelfValuesBuf,
+    const std::vector<int64_t> &childVisitsBuf,
+    std::vector<double> &resultBuf) const
 {
   resultBuf.clear();
   if (numChildren <= 0)
@@ -1751,18 +1751,18 @@ void Search::recomputeNodeStats(
     bool isRoot)
 {
   // Find all children and compute weighting of the children based on their values
-  vector<double> &weightFactors = thread.weightFactorBuf;
-  vector<double> &winValues = thread.winValuesBuf;
-  vector<double> &noResultValues = thread.noResultValuesBuf;
-  vector<double> &scoreMeans = thread.scoreMeansBuf;
-  vector<double> &scoreMeanSqs = thread.scoreMeanSqsBuf;
-  vector<double> &leads = thread.leadsBuf;
-  vector<double> &utilitySums = thread.utilityBuf;
-  vector<double> &utilitySqSums = thread.utilitySqBuf;
-  vector<double> &selfUtilities = thread.selfUtilityBuf;
-  vector<double> &weightSums = thread.weightBuf;
-  vector<double> &weightSqSums = thread.weightSqBuf;
-  vector<int64_t> &visits = thread.visitsBuf;
+  std::vector<double> &weightFactors = thread.weightFactorBuf;
+  std::vector<double> &winValues = thread.winValuesBuf;
+  std::vector<double> &noResultValues = thread.noResultValuesBuf;
+  std::vector<double> &scoreMeans = thread.scoreMeansBuf;
+  std::vector<double> &scoreMeanSqs = thread.scoreMeanSqsBuf;
+  std::vector<double> &leads = thread.leadsBuf;
+  std::vector<double> &utilitySums = thread.utilityBuf;
+  std::vector<double> &utilitySqSums = thread.utilitySqBuf;
+  std::vector<double> &selfUtilities = thread.selfUtilityBuf;
+  std::vector<double> &weightSums = thread.weightBuf;
+  std::vector<double> &weightSqSums = thread.weightSqBuf;
+  std::vector<int64_t> &visits = thread.visitsBuf;
 
   int64_t totalChildVisits = 0;
   int64_t maxChildVisits = 0;
@@ -2053,7 +2053,7 @@ void Search::initNodeNNOutput(
   nnInputParams.nnPolicyTemperature = searchParams.nnPolicyTemperature;
   if (isRoot && searchParams.rootNumSymmetriesToSample > 1)
   {
-    vector<shared_ptr<NNOutput>> ptrs;
+    std::vector<shared_ptr<NNOutput>> ptrs;
     std::array<int, NNInputs::NUM_SYMMETRY_COMBINATIONS> symmetryIndexes;
     std::iota(symmetryIndexes.begin(), symmetryIndexes.end(), 0);
     for (int i = 0; i < searchParams.rootNumSymmetriesToSample; i++)

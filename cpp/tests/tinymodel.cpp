@@ -202,7 +202,7 @@ NNEvaluator* TinyModelTest::runTinyModelTest(const string& baseDir, Logger& logg
     }
   };
 
-  vector<std::thread> testThreads;
+  std::vector<std::thread> testThreads;
   for(int i = 0; i<4; i++)
     testThreads.push_back(std::thread(runAFewTests));
   for(int i = 0; i<4; i++)

@@ -199,8 +199,8 @@ Move PlayUtils::getGameInitializationMove(
   nnEval->evaluate(board, hist, pla, nnInputParams, buf, false, false);
   std::shared_ptr<NNOutput> nnOutput = std::move(buf.result);
 
-  vector<Move> moves;
-  vector<double> playSelectionValues;
+  std::vector<Move> moves;
+  std::vector<double> playSelectionValues;
   int nnXLen = nnOutput->nnXLen;
   int nnYLen = nnOutput->nnYLen;
   assert(nnXLen >= board.x_size);
@@ -618,7 +618,7 @@ double PlayUtils::getSearchFactor(
     double searchFactorWhenWinningThreshold,
     double searchFactorWhenWinning,
     const SearchParams &params,
-    const vector<double> &recentWinLossValues,
+    const std::vector<double> &recentWinLossValues,
     Player pla)
 {
   double searchFactor = 1.0;
@@ -665,7 +665,7 @@ vector<double> PlayUtils::computeOwnership(
   bot->runWholeSearch(pla, logger);
 
   int64_t minVisitsForOwnership = 2;
-  vector<double> ownerships = bot->getAverageTreeOwnership(minVisitsForOwnership);
+  std::vector<double> ownerships = bot->getAverageTreeOwnership(minVisitsForOwnership);
 
   bot->setParams(oldParams);
   bot->setAlwaysIncludeOwnerMap(oldAlwaysIncludeOwnerMap);
@@ -679,7 +679,7 @@ vector<bool> PlayUtils::computeAnticipatedStatusesSimple(
     const Board &board,
     const BoardHistory &hist)
 {
-  vector<bool> isAlive(Board::MAX_ARR_SIZE, false);
+  std::vector<bool> isAlive(Board::MAX_ARR_SIZE, false);
 
   //Treat all stones as alive under a no result
   if (hist.isGameFinished && hist.isNoResult)
@@ -723,9 +723,9 @@ vector<bool> PlayUtils::computeAnticipatedStatusesWithOwnership(
     Player pla,
     int64_t numVisits,
     Logger &logger,
-    vector<double> &ownershipsBuf)
+    std::vector<double> &ownershipsBuf)
 {
-  vector<bool> isAlive(Board::MAX_ARR_SIZE, false);
+  std::vector<bool> isAlive(Board::MAX_ARR_SIZE, false);
   bool solved[Board::MAX_ARR_SIZE];
   for (int i = 0; i < Board::MAX_ARR_SIZE; i++)
   {
@@ -734,7 +734,7 @@ vector<bool> PlayUtils::computeAnticipatedStatusesWithOwnership(
   }
 
   ownershipsBuf = computeOwnership(bot, board, hist, pla, numVisits, logger);
-  const vector<double> &ownerships = ownershipsBuf;
+  const std::vector<double> &ownerships = ownershipsBuf;
   int nnXLen = bot->nnXLen;
   int nnYLen = bot->nnYLen;
 
@@ -821,7 +821,7 @@ double PlayUtils::BenchmarkResults::computeEloEffect(double secondsPerGameMove) 
   return gain - cost;
 }
 
-void PlayUtils::BenchmarkResults::printEloComparison(const vector<BenchmarkResults> &results, double secondsPerGameMove)
+void PlayUtils::BenchmarkResults::printEloComparison(const std::vector<BenchmarkResults> &results, double secondsPerGameMove)
 {
   int bestIdx = 0;
   for (int i = 1; i < results.size(); i++)
@@ -858,7 +858,7 @@ PlayUtils::BenchmarkResults PlayUtils::benchmarkSearchOnPositionsAndPrint(
     bool printElo)
 {
   //Pick random positions from the SGF file, but deterministically
-  vector<Move> moves = sgf->moves;
+  std::vector<Move> moves = sgf->moves;
   string posSeed = "benchmarkPosSeed|";
   for (int i = 0; i < moves.size(); i++)
   { /*
@@ -867,7 +867,7 @@ PlayUtils::BenchmarkResults PlayUtils::benchmarkSearchOnPositionsAndPrint(
     posSeed += "|";
   }
 
-  vector<int> possiblePositionIdxs;
+  std::vector<int> possiblePositionIdxs;
   {
     Rand posRand(posSeed);
     for (int i = 0; i < moves.size(); i++)
@@ -984,9 +984,9 @@ void PlayUtils::printGenmoveLog(ostream &out, const AsyncBot *bot, const NNEvalu
 
 Rules PlayUtils::genRandomRules(Rand &rand)
 {
-  vector<int> allowedKoRules = {Rules::KO_SIMPLE, Rules::KO_POSITIONAL, Rules::KO_SITUATIONAL};
-  vector<int> allowedScoringRules = {Rules::SCORING_AREA, Rules::SCORING_TERRITORY};
-  vector<int> allowedTaxRules = {Rules::TAX_NONE, Rules::TAX_SEKI, Rules::TAX_ALL};
+  std::vector<int> allowedKoRules = {Rules::KO_SIMPLE, Rules::KO_POSITIONAL, Rules::KO_SITUATIONAL};
+  std::vector<int> allowedScoringRules = {Rules::SCORING_AREA, Rules::SCORING_TERRITORY};
+  std::vector<int> allowedTaxRules = {Rules::TAX_NONE, Rules::TAX_SEKI, Rules::TAX_ALL};
 
   Rules rules;
   rules.koRule = allowedKoRules[rand.nextUInt(allowedKoRules.size())];

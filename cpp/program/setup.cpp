@@ -23,7 +23,7 @@ NNEvaluator* Setup::initializeNNEvaluator(
   int defaultMaxBatchSize,
   setup_for_t setupFor
 ) {
-  vector<NNEvaluator*> nnEvals =
+  std::vector<NNEvaluator*> nnEvals =
     initializeNNEvaluators(
       {nnModelName},{nnModelFile},{expectedSha256},
       cfg,logger,seedRand,maxConcurrentEvals,expectedConcurrentEvals,defaultNNXLen,defaultNNYLen,defaultMaxBatchSize,setupFor
@@ -33,9 +33,9 @@ NNEvaluator* Setup::initializeNNEvaluator(
 }
 
 vector<NNEvaluator*> Setup::initializeNNEvaluators(
-  const vector<string>& nnModelNames,
-  const vector<string>& nnModelFiles,
-  const vector<string>& expectedSha256s,
+  const std::vector<string>& nnModelNames,
+  const std::vector<string>& nnModelFiles,
+  const std::vector<string>& expectedSha256s,
   ConfigParser& cfg,
   Logger& logger,
   Rand& seedRand,
@@ -46,7 +46,7 @@ vector<NNEvaluator*> Setup::initializeNNEvaluators(
   int defaultMaxBatchSize,
   setup_for_t setupFor
 ) {
-  vector<NNEvaluator*> nnEvals;
+  std::vector<NNEvaluator*> nnEvals;
   assert(nnModelNames.size() == nnModelFiles.size());
   assert(expectedSha256s.size() == 0 || expectedSha256s.size() == nnModelFiles.size());
 
@@ -164,7 +164,7 @@ vector<NNEvaluator*> Setup::initializeNNEvaluators(
       cfg.getInt("numEigenThreadsPerModel",1,1024);
 #endif
 
-    vector<int> gpuIdxByServerThread;
+    std::vector<int> gpuIdxByServerThread;
     for(int j = 0; j<numNNServerThreadsPerModel; j++) {
       string threadIdxStr = Global::intToString(j);
       if(cfg.contains(backendPrefix+"DeviceToUseModel"+idxStr+"Thread"+threadIdxStr))
@@ -332,7 +332,7 @@ SearchParams Setup::loadSingleParams(
   ConfigParser& cfg,
   setup_for_t setupFor
 ) {
-  vector<SearchParams> paramss = loadParams(cfg, setupFor);
+  std::vector<SearchParams> paramss = loadParams(cfg, setupFor);
   if(paramss.size() != 1)
     throw StringError("Config contains parameters for multiple bot configurations, but this KataGo command only supports a single configuration");
   return paramss[0];
@@ -351,7 +351,7 @@ vector<SearchParams> Setup::loadParams(
   setup_for_t setupFor
 ) {
 
-  vector<SearchParams> paramss;
+  std::vector<SearchParams> paramss;
   int numBots = 1;
   if(cfg.contains("numBots"))
     numBots = cfg.getInt("numBots",1,MAX_BOT_PARAMS_FROM_CFG);
@@ -663,7 +663,7 @@ Rules Setup::loadSingleRulesExceptForKomi(
 }
 
 vector<pair<set<string>,set<string>>> Setup::getMutexKeySets() {
-  vector<pair<set<string>,set<string>>> mutexKeySets = {
+  std::vector<pair<set<string>,set<string>>> mutexKeySets = {
     std::make_pair<set<string>,set<string>>(
     {"rules"},{"koRule","scoringRule","multiStoneSuicideLegal","taxRule","hasButton","whiteBonusPerHandicapStone","friendlyPassOk","whiteHandicapBonus"}
     ),

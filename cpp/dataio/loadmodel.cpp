@@ -73,7 +73,7 @@ void LoadModel::setLastModifiedTimeToNow(const string& filePath, Logger& logger)
 
 void LoadModel::deleteModelsOlderThan(const string& modelsDir, Logger& logger, const time_t& time) {
   namespace gfs = ghc::filesystem;
-  vector<gfs::path> pathsToRemove;
+  std::vector<gfs::path> pathsToRemove;
   for(gfs::directory_iterator iter(modelsDir); iter != gfs::directory_iterator(); ++iter) {
     gfs::path filePath = iter->path();
     if(gfs::is_directory(filePath))
