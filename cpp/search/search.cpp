@@ -349,7 +349,7 @@ bool Search::makeMove(Loc fromLoc, Loc toLoc, Player movePla)
     {
       SearchNode *child = rootNode->children[foundChildIdx];
       mutex &mutex = mutexPool->getMutex(child->lockIdx);
-      lock_guard<mutex> lock(mutex);
+      lock_guard<std::mutex> lock(mutex);
       if (child->nnOutput == nullptr)
         foundChild = false;
     }
@@ -980,7 +980,7 @@ void Search::recursivelyRecomputeStats(SearchNode &node, SearchThread &thread, b
   bool noNNOutput;
   {
     mutex &mutex = mutexPool->getMutex(node.lockIdx);
-    lock_guard<mutex> lock(mutex);
+    lock_guard<std::mutex> lock(mutex);
     numChildren = node.numChildren;
     for (int i = 0; i < numChildren; i++)
       children.push_back(node.children[i]);
@@ -1768,7 +1768,7 @@ void Search::recomputeNodeStats(
   int64_t maxChildVisits = 0;
 
   mutex &mutex = mutexPool->getMutex(node.lockIdx);
-  unique_lock<mutex> lock(mutex);
+  unique_lock<std::mutex> lock(mutex);
 
   int numChildren = node.numChildren;
   int numGoodChildren = 0;
@@ -2146,7 +2146,7 @@ void Search::playoutDescend(
   }
 
   mutex &mutex = mutexPool->getMutex(node.lockIdx);
-  unique_lock<mutex> lock(mutex);
+  unique_lock<std::mutex> lock(mutex);
 
   // Hit leaf node, finish
   if (node.nnOutput == nullptr)
