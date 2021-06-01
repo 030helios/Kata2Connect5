@@ -214,10 +214,10 @@ bool Board::isOnBoard(Loc loc) const {
   return loc >= 0 && loc < MAX_ARR_SIZE && colors[loc] != C_WALL;
 }
 
-bool Board::get_is_legal_capture(Player pla, Loc fromLoc, Loc toLoc, const std::array<int, 56> &circle, bool reverse) const
+bool Board::get_is_legal_capture(Loc fromLoc, Loc toLoc, const std::array<int, 56> &circle, bool reverse) const
 {
   int our_index = -1;
-  bool CanCapture = false, passed_the_loop = false;
+  bool passed_the_loop = false;
 
   int src_index = reverse ? 55 : 0;
   for (; reverse ? src_index >= 0 : src_index < 56; reverse ? src_index-- : src_index++)
@@ -238,16 +238,19 @@ bool Board::get_is_legal_capture(Player pla, Loc fromLoc, Loc toLoc, const std::
     if (circle[src_index] == toLoc && our_index != -1 && passed_the_loop)
       return true;
   }
+  return false;
 }
 bool Board::getIsLegalCapture(Player pla, Loc fromLoc, Loc toLoc) const
 {
-  if (get_is_legal_capture(pla, fromLoc, toLoc, kOuter, true))
+  if(colors[toLoc]==pla)
+    return false;
+  if (get_is_legal_capture(fromLoc, toLoc, kOuter, true))
     return true;
-  if (get_is_legal_capture(pla, fromLoc, toLoc, kOuter, false))
+  if (get_is_legal_capture(fromLoc, toLoc, kOuter, false))
     return true;
-  if (get_is_legal_capture(pla, fromLoc, toLoc, kInter, true))
+  if (get_is_legal_capture(fromLoc, toLoc, kInter, true))
     return true;
-  if (get_is_legal_capture(pla, fromLoc, toLoc, kInter, false))
+  if (get_is_legal_capture(fromLoc, toLoc, kInter, false))
     return true;
   return false;
 }
@@ -412,10 +415,6 @@ int Location::euclideanDistanceSquared(Loc loc0, Loc loc1, int x_size) {
 
 void Board::checkConsistency() const {
   const string errLabel = string("Board::checkConsistency(): ");
-
-  bool chainLocChecked[MAX_ARR_SIZE];
-  for(int i = 0; i<MAX_ARR_SIZE; i++)
-    chainLocChecked[i] = false;
   vector<Loc> buf;
   Hash128 tmp_pos_hash = ZOBRIST_SIZE_X_HASH[x_size] ^ ZOBRIST_SIZE_Y_HASH[y_size];
   int emptyCount = 0;

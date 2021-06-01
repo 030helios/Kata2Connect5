@@ -278,21 +278,21 @@ struct Search
     // Does take into account chosenMoveSubtract but does NOT apply temperature.
     // If somehow the max value is less than scaleMaxToAtLeast, scale it to at least that value.
     bool getPlaySelectionValues(
-        vector<Loc> &fromLocs,
-        vector<Loc> &toLocs,
+        std::vector<Loc> &fromLocs,
+        std::vector<Loc> &toLocs,
         std::vector<double> &playSelectionValues,
         double scaleMaxToAtLeast) const;
     bool getPlaySelectionValues(
-        vector<Loc> &fromLocs,
-        vector<Loc> &toLocs,
+        std::vector<Loc> &fromLocs,
+        std::vector<Loc> &toLocs,
         std::vector<double> &playSelectionValues,
         std::vector<double> *retVisitCounts,
         double scaleMaxToAtLeast) const;
     // Same, but works on a node within the search, not just the root
     bool getPlaySelectionValues(
         const SearchNode &node,
-        vector<Loc> &fromLocs,
-        vector<Loc> &toLocs,
+        std::vector<Loc> &fromLocs,
+        std::vector<Loc> &toLocs,
         std::vector<double> &playSelectionValues,
         std::vector<double> *retVisitCounts,
         double scaleMaxToAtLeast,
@@ -326,7 +326,7 @@ struct Search
     double getPolicySurprise() const;
 
     void printPV(std::ostream &out, const SearchNode *node, int maxDepth) const;
-    void printPVForMove(std::ostream &out, const SearchNode *node, Loc fromMove,Loc toMove, int maxDepth) const;
+    void printPVForMove(std::ostream &out, const SearchNode *node, Loc fromMove, Loc toMove, int maxDepth) const;
     void printTree(std::ostream &out, const SearchNode *node, PrintTreeOptions options, Player perspective) const;
     void printRootPolicyMap(std::ostream &out) const;
     //edit:only print endl
@@ -351,8 +351,8 @@ struct Search
         std::vector<Loc> &FromBuf,
         std::vector<Loc> &ToBuf,
         std::vector<int64_t> &visitsBuf,
-        vector<Loc> &fromLocs,
-        vector<Loc> &toLocs,
+        std::vector<Loc> &fromLocs,
+        std::vector<Loc> &toLocs,
         std::vector<double> &scratchValues,
         const SearchNode *n,
         int maxDepth) const;
@@ -361,8 +361,8 @@ struct Search
         std::vector<Loc> &FromBuf,
         std::vector<Loc> &ToBuf,
         std::vector<int64_t> &visitsBuf,
-        vector<Loc> &fromLocs,
-        vector<Loc> &toLocs,
+        std::vector<Loc> &fromLocs,
+        std::vector<Loc> &toLocs,
         std::vector<double> &scratchValues,
         const SearchNode *n,
         Loc fromMove,
@@ -453,8 +453,8 @@ private:
     //used to be just locs, modified so that it's more readible than to switch between fromLoc and toLoc
     bool getPlaySelectionValuesAlreadyLocked(
         const SearchNode &node,
-        vector<Loc> &fromLocs,
-        vector<Loc> &toLocs,
+        std::vector<Loc> &fromLocs,
+        std::vector<Loc> &toLocs,
         std::vector<double> &playSelectionValues,
         std::vector<double> *retVisitCounts,
         double scaleMaxToAtLeast,
@@ -544,8 +544,8 @@ private:
 
     AnalysisData getAnalysisDataOfSingleChild(
         const SearchNode *child,
-        vector<Loc> &fromLocs,
-        vector<Loc> &toLocs,
+        std::vector<Loc> &fromLocs,
+        std::vector<Loc> &toLocs,
         std::vector<double> &scratchValues,
         Loc fromLoc,
         Loc toLoc,
@@ -558,7 +558,7 @@ private:
         double parentLead,
         int maxPVDepth) const;
 
-    void printPV(std::ostream &out, const vector<Loc> &FromBuf, const vector<Loc> &ToBuf) const;
+    void printPV(std::ostream &out, const std::vector<Loc> &FromBuf, const vector<Loc> &ToBuf) const;
 
     void printTreeHelper(
         std::ostream &out,

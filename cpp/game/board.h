@@ -245,7 +245,7 @@ struct Board
   //Functions------------------------------------
   //Check if this is legal capture
   bool getIsLegalCapture(Player Pla, Loc fromLoc, Loc toLoc) const;
-  bool get_is_legal_capture(Player Pla, Loc fromLoc, Loc toLoc, const std::array<int, 56> &circle,bool reverse) const;
+  bool get_is_legal_capture(Loc fromLoc, Loc toLoc, const std::array<int, 56> &circle,bool reverse) const;
   //Check if moving here is legal. Equivalent to isLegalIgnoringKo && !isKoBanned
   bool isLegal(Loc fromLoc, Loc toLoc, Player pla ) const;
   //Check if this location is on the board
