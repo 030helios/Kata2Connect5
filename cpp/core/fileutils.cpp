@@ -33,7 +33,7 @@ void FileUtils::loadFileIntoString(const string& filename, const string& expecte
 }
 
 void FileUtils::uncompressAndLoadFileIntoString(const string& filename, const string& expectedSha256, string& uncompressed) {
-  std::unique_ptr<string> compressed = std::make_unique<string>();
+  unique_ptr<string> compressed = make_unique<string>();
   loadFileIntoString(filename,expectedSha256,*compressed);
 
   static constexpr size_t CHUNK_SIZE = 262144;

@@ -1030,7 +1030,7 @@ WouldBeKo white
   //============================================================================
   {
     const char* name = "Ladders 1 Lib";
-    std::vector<Loc> buf;
+    vector<Loc> buf;
     Board board = Board::parseBoard(9,9,R"%%(
 xo.x..oxo
 xoxo..o..
@@ -1076,8 +1076,8 @@ xoox..xo.
   //============================================================================
   {
     const char* name = "Ladders 2 Libs";
-    std::vector<Loc> buf;
-    std::vector<Loc> buf2;
+    vector<Loc> buf;
+    vector<Loc> buf2;
     Board board = Board::parseBoard(9,9,R"%%(
 xo.x..oxo
 xo.o..o..
@@ -1124,8 +1124,8 @@ xoox..xo.
   //============================================================================
   {
     const char* name = "LaddersKo-1";
-    std::vector<Loc> buf;
-    std::vector<Loc> buf2;
+    vector<Loc> buf;
+    vector<Loc> buf2;
     Board board = Board::parseBoard(18,9,R"%%(
 ..................
 ..................
@@ -1172,8 +1172,8 @@ xoox..xo.
   //============================================================================
   {
     const char* name = "LaddersKo-2";
-    std::vector<Loc> buf;
-    std::vector<Loc> buf2;
+    vector<Loc> buf;
+    vector<Loc> buf2;
     Board board = Board::parseBoard(18,9,R"%%(
 .............xo.oo
 ....x........xxooo
@@ -1285,8 +1285,8 @@ xoox..xo.
   //============================================================================
   {
     const char* name = "LaddersMultiKo";
-    std::vector<Loc> buf;
-    std::vector<Loc> buf2;
+    vector<Loc> buf;
+    vector<Loc> buf2;
     Board board = Board::parseBoard(9,9,R"%%(
 .xxxxxxo.
 xoxox.xo.
@@ -1330,8 +1330,8 @@ o.ooo.ox.
   //============================================================================
   {
     const char* name = "LaddersBigBoard";
-    std::vector<Loc> buf;
-    std::vector<Loc> buf2;
+    vector<Loc> buf;
+    vector<Loc> buf2;
     Board board = Board::parseBoard(19,19,R"%%(
    A B C D E F G H J K L M N O P Q R S T
 19 . . . . . . . . . . . . . . . . . . .
@@ -1398,8 +1398,8 @@ o.ooo.ox.
   //============================================================================
   {
     const char* name = "WholeBoardLadder";
-    std::vector<Loc> buf;
-    std::vector<Loc> buf2;
+    vector<Loc> buf;
+    vector<Loc> buf2;
     Board board = Board::parseBoard(19,19,R"%%(
    A B C D E F G H J K L M N O P Q R S T
 19 . . . . O . . . . . . . . . . . . . .
@@ -1467,8 +1467,8 @@ o.ooo.ox.
   //============================================================================
   {
     const char* name = "CubicLadder not far from max node budget";
-    std::vector<Loc> buf;
-    std::vector<Loc> buf2;
+    vector<Loc> buf;
+    vector<Loc> buf2;
     Board board = Board::parseBoard(19,19,R"%%(
    A B C D E F G H J K L M N O P Q R S T
 19 . . . O O O O O O O O . . . . . O . O
@@ -1536,8 +1536,8 @@ o.ooo.ox.
   {
     //Requires a node budget of somewhere between 2.5M and 25M nodes
     const char* name = "Failing polynomial ladder due to max node budget";
-    std::vector<Loc> buf;
-    std::vector<Loc> buf2;
+    vector<Loc> buf;
+    vector<Loc> buf2;
     Board board = Board::parseBoard(19,19,R"%%(
    A B C D E F G H J K L M N O P Q R S T
 19 X . O O O O X . O O O O X . O O O O O
@@ -1894,8 +1894,8 @@ void Tests::runBoardStressTest() {
         else {
           testAssert(board.colors[loc] == pla);
           testAssert(board.getNumLiberties(loc) == copy.getNumLibertiesAfterPlay(loc,pla,1000));
-          testAssert(std::min(2,board.getNumLiberties(loc)) == copy.getNumLibertiesAfterPlay(loc,pla,2));
-          testAssert(std::min(4,board.getNumLiberties(loc)) == copy.getNumLibertiesAfterPlay(loc,pla,4));
+          testAssert(min(2,board.getNumLiberties(loc)) == copy.getNumLibertiesAfterPlay(loc,pla,2));
+          testAssert(min(4,board.getNumLiberties(loc)) == copy.getNumLibertiesAfterPlay(loc,pla,4));
           if(board.ko_loc != Board::NULL_LOC) {
             koCaptureCount++;
             testAssert(copy.wouldBeKoCapture(loc,pla));

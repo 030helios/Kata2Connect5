@@ -65,7 +65,7 @@ static void runBotOnPosition(AsyncBot* bot, Board board, Player nextPla, BoardHi
     Loc move;
     if(opts.printAfterBegun) {
       cout << "Just after begun" << endl;
-      std::function<void()> onSearchBegun = [&]() {
+      function<void()> onSearchBegun = [&]() {
         const Search* search = bot->getSearch();
         search->printTree(cout, search->rootNode, options, P_WHITE);
       };
@@ -99,8 +99,8 @@ static void runBotOnPosition(AsyncBot* bot, Board board, Player nextPla, BoardHi
     if(opts.printPlaySelectionValues) {
       cout << "Play selection values" << endl;
       double scaleMaxToAtLeast = 10.0;
-      std::vector<Loc> locsBuf;
-      std::vector<double> playSelectionValuesBuf;
+      vector<Loc> locsBuf;
+      vector<double> playSelectionValuesBuf;
       bool success = search->getPlaySelectionValues(locsBuf,playSelectionValuesBuf,scaleMaxToAtLeast);
       testAssert(success);
       for(int j = 0; j<locsBuf.size(); j++) {
@@ -147,7 +147,7 @@ static NNEvaluator* startNNEval(
   int defaultSymmetry, bool inputsUseNHWC, bool useNHWC, bool useFP16, bool debugSkipNeuralNet,
   bool requireExactNNLen
 ) {
-  std::vector<int> gpuIdxByServerThread = {0};
+  vector<int> gpuIdxByServerThread = {0};
   int maxBatchSize = 16;
   int nnCacheSizePowerOfTwo = 16;
   int nnMutexPoolSizePowerOfTwo = 12;
@@ -196,7 +196,7 @@ static NNEvaluator* startNNEval(
   nnEval->spawnServerThreads();
 
   //Hack to get more consistent ordering of log messages spawned by nnEval threads with other output.
-  std::this_thread::sleep_for(std::chrono::duration<double>(0.1));
+  this_thread::sleep_for(chrono::duration<double>(0.1));
   return nnEval;
 }
 
@@ -2301,14 +2301,14 @@ void Tests::runNNLessSearchTests() {
     search->printTree(cout, search->rootNode, options, P_WHITE);
 
     auto sampleChosenMoves = [&]() {
-      std::map<Loc,int> moveLocsAndCounts;
+      map<Loc,int> moveLocsAndCounts;
       for(int i = 0; i<10000; i++) {
         Loc loc = search->getChosenMoveLoc();
         moveLocsAndCounts[loc] += 1;
       }
-      std::vector<pair<Loc,int>> moveLocsAndCountsSorted;
-      std::copy(moveLocsAndCounts.begin(),moveLocsAndCounts.end(),std::back_inserter(moveLocsAndCountsSorted));
-      std::sort(moveLocsAndCountsSorted.begin(), moveLocsAndCountsSorted.end(), [](pair<Loc,int> a, pair<Loc,int> b) { return a.second > b.second; });
+      vector<pair<Loc,int>> moveLocsAndCountsSorted;
+      copy(moveLocsAndCounts.begin(),moveLocsAndCounts.end(),back_inserter(moveLocsAndCountsSorted));
+      sort(moveLocsAndCountsSorted.begin(), moveLocsAndCountsSorted.end(), [](pair<Loc,int> a, pair<Loc,int> b) { return a.second > b.second; });
 
       for(int i = 0; i<moveLocsAndCountsSorted.size(); i++) {
         cout << Location::toString(moveLocsAndCountsSorted[i].first,board) << " " << moveLocsAndCountsSorted[i].second << endl;
@@ -2700,7 +2700,7 @@ o..o.oo
 
       float origPolicyProbs[NNPos::MAX_NN_POLICY_SIZE];
       float policyProbs[NNPos::MAX_NN_POLICY_SIZE];
-      std::fill(policyProbs,policyProbs+NNPos::MAX_NN_POLICY_SIZE,-1.0f);
+      fill(policyProbs,policyProbs+NNPos::MAX_NN_POLICY_SIZE,-1.0f);
       {
         for(int y = 0; y<board.y_size; y++) {
           for(int x = 0; x<board.x_size; x++) {
@@ -2719,7 +2719,7 @@ o..o.oo
         }
       }
 
-      std::copy(policyProbs,policyProbs+NNPos::MAX_NN_POLICY_SIZE,origPolicyProbs);
+      copy(policyProbs,policyProbs+NNPos::MAX_NN_POLICY_SIZE,origPolicyProbs);
       Search::addDirichletNoise(params, rand, NNPos::MAX_NN_POLICY_SIZE, policyProbs);
 
       {
@@ -3105,9 +3105,9 @@ void Tests::runNNOnManyPoses(const string& modelFile, bool inputsNHWC, bool useN
   bool skipCache = true;
   bool includeOwnerMap = true;
 
-  std::vector<float> winProbs;
-  std::vector<float> scoreMeans;
-  std::vector<float> policyProbs;
+  vector<float> winProbs;
+  vector<float> scoreMeans;
+  vector<float> policyProbs;
 
   for(int turnIdx = 0; turnIdx<sgf->moves.size(); turnIdx++) {
     Board board;
@@ -3128,8 +3128,8 @@ void Tests::runNNOnManyPoses(const string& modelFile, bool inputsNHWC, bool useN
   }
 
   if(comparisonFile == "") {
-    cout << std::setprecision(17);
-    cout << std::fixed;
+    cout << setprecision(17);
+    cout << fixed;
     for(int i = 0; i<winProbs.size(); i++)
       cout << winProbs[i] << endl;
     for(int i = 0; i<scoreMeans.size(); i++)
@@ -3180,7 +3180,7 @@ void Tests::runNNBatchingTest(const string& modelFile, bool inputsNHWC, bool use
   string sgf19x10 = "(;FF[4]GM[1]SZ[19:10]HA[0]KM[6]RU[koPOSITIONALscoreAREAtaxNONEsui0]RE[W+2];B[dg];W[cd];B[pg];W[pd];B[ec];W[bg];B[cg];W[bh];B[nc];W[de];B[cf];W[di];B[bf];W[eh];B[eg];W[fd];B[dc];W[cc];B[gb];W[he];B[ee];W[ed];B[ci];W[dd];B[dh];W[hc];B[hh];W[jc];B[kc];W[kb];B[jd];W[lc];B[kd];W[ic];B[oe];W[ld];B[re];W[pe];B[pf];W[od];B[nd];W[ob];B[le];W[rd];B[kf];W[oi];B[ph];W[kh];B[ji];W[mh];B[ki];W[kg];B[jf];W[qf];B[rf];W[qe];B[qg];W[pi];B[qc];W[qb];B[qi];W[mf];B[me];W[nf];B[ng];W[mg];B[li];W[rh];B[rg];W[ri];B[nh];W[ne];B[of];W[ig];B[lh];W[qh];B[ni];W[hg];B[sh];W[ih];B[lg];W[fh];B[rb];W[nb];B[rc];W[qj];B[si];W[oj];B[hi];W[fg];B[rj];W[sj];B[ff];W[gf];B[rj];W[mc];B[md];W[sj];B[cb];W[bb];B[rj];W[ei];B[bi];W[sj];B[eb];W[ca];B[rj];W[be];B[af];W[sj];B[da];W[ba];B[rj];W[ai];B[cj];W[sj];B[hb];W[ib];B[rj];W[pb];B[qi];W[qd];B[sd];W[ii];B[ij];W[ra];B[id];W[gi];B[gj];W[gh];B[fj];W[hj];B[hi];W[hd];B[ce];W[bd];B[if];W[ie];B[je];W[ae];B[ef];W[hf];B[fe];W[ge];B[hj];W[df];B[ah];W[hh];B[sa];W[qa];B[sc];W[sb];B[bc];W[ac];B[sa];W[ag];B[ch];W[sb];B[lb];W[mb];B[sa];W[se];B[sf];W[sb];B[jb];W[ja];B[sa];W[pc];B[se];W[sb];B[fa];W[fc];B[sa];W[dj];B[ah];W[sb];B[fb];W[ha];B[sa];W[ag];B[bg];W[sb];B[jg];W[jh];B[sa];W[lf];B[mi];W[sb];B[jj];W[sa];B[ej];W[fi];B[oc];W[ia];B[lf];W[la];B[nj];W[bc];B[sg];W[db];B[pj];W[ea];B[qj];W[da];B[aj];W[gc];B[oh];W[ga];B[];W[])";
 
   constexpr int numThreads = 10;
-  std::vector<NNBatchingTestItem> items;
+  vector<NNBatchingTestItem> items;
 
   auto appendSgfPoses = [&](string sgfStr) {
     Rand rand("runNNBatchingTest");
@@ -3205,19 +3205,19 @@ void Tests::runNNBatchingTest(const string& modelFile, bool inputsNHWC, bool use
   appendSgfPoses(sgf19x19);
   appendSgfPoses(sgf19x10);
 
-  std::vector<double> policyResults(items.size());
-  std::vector<double> valueResults(items.size());
-  std::vector<double> scoreResults(items.size());
-  std::vector<double> ownershipResults(items.size());
+  vector<double> policyResults(items.size());
+  vector<double> valueResults(items.size());
+  vector<double> scoreResults(items.size());
+  vector<double> ownershipResults(items.size());
 
   auto runEvals = [&](int threadIdx) {
     Rand rand("runNNBatchingTest" + Global::intToString(threadIdx));
     for(size_t i = threadIdx; i < items.size(); i += numThreads) {
       //Get some more thread interleaving
       if(rand.nextBool(0.2))
-        std::this_thread::yield();
+        this_thread::yield();
       if(rand.nextBool(0.2))
-        std::this_thread::sleep_for(std::chrono::duration<double>(0.001));
+        this_thread::sleep_for(chrono::duration<double>(0.001));
       const NNBatchingTestItem& item = items[i];
       MiscNNInputParams nnInputParams;
       nnInputParams.drawEquivalentWinsForWhite = rand.nextDouble();
@@ -3254,18 +3254,18 @@ void Tests::runNNBatchingTest(const string& modelFile, bool inputsNHWC, bool use
 
   for(int threadIdx = 0; threadIdx<numThreads; threadIdx++)
     runEvals(threadIdx);
-  std::vector<double> policyResultsSingleThreaded = policyResults;
-  std::vector<double> valueResultsSingleThreaded = valueResults;
-  std::vector<double> scoreResultsSingleThreaded = scoreResults;
-  std::vector<double> ownershipResultsSingleThreaded = ownershipResults;
-  std::fill(policyResults.begin(), policyResults.end(), 0.0);
-  std::fill(valueResults.begin(), valueResults.end(), 0.0);
-  std::fill(scoreResults.begin(), scoreResults.end(), 0.0);
-  std::fill(ownershipResults.begin(), ownershipResults.end(), 0.0);
+  vector<double> policyResultsSingleThreaded = policyResults;
+  vector<double> valueResultsSingleThreaded = valueResults;
+  vector<double> scoreResultsSingleThreaded = scoreResults;
+  vector<double> ownershipResultsSingleThreaded = ownershipResults;
+  fill(policyResults.begin(), policyResults.end(), 0.0);
+  fill(valueResults.begin(), valueResults.end(), 0.0);
+  fill(scoreResults.begin(), scoreResults.end(), 0.0);
+  fill(ownershipResults.begin(), ownershipResults.end(), 0.0);
 
-  std::vector<std::thread> testThreads;
+  vector<thread> testThreads;
   for(int threadIdx = 0; threadIdx<numThreads; threadIdx++)
-    testThreads.push_back(std::thread(runEvals,threadIdx));
+    testThreads.push_back(thread(runEvals,threadIdx));
   for(int threadIdx = 0; threadIdx<numThreads; threadIdx++)
     testThreads[threadIdx].join();
 

@@ -78,7 +78,7 @@ class StdOutput : public CmdLineOutput
 		 * \param c - The CmdLine object the output is generated for. 
          * \param os - The stream to write the message to.
          */
-        virtual void _shortUsage( CmdLineInterface& c, std::ostream& os ) const;
+        virtual void _shortUsage( CmdLineInterface& c, ostream& os ) const;
 
         /**
 		 * Writes a longer usage message with long and short args, 
@@ -86,7 +86,7 @@ class StdOutput : public CmdLineOutput
 		 * \param c - The CmdLine object the output is generated for. 
 		 * \param os - The stream to write the message to.
 		 */
-		virtual void _longUsage( CmdLineInterface& c, std::ostream& os ) const;
+		virtual void _longUsage( CmdLineInterface& c, ostream& os ) const;
 
 		/**
 		 * This function inserts line breaks and indents long strings 
@@ -99,8 +99,8 @@ class StdOutput : public CmdLineOutput
 		 * \param secondLineOffset - The number of spaces to indent the second
 		 * and all subsequent lines in addition to indentSpaces.
 		 */
-		void spacePrint( std::ostream& os, 
-						 const std::string& s, 
+		void spacePrint( ostream& os, 
+						 const string& s, 
 						 int maxWidth, 
 						 int indentSpaces, 
 						 int secondLineOffset ) const;
@@ -110,45 +110,45 @@ class StdOutput : public CmdLineOutput
 
 inline void StdOutput::version(CmdLineInterface& _cmd) 
 {
-	std::string progName = _cmd.getProgramName();
-	std::string xversion = _cmd.getVersion();
+	string progName = _cmd.getProgramName();
+	string xversion = _cmd.getVersion();
 
-	std::cout << std::endl << progName << "  version: " 
-			  << xversion << std::endl << std::endl;
+	cout << endl << progName << "  version: " 
+			  << xversion << endl << endl;
 }
 
 inline void StdOutput::usage(CmdLineInterface& _cmd ) 
 {
-	std::cout << std::endl << "USAGE: " << std::endl << std::endl; 
+	cout << endl << "USAGE: " << endl << endl; 
 
-	_shortUsage( _cmd, std::cout );
+	_shortUsage( _cmd, cout );
 
-	std::cout << std::endl << std::endl << "Where: " << std::endl << std::endl;
+	cout << endl << endl << "Where: " << endl << endl;
 
-	_longUsage( _cmd, std::cout );
+	_longUsage( _cmd, cout );
 
-	std::cout << std::endl; 
+	cout << endl; 
 
 }
 
 inline void StdOutput::failure( CmdLineInterface& _cmd,
 								ArgException& e ) 
 {
-	std::string progName = _cmd.getProgramName();
+	string progName = _cmd.getProgramName();
 
-	std::cerr << "PARSE ERROR: " << e.argId() << std::endl
-		      << "             " << e.error() << std::endl << std::endl;
+	cerr << "PARSE ERROR: " << e.argId() << endl
+		      << "             " << e.error() << endl << endl;
 
 	if ( _cmd.hasHelpAndVersion() )
 		{
-			std::cerr << "Brief USAGE: " << std::endl;
+			cerr << "Brief USAGE: " << endl;
 
-			_shortUsage( _cmd, std::cerr );	
+			_shortUsage( _cmd, cerr );	
 
-			std::cerr << std::endl << "For complete USAGE and HELP type: " 
-					  << std::endl << "   " << progName << " "
+			cerr << endl << "For complete USAGE and HELP type: " 
+					  << endl << "   " << progName << " "
 					  << Arg::nameStartString() << "help"
-					  << std::endl << std::endl;
+					  << endl << endl;
 		}
 	else
 		usage(_cmd);
@@ -158,14 +158,14 @@ inline void StdOutput::failure( CmdLineInterface& _cmd,
 
 inline void 
 StdOutput::_shortUsage( CmdLineInterface& _cmd, 
-						std::ostream& os ) const
+						ostream& os ) const
 {
-	std::list<Arg*> argList = _cmd.getArgList();
-	std::string progName = _cmd.getProgramName();
+	list<Arg*> argList = _cmd.getArgList();
+	string progName = _cmd.getProgramName();
 	XorHandler xorHandler = _cmd.getXorHandler();
-	std::vector< std::vector<Arg*> > xorList = xorHandler.getXorList();
+	vector< vector<Arg*> > xorList = xorHandler.getXorList();
 
-	std::string s = progName + " ";
+	string s = progName + " ";
 
 	// first the xor
 	for ( int i = 0; static_cast<unsigned int>(i) < xorList.size(); i++ )
@@ -193,12 +193,12 @@ StdOutput::_shortUsage( CmdLineInterface& _cmd,
 
 inline void 
 StdOutput::_longUsage( CmdLineInterface& _cmd, 
-					   std::ostream& os ) const
+					   ostream& os ) const
 {
-	std::list<Arg*> argList = _cmd.getArgList();
-	std::string message = _cmd.getMessage();
+	list<Arg*> argList = _cmd.getArgList();
+	string message = _cmd.getMessage();
 	XorHandler xorHandler = _cmd.getXorHandler();
-	std::vector< std::vector<Arg*> > xorList = xorHandler.getXorList();
+	vector< vector<Arg*> > xorList = xorHandler.getXorList();
 
 	// first the xor 
 	for ( int i = 0; static_cast<unsigned int>(i) < xorList.size(); i++ )
@@ -213,7 +213,7 @@ StdOutput::_longUsage( CmdLineInterface& _cmd,
 					if ( it+1 != xorList[i].end() )
 						spacePrint(os, "-- OR --", 75, 9, 0);
 				}
-			os << std::endl << std::endl;
+			os << endl << endl;
 		}
 
 	// then the rest
@@ -222,16 +222,16 @@ StdOutput::_longUsage( CmdLineInterface& _cmd,
 			{
 				spacePrint( os, (*it)->longID(), 75, 3, 3 ); 
 				spacePrint( os, (*it)->getDescription(), 75, 5, 0 ); 
-				os << std::endl;
+				os << endl;
 			}
 
-	os << std::endl;
+	os << endl;
 
 	spacePrint( os, message, 75, 3, 0 );
 }
 
-inline void StdOutput::spacePrint( std::ostream& os, 
-						           const std::string& s, 
+inline void StdOutput::spacePrint( ostream& os, 
+						           const string& s, 
 						           int maxWidth, 
 						           int indentSpaces, 
 						           int secondLineOffset ) const
@@ -245,7 +245,7 @@ inline void StdOutput::spacePrint( std::ostream& os,
 			while ( start < len )
 				{
 					// find the substring length
-					// int stringLen = std::min<int>( len - start, allowedLen );
+					// int stringLen = min<int>( len - start, allowedLen );
 					// doing it this way to support a VisualC++ 2005 bug 
 					using namespace std; 
 					int stringLen = min<int>( len - start, allowedLen );
@@ -281,7 +281,7 @@ inline void StdOutput::spacePrint( std::ostream& os,
 							allowedLen -= secondLineOffset;
 						}
 
-					os << s.substr(start,stringLen) << std::endl;
+					os << s.substr(start,stringLen) << endl;
 
 					// so we don't start a line with a space
 					while ( s[stringLen+start] == ' ' && start < len )
@@ -294,7 +294,7 @@ inline void StdOutput::spacePrint( std::ostream& os,
 		{
 			for ( int i = 0; i < indentSpaces; i++ )
 				os << " ";
-			os << s << std::endl;
+			os << s << endl;
 		}
 }
 

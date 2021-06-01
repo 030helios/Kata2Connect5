@@ -460,7 +460,7 @@ bool OpenCLTuneParams::isValid() const {
 bool OpenCLTuneParams::operator==(const OpenCLTuneParams& other) const {
   if(this == &other)
     return true;
-  return std::memcmp(this,&other,sizeof(OpenCLTuneParams)) == 0;
+  return memcmp(this,&other,sizeof(OpenCLTuneParams)) == 0;
 }
 
 int OpenCLTuneParams::getXGemmMPaddingMult(bool usingFP16Compute, bool usingFP16TensorCores) const {
@@ -525,8 +525,8 @@ void OpenCLTuneParams::save(const string& filename, const OpenCLTuneParams& conf
 
 
 OpenCLTuneParams OpenCLTuneParams::load(const string& filename) {
-  std::vector<string> lines = Global::readFileLines(filename, '\n');
-  std::vector<string> filteredLines;
+  vector<string> lines = Global::readFileLines(filename, '\n');
+  vector<string> filteredLines;
   for(size_t i = 0; i<lines.size(); i++) {
     string line = Global::stripComments(lines[i]);
     line = Global::trim(line);
@@ -556,20 +556,20 @@ OpenCLTuneParams OpenCLTuneParams::load(const string& filename) {
 }
 
 static cl_mem constantReadOnlyBufferFloat(cl_context context, int numElts, float constant) {
-  std::vector<float> buf(numElts);
+  vector<float> buf(numElts);
   for(int i = 0; i<numElts; i++)
     buf[i] = constant;
   return createReadOnlyBuffer(context,buf);
 }
 static cl_mem randomReadOnlyBufferFloat(const char* seed, cl_context context, int numElts, double scale) {
-  std::vector<float> buf(numElts);
+  vector<float> buf(numElts);
   Rand rand(seed);
   for(int i = 0; i<numElts; i++)
     buf[i] = (float)rand.nextDouble(scale);
   return createReadOnlyBuffer(context,buf);
 }
 static cl_mem randomReadOnlyBufferHalf(const char* seed, cl_context context, int numElts, double scale) {
-  std::vector<half_t> buf(numElts);
+  vector<half_t> buf(numElts);
   Rand rand(seed);
   for(int i = 0; i<numElts; i++)
     buf[i] = half_float::half_cast<half_t>(rand.nextDouble(scale));
@@ -580,7 +580,7 @@ static cl_mem randomReadOnly3dPaddedBufferFloat(
   int batchSize, int ySize, int ySizePadded, int xSize, int xSizePadded,
   double scale
 ) {
-  std::vector<float> buf((size_t)batchSize*ySizePadded*xSizePadded);
+  vector<float> buf((size_t)batchSize*ySizePadded*xSizePadded);
   Rand rand(seed);
   size_t i = 0;
   for(int n = 0; n<batchSize; n++) {
@@ -600,7 +600,7 @@ static cl_mem randomReadOnly3dPaddedBufferHalf(
   int batchSize, int ySize, int ySizePadded, int xSize, int xSizePadded,
   double scale
 ) {
-  std::vector<half_t> buf((size_t)batchSize*ySizePadded*xSizePadded);
+  vector<half_t> buf((size_t)batchSize*ySizePadded*xSizePadded);
   Rand rand(seed);
   size_t i = 0;
   for(int n = 0; n<batchSize; n++) {
@@ -620,11 +620,11 @@ static cl_mem randomReadOnly3dPaddedBufferHalf(
 
 template<typename T>
 static void addConfigs(
-  std::vector<OpenCLTuneParams>& configs,
-  std::function<void(OpenCLTuneParams&, T value)> apply,
-  const std::vector<T>& values
+  vector<OpenCLTuneParams>& configs,
+  function<void(OpenCLTuneParams&, T value)> apply,
+  const vector<T>& values
 ) {
-  std::vector<OpenCLTuneParams> newCfgs;
+  vector<OpenCLTuneParams> newCfgs;
   for(int i = 0; i<values.size(); i++) {
     for(int j = 0; j<configs.size(); j++) {
       OpenCLTuneParams cfg = configs[j];
@@ -636,10 +636,10 @@ static void addConfigs(
 }
 
 static void filterConfigs(
-  std::vector<OpenCLTuneParams>& configs,
-  std::function<bool(const OpenCLTuneParams&)> isValid
+  vector<OpenCLTuneParams>& configs,
+  function<bool(const OpenCLTuneParams&)> isValid
 ) {
-  std::vector<OpenCLTuneParams> newCfgs;
+  vector<OpenCLTuneParams> newCfgs;
   for(int j = 0; j<configs.size(); j++) {
     if(isValid(configs[j]))
       newCfgs.push_back(configs[j]);
@@ -648,14 +648,14 @@ static void filterConfigs(
 }
 
 static void shuffleConfigs(
-  std::vector<OpenCLTuneParams>& configs
+  vector<OpenCLTuneParams>& configs
 ) {
   Rand rand;
   if(configs.size() == 0)
     return;
   for(int i = configs.size()-1; i > 0; i--) {
     int j = rand.nextUInt(i+1);
-    std::swap(configs[i],configs[j]);
+    swap(configs[i],configs[j]);
   }
 }
 
@@ -699,18 +699,18 @@ struct OpenCLTuneAccums {
 
 static bool testAllConfigs(
   bool stopOnReferenceImplFail,
-  const std::vector<OpenCLTuneParams>& configsToTest,
+  const vector<OpenCLTuneParams>& configsToTest,
   OpenCLTuneParams& currentConfig,
   OpenCLTuneParams referenceConfig,
   ostream& out,
   bool verboseErrors,
   bool verboseTuner,
   double errorToleranceScale,
-  std::function<string(const OpenCLTuneParams&)> getDesc,
-  std::function<OpenCLTuneAccums(const OpenCLTuneParams& cfg, std::vector<float>& ret)> testConfig,
+  function<string(const OpenCLTuneParams&)> getDesc,
+  function<OpenCLTuneAccums(const OpenCLTuneParams& cfg, vector<float>& ret)> testConfig,
   double& bestKernelsPerSecondBuf
 ) {
-  std::vector<OpenCLTuneParams> configs = configsToTest;
+  vector<OpenCLTuneParams> configs = configsToTest;
 
   //Insert the reference configuration first
   configs.insert(configs.begin(),referenceConfig);
@@ -722,8 +722,8 @@ static bool testAllConfigs(
   int numTested = 0;
   int numTestedRunnable = 0;
 
-  std::vector<float> referenceRet;
-  std::vector<float> ret;
+  vector<float> referenceRet;
+  vector<float> ret;
 
   out << "Testing " << configs.size() << " different configs" << endl;
   for(int i = 0; i<configs.size(); i++) {
@@ -755,11 +755,11 @@ static bool testAllConfigs(
       double squerr = 0.0;
       double sqmag = 0.0;
       if(referenceRet.size() != ret.size())
-        squerr = std::numeric_limits<double>::infinity();
+        squerr = numeric_limits<double>::infinity();
       else {
         for(int j = 0; j<referenceRet.size(); j++) {
           if(!isfinite(referenceRet[j]) || !isfinite(ret[j]))
-            squerr = std::numeric_limits<double>::infinity();
+            squerr = numeric_limits<double>::infinity();
           else {
             double diff = (double)referenceRet[j] - (double)ret[j];
             squerr += diff * diff;
@@ -800,9 +800,9 @@ static bool testAllConfigs(
   return true;
 }
 
-#define SETTER(field) std::function<void(OpenCLTuneParams&, int value)>([](OpenCLTuneParams& p, int value){ p.field = value; })
-#define ISVALID(field) std::function<bool(const OpenCLTuneParams&)>([](const OpenCLTuneParams& p){ return p.field.isValid(); })
-#define ISSIMPLE(field) std::function<bool(const OpenCLTuneParams&)>([](const OpenCLTuneParams& p){ return p.field.isSimple(); })
+#define SETTER(field) function<void(OpenCLTuneParams&, int value)>([](OpenCLTuneParams& p, int value){ p.field = value; })
+#define ISVALID(field) function<bool(const OpenCLTuneParams&)>([](const OpenCLTuneParams& p){ return p.field.isValid(); })
+#define ISSIMPLE(field) function<bool(const OpenCLTuneParams&)>([](const OpenCLTuneParams& p){ return p.field.isSimple(); })
 
 OpenCLTuner::ModelInfoForTuning OpenCLTuner::ModelInfoForTuning::ofDesc(const ModelDesc* desc) {
   OpenCLTuner::ModelInfoForTuning modelInfo;
@@ -821,7 +821,7 @@ static void tuneXGemmDirect(
   const OpenCLTuneParams& untunedConfig,
   const cl_context& context,
   cl_command_queue& commandQueue,
-  const std::vector<cl_device_id>& deviceIdsToUse,
+  const vector<cl_device_id>& deviceIdsToUse,
   int batchSize,
   int nnXLen,
   int nnYLen,
@@ -835,7 +835,7 @@ static void tuneXGemmDirect(
   out << "------------------------------------------------------" << endl;
   out << "Tuning xGemmDirect for 1x1 convolutions and matrix mult" << endl;
 
-  std::vector<OpenCLTuneParams> configs;
+  vector<OpenCLTuneParams> configs;
   configs.push_back(currentConfig);
   if(full) {
     addConfigs(configs,SETTER(xGemmDirect.WGD),{8,16,32,64});
@@ -890,7 +890,7 @@ static void tuneXGemmDirect(
 
   auto getDesc = [](const OpenCLTuneParams& cfg) { return cfg.xGemmDirect.desc(); };
 
-  auto test = [&](const OpenCLTuneParams& cfg, std::vector<float>& ret) {
+  auto test = [&](const OpenCLTuneParams& cfg, vector<float>& ret) {
     OpenCLTuneAccums accums;
 
     cl_int err;
@@ -906,10 +906,10 @@ static void tuneXGemmDirect(
     if(err != 0) { accums.bad = true; accums.badErr = err; return accums; }
 
     int maxChannels = modelInfo.maxConvChannels1x1;
-    maxChannels = std::max(modelInfo.trunkNumChannels,maxChannels);
-    maxChannels = std::max(modelInfo.midNumChannels,maxChannels);
-    maxChannels = std::max(modelInfo.regularNumChannels,maxChannels);
-    maxChannels = std::max(modelInfo.gpoolNumChannels,maxChannels);
+    maxChannels = max(modelInfo.trunkNumChannels,maxChannels);
+    maxChannels = max(modelInfo.midNumChannels,maxChannels);
+    maxChannels = max(modelInfo.regularNumChannels,maxChannels);
+    maxChannels = max(modelInfo.gpoolNumChannels,maxChannels);
 
     int ioNumFloats = batchSize*nnXLen*nnYLen*maxChannels;
     int filterNumFloats = maxChannels * maxChannels;
@@ -981,8 +981,8 @@ static void tuneXGemmDirect(
     verboseErrors,
     verboseTuner,
     errorToleranceScale,
-    std::function<string(const OpenCLTuneParams& cfg)>(getDesc),
-    std::function<OpenCLTuneAccums(const OpenCLTuneParams& cfg, std::vector<float>& ret)>(test),
+    function<string(const OpenCLTuneParams& cfg)>(getDesc),
+    function<OpenCLTuneAccums(const OpenCLTuneParams& cfg, vector<float>& ret)>(test),
     bestKernelsPerSecond
   );
   tunedConfig = currentConfig;
@@ -993,7 +993,7 @@ static bool tuneXGemm(
   const OpenCLTuneParams& untunedConfig,
   const cl_context& context,
   cl_command_queue& commandQueue,
-  const std::vector<cl_device_id>& deviceIdsToUse,
+  const vector<cl_device_id>& deviceIdsToUse,
   int batchSize,
   int nnXLen,
   int nnYLen,
@@ -1012,7 +1012,7 @@ static bool tuneXGemm(
   else
     out << "Tuning xGemm for convolutions" << endl;
 
-  std::vector<OpenCLTuneParams> configs;
+  vector<OpenCLTuneParams> configs;
   configs.push_back(currentConfig);
   if(full) {
     addConfigs(configs,SETTER(xGemm.MWG),{8,16,32,64,128});
@@ -1084,7 +1084,7 @@ static bool tuneXGemm(
 
   auto getDesc = [](const OpenCLTuneParams& cfg) { return cfg.xGemm.desc(); };
 
-  auto test = [&](const OpenCLTuneParams& cfg, std::vector<float>& ret) {
+  auto test = [&](const OpenCLTuneParams& cfg, vector<float>& ret) {
     OpenCLTuneAccums accums;
 
     cl_int err;
@@ -1108,10 +1108,10 @@ static bool tuneXGemm(
     int inTileXYSize = inTileXSize * inTileYSize;
 
     int maxChannels = modelInfo.maxConvChannels3x3;
-    maxChannels = std::max(modelInfo.trunkNumChannels,maxChannels);
-    maxChannels = std::max(modelInfo.midNumChannels,maxChannels);
-    maxChannels = std::max(modelInfo.regularNumChannels,maxChannels);
-    maxChannels = std::max(modelInfo.gpoolNumChannels,maxChannels);
+    maxChannels = max(modelInfo.trunkNumChannels,maxChannels);
+    maxChannels = max(modelInfo.midNumChannels,maxChannels);
+    maxChannels = max(modelInfo.regularNumChannels,maxChannels);
+    maxChannels = max(modelInfo.gpoolNumChannels,maxChannels);
 
     int numTilesTotalPadded = roundUpToMultiple(numTilesTotal,cfg.xGemm.MWG);
     int maxOutChannelsPadded = roundUpToMultiple(maxChannels,cfg.xGemm.NWG);
@@ -1213,8 +1213,8 @@ static bool tuneXGemm(
     verboseErrors,
     verboseTuner,
     errorToleranceScale,
-    std::function<string(const OpenCLTuneParams& cfg)>(getDesc),
-    std::function<OpenCLTuneAccums(const OpenCLTuneParams& cfg, std::vector<float>& ret)>(test),
+    function<string(const OpenCLTuneParams& cfg)>(getDesc),
+    function<OpenCLTuneAccums(const OpenCLTuneParams& cfg, vector<float>& ret)>(test),
     bestKernelsPerSecond
   );
   tunedConfig = currentConfig;
@@ -1226,7 +1226,7 @@ static bool tuneXGemm16(
   const OpenCLTuneParams& untunedConfig,
   const cl_context& context,
   cl_command_queue& commandQueue,
-  const std::vector<cl_device_id>& deviceIdsToUse,
+  const vector<cl_device_id>& deviceIdsToUse,
   int batchSize,
   int nnXLen,
   int nnYLen,
@@ -1241,7 +1241,7 @@ static bool tuneXGemm16(
   out << "------------------------------------------------------" << endl;
   out << "Tuning xGemm16 for convolutions" << endl;
 
-  std::vector<OpenCLTuneParams> configs;
+  vector<OpenCLTuneParams> configs;
   configs.push_back(currentConfig);
   if(full) {
     addConfigs(configs,SETTER(xGemm16.MWG),{8,16,32,64,128});
@@ -1313,7 +1313,7 @@ static bool tuneXGemm16(
 
   auto getDesc = [](const OpenCLTuneParams& cfg) { return cfg.xGemm16.desc(); };
 
-  auto test = [&](const OpenCLTuneParams& cfg, std::vector<float>& ret) {
+  auto test = [&](const OpenCLTuneParams& cfg, vector<float>& ret) {
     OpenCLTuneAccums accums;
 
     cl_int err;
@@ -1337,10 +1337,10 @@ static bool tuneXGemm16(
     int inTileXYSize = inTileXSize * inTileYSize;
 
     int maxChannels = modelInfo.maxConvChannels3x3;
-    maxChannels = std::max(modelInfo.trunkNumChannels,maxChannels);
-    maxChannels = std::max(modelInfo.midNumChannels,maxChannels);
-    maxChannels = std::max(modelInfo.regularNumChannels,maxChannels);
-    maxChannels = std::max(modelInfo.gpoolNumChannels,maxChannels);
+    maxChannels = max(modelInfo.trunkNumChannels,maxChannels);
+    maxChannels = max(modelInfo.midNumChannels,maxChannels);
+    maxChannels = max(modelInfo.regularNumChannels,maxChannels);
+    maxChannels = max(modelInfo.gpoolNumChannels,maxChannels);
 
     int numTilesTotalPadded = roundUpToMultiple(numTilesTotal,cfg.xGemm16.MWG);
     int maxOutChannelsPadded = roundUpToMultiple(maxChannels,cfg.xGemm16.NWG);
@@ -1428,8 +1428,8 @@ static bool tuneXGemm16(
     verboseErrors,
     verboseTuner,
     errorToleranceScale,
-    std::function<string(const OpenCLTuneParams& cfg)>(getDesc),
-    std::function<OpenCLTuneAccums(const OpenCLTuneParams& cfg, std::vector<float>& ret)>(test),
+    function<string(const OpenCLTuneParams& cfg)>(getDesc),
+    function<OpenCLTuneAccums(const OpenCLTuneParams& cfg, vector<float>& ret)>(test),
     bestKernelsPerSecond
   );
   if(suc) {
@@ -1444,7 +1444,7 @@ static bool tuneHGemmWmma(
   const OpenCLTuneParams& untunedConfig,
   const cl_context& context,
   cl_command_queue& commandQueue,
-  const std::vector<cl_device_id>& deviceIdsToUse,
+  const vector<cl_device_id>& deviceIdsToUse,
   int batchSize,
   int nnXLen,
   int nnYLen,
@@ -1459,7 +1459,7 @@ static bool tuneHGemmWmma(
   out << "------------------------------------------------------" << endl;
   out << "Tuning hGemmWmma for convolutions" << endl;
 
-  std::vector<OpenCLTuneParams> configs;
+  vector<OpenCLTuneParams> configs;
   configs.push_back(currentConfig);
   if(full) {
     addConfigs(configs,SETTER(hGemmWmma.MWG),{16,32,64,128});
@@ -1510,7 +1510,7 @@ static bool tuneHGemmWmma(
 
   auto getDesc = [](const OpenCLTuneParams& cfg) { return cfg.hGemmWmma.desc(); };
 
-  auto test = [&](const OpenCLTuneParams& cfg, std::vector<float>& ret) {
+  auto test = [&](const OpenCLTuneParams& cfg, vector<float>& ret) {
     OpenCLTuneAccums accums;
 
     cl_int err;
@@ -1534,10 +1534,10 @@ static bool tuneHGemmWmma(
     int inTileXYSize = inTileXSize * inTileYSize;
 
     int maxChannels = modelInfo.maxConvChannels3x3;
-    maxChannels = std::max(modelInfo.trunkNumChannels,maxChannels);
-    maxChannels = std::max(modelInfo.midNumChannels,maxChannels);
-    maxChannels = std::max(modelInfo.regularNumChannels,maxChannels);
-    maxChannels = std::max(modelInfo.gpoolNumChannels,maxChannels);
+    maxChannels = max(modelInfo.trunkNumChannels,maxChannels);
+    maxChannels = max(modelInfo.midNumChannels,maxChannels);
+    maxChannels = max(modelInfo.regularNumChannels,maxChannels);
+    maxChannels = max(modelInfo.gpoolNumChannels,maxChannels);
 
     int numTilesTotalPadded = roundUpToMultiple(numTilesTotal,cfg.hGemmWmma.MWG);
     int maxOutChannelsPadded = roundUpToMultiple(maxChannels,cfg.hGemmWmma.NWG);
@@ -1625,8 +1625,8 @@ static bool tuneHGemmWmma(
     verboseErrors,
     verboseTuner,
     errorToleranceScale,
-    std::function<string(const OpenCLTuneParams& cfg)>(getDesc),
-    std::function<OpenCLTuneAccums(const OpenCLTuneParams& cfg, std::vector<float>& ret)>(test),
+    function<string(const OpenCLTuneParams& cfg)>(getDesc),
+    function<OpenCLTuneAccums(const OpenCLTuneParams& cfg, vector<float>& ret)>(test),
     bestKernelsPerSecond
   );
   if(suc) {
@@ -1640,7 +1640,7 @@ static void tuneTransform(
   const OpenCLTuneParams& untunedConfig,
   const cl_context& context,
   cl_command_queue& commandQueue,
-  const std::vector<cl_device_id>& deviceIdsToUse,
+  const vector<cl_device_id>& deviceIdsToUse,
   int batchSize,
   int nnXLen,
   int nnYLen,
@@ -1655,7 +1655,7 @@ static void tuneTransform(
   out << "------------------------------------------------------" << endl;
   out << "Tuning winograd transform for convolutions" << endl;
 
-  std::vector<OpenCLTuneParams> configs;
+  vector<OpenCLTuneParams> configs;
   configs.push_back(currentConfig);
   if(full) {
     addConfigs(configs,SETTER(conv3x3.transLocalSize0),{1,2,4,8,16,32,64,128});
@@ -1676,7 +1676,7 @@ static void tuneTransform(
 
   auto getDesc = [](const OpenCLTuneParams& cfg) { return cfg.conv3x3.transDesc(); };
 
-  auto test = [&](const OpenCLTuneParams& cfg, std::vector<float>& ret) {
+  auto test = [&](const OpenCLTuneParams& cfg, vector<float>& ret) {
     OpenCLTuneAccums accums;
 
     cl_int err;
@@ -1700,10 +1700,10 @@ static void tuneTransform(
     int inTileYSize = cfg.conv3x3.INTILE_YSIZE;
 
     int maxChannels = modelInfo.maxConvChannels3x3;
-    maxChannels = std::max(modelInfo.trunkNumChannels,maxChannels);
-    maxChannels = std::max(modelInfo.midNumChannels,maxChannels);
-    maxChannels = std::max(modelInfo.regularNumChannels,maxChannels);
-    maxChannels = std::max(modelInfo.gpoolNumChannels,maxChannels);
+    maxChannels = max(modelInfo.trunkNumChannels,maxChannels);
+    maxChannels = max(modelInfo.midNumChannels,maxChannels);
+    maxChannels = max(modelInfo.regularNumChannels,maxChannels);
+    maxChannels = max(modelInfo.gpoolNumChannels,maxChannels);
 
     int mPaddingMult = cfg.getXGemmMPaddingMult(cfg.shouldUseFP16Compute, cfg.shouldUseFP16TensorCores);
     //int nPaddingMult = cfg.getXGemmNPaddingMult(cfg.shouldUseFP16Compute, cfg.shouldUseFP16TensorCores);
@@ -1788,8 +1788,8 @@ static void tuneTransform(
     verboseErrors,
     verboseTuner,
     errorToleranceScale,
-    std::function<string(const OpenCLTuneParams& cfg)>(getDesc),
-    std::function<OpenCLTuneAccums(const OpenCLTuneParams& cfg, std::vector<float>& ret)>(test),
+    function<string(const OpenCLTuneParams& cfg)>(getDesc),
+    function<OpenCLTuneAccums(const OpenCLTuneParams& cfg, vector<float>& ret)>(test),
     bestKernelsPerSecond
   );
 
@@ -1801,7 +1801,7 @@ static void tuneUntransform(
   const OpenCLTuneParams& untunedConfig,
   const cl_context& context,
   cl_command_queue& commandQueue,
-  const std::vector<cl_device_id>& deviceIdsToUse,
+  const vector<cl_device_id>& deviceIdsToUse,
   int batchSize,
   int nnXLen,
   int nnYLen,
@@ -1816,7 +1816,7 @@ static void tuneUntransform(
   out << "------------------------------------------------------" << endl;
   out << "Tuning winograd untransform for convolutions" << endl;
 
-  std::vector<OpenCLTuneParams> configs;
+  vector<OpenCLTuneParams> configs;
   configs.push_back(currentConfig);
   if(full) {
     addConfigs(configs,SETTER(conv3x3.untransLocalSize0),{1,2,4,8,16,32,64});
@@ -1840,7 +1840,7 @@ static void tuneUntransform(
 
   auto getDesc = [](const OpenCLTuneParams& cfg) { return cfg.conv3x3.untransDesc(); };
 
-  auto test = [&](const OpenCLTuneParams& cfg, std::vector<float>& ret) {
+  auto test = [&](const OpenCLTuneParams& cfg, vector<float>& ret) {
     OpenCLTuneAccums accums;
 
     cl_int err;
@@ -1864,10 +1864,10 @@ static void tuneUntransform(
     int inTileYSize = cfg.conv3x3.INTILE_YSIZE;
 
     int maxChannels = modelInfo.maxConvChannels3x3;
-    maxChannels = std::max(modelInfo.trunkNumChannels,maxChannels);
-    maxChannels = std::max(modelInfo.midNumChannels,maxChannels);
-    maxChannels = std::max(modelInfo.regularNumChannels,maxChannels);
-    maxChannels = std::max(modelInfo.gpoolNumChannels,maxChannels);
+    maxChannels = max(modelInfo.trunkNumChannels,maxChannels);
+    maxChannels = max(modelInfo.midNumChannels,maxChannels);
+    maxChannels = max(modelInfo.regularNumChannels,maxChannels);
+    maxChannels = max(modelInfo.gpoolNumChannels,maxChannels);
 
     int mPaddingMult = cfg.getXGemmMPaddingMult(cfg.shouldUseFP16Compute, cfg.shouldUseFP16TensorCores);
     int nPaddingMult = cfg.getXGemmNPaddingMult(cfg.shouldUseFP16Compute, cfg.shouldUseFP16TensorCores);
@@ -1952,8 +1952,8 @@ static void tuneUntransform(
     verboseErrors,
     verboseTuner,
     errorToleranceScale,
-    std::function<string(const OpenCLTuneParams& cfg)>(getDesc),
-    std::function<OpenCLTuneAccums(const OpenCLTuneParams& cfg, std::vector<float>& ret)>(test),
+    function<string(const OpenCLTuneParams& cfg)>(getDesc),
+    function<OpenCLTuneAccums(const OpenCLTuneParams& cfg, vector<float>& ret)>(test),
     bestKernelsPerSecond
   );
 
@@ -1965,7 +1965,7 @@ static void tuneGPool(
   const OpenCLTuneParams& untunedConfig,
   const cl_context& context,
   cl_command_queue& commandQueue,
-  const std::vector<cl_device_id>& deviceIdsToUse,
+  const vector<cl_device_id>& deviceIdsToUse,
   int batchSize,
   int nnXLen,
   int nnYLen,
@@ -1980,11 +1980,11 @@ static void tuneGPool(
   out << "------------------------------------------------------" << endl;
   out << "Tuning global pooling strides" << endl;
 
-  std::vector<OpenCLTuneParams> configs;
+  vector<OpenCLTuneParams> configs;
   configs.push_back(currentConfig);
 
   auto powersOfTwoUpTo = [](int n) {
-    std::vector<int> vec;
+    vector<int> vec;
     for(int i = 1; i <= n; i *= 2)
       vec.push_back(i);
     return vec;
@@ -1993,13 +1993,13 @@ static void tuneGPool(
   int numChannels = modelInfo.gpoolNumChannels;
   if(full) {
     addConfigs(configs,SETTER(gPool.XYSTRIDE),{1,2,4,8,16,32,64});
-    addConfigs(configs,SETTER(gPool.CHANNELSTRIDE),powersOfTwoUpTo(std::min(64,numChannels)));
-    addConfigs(configs,SETTER(gPool.BATCHSTRIDE),powersOfTwoUpTo(std::min(4,batchSize)));
+    addConfigs(configs,SETTER(gPool.CHANNELSTRIDE),powersOfTwoUpTo(min(64,numChannels)));
+    addConfigs(configs,SETTER(gPool.BATCHSTRIDE),powersOfTwoUpTo(min(4,batchSize)));
   }
   else {
     addConfigs(configs,SETTER(gPool.XYSTRIDE),{1,2,4,8,16,32});
-    addConfigs(configs,SETTER(gPool.CHANNELSTRIDE),powersOfTwoUpTo(std::min(32,numChannels)));
-    addConfigs(configs,SETTER(gPool.BATCHSTRIDE),powersOfTwoUpTo(std::min(4,batchSize)));
+    addConfigs(configs,SETTER(gPool.CHANNELSTRIDE),powersOfTwoUpTo(min(32,numChannels)));
+    addConfigs(configs,SETTER(gPool.BATCHSTRIDE),powersOfTwoUpTo(min(4,batchSize)));
   }
 
   filterConfigs(configs,ISVALID(gPool));
@@ -2013,7 +2013,7 @@ static void tuneGPool(
 
   auto getDesc = [](const OpenCLTuneParams& cfg) { return cfg.gPool.desc(); };
 
-  auto test = [&](const OpenCLTuneParams& cfg, std::vector<float>& ret) {
+  auto test = [&](const OpenCLTuneParams& cfg, vector<float>& ret) {
     OpenCLTuneAccums accums;
 
     cl_int err;
@@ -2091,8 +2091,8 @@ static void tuneGPool(
     verboseErrors,
     verboseTuner,
     errorToleranceScale,
-    std::function<string(const OpenCLTuneParams& cfg)>(getDesc),
-    std::function<OpenCLTuneAccums(const OpenCLTuneParams& cfg, std::vector<float>& ret)>(test),
+    function<string(const OpenCLTuneParams& cfg)>(getDesc),
+    function<OpenCLTuneAccums(const OpenCLTuneParams& cfg, vector<float>& ret)>(test),
     bestKernelsPerSecond
   );
 
@@ -2121,7 +2121,7 @@ void OpenCLTuner::tune(
   const InitializedDevice* device = devicesContext.findGpuExn(gpuIdx);
   const cl_context& context = device->context;
   cl_command_queue commandQueue = device->commandQueue;
-  const std::vector<cl_device_id>& deviceIdsToUse = { device->info.deviceId };
+  const vector<cl_device_id>& deviceIdsToUse = { device->info.deviceId };
 
   out << "Beginning GPU tuning for " << device->info.name << " modelVersion " << modelInfo.version << " channels " << modelInfo.trunkNumChannels << endl;
 
@@ -2542,7 +2542,7 @@ OpenCLTuneParams OpenCLTuner::loadOrAutoTune(
     cerr << "*** On some systems, this may take several minutes, please be patient ***" << endl;
   }
 
-  std::vector<DeviceInfo> allDeviceInfos = DeviceInfo::getAllDeviceInfosOnSystem(logger);
+  vector<DeviceInfo> allDeviceInfos = DeviceInfo::getAllDeviceInfosOnSystem(logger);
   if(gpuIdxForTuning < 0 || gpuIdxForTuning >= allDeviceInfos.size())
     throw StringError("Requested gpuIdxForTuning for autotuning was not a valid device: " + Global::intToString(gpuIdxForTuning));
   if(allDeviceInfos[gpuIdxForTuning].name != gpuName)
@@ -2610,7 +2610,7 @@ void OpenCLTuner::autoTuneEverything(
     cerr << "*** If this has not already been done, it may take some time, please be patient ***" << endl;
   }
 
-  std::vector<DeviceInfo> allDeviceInfos = DeviceInfo::getAllDeviceInfosOnSystem(logger);
+  vector<DeviceInfo> allDeviceInfos = DeviceInfo::getAllDeviceInfosOnSystem(logger);
   bool enableProfiling = true;
   DevicesContext devicesContext(allDeviceInfos, {gpuIdxForTuning}, logger, enableProfiling);
   //Relookup the gpuIdx to handle the case where it was -1 and the user requested a default
@@ -2623,7 +2623,7 @@ void OpenCLTuner::autoTuneEverything(
 
   //Just hardcodedly tune all the models that KataGo's main run uses.
   static_assert(NNModelVersion::latestModelVersionImplemented == 10, "");
-  std::vector<ModelInfoForTuning> modelInfos;
+  vector<ModelInfoForTuning> modelInfos;
   {
     ModelInfoForTuning modelInfo;
     modelInfo.maxConvChannels1x1 = 96;

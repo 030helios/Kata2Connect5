@@ -137,21 +137,21 @@ double FancyMath::normToTApprox(double z, double degreesOfFreedom) {
 #define APPROX_EQ(x,y,tolerance) testApproxEq((x),(y),(tolerance), #x, #y, __FILE__, __LINE__)
 static void testApproxEq(double x, double y, double tolerance, const char* msgX, const char* msgY, const char *file, int line) {
 
-  double maxDiff = tolerance * std::max(std::abs(x),std::max(std::abs(y),1.0));
-  if(std::abs(x-y) <= maxDiff)
+  double maxDiff = tolerance * max(abs(x),max(abs(y),1.0));
+  if(abs(x-y) <= maxDiff)
     return;
   Global::fatalError(
-    std::string("Failed approx equal: ") + std::string(msgX) + " " + std::string(msgY) + "\n" +
-    std::string("file: ") + std::string(file) + "\n" + std::string("line: ") + Global::intToString(line) + "\n" +
-    std::string("Values: ") + Global::strprintf("%.17f",x) + " " + Global::strprintf("%.17f",y)
+    string("Failed approx equal: ") + string(msgX) + " " + string(msgY) + "\n" +
+    string("file: ") + string(file) + "\n" + string("line: ") + Global::intToString(line) + "\n" +
+    string("Values: ") + Global::strprintf("%.17f",x) + " " + Global::strprintf("%.17f",y)
   );
 }
 
 void FancyMath::runTests() {
   cout << "Running fancy math tests" << endl;
   ostringstream out;
-  out << std::setprecision(10);
-  out << std::fixed;
+  out << setprecision(10);
+  out << fixed;
 
   {
     //const char* name = "Continued fraction tests";

@@ -14,7 +14,7 @@ void NeuralNet::globalCleanup() {
 }
 
 ComputeContext* NeuralNet::createComputeContext(
-  const std::vector<int>& gpuIdxs,
+  const vector<int>& gpuIdxs,
   Logger* logger,
   int nnXLen,
   int nnYLen,
@@ -116,7 +116,7 @@ void NeuralNet::getOutput(
   InputBuffers* inputBuffers,
   int numBatchEltsFilled,
   NNResultBuf** inputBufs,
-  std::vector<NNOutput*>& outputs
+  vector<NNOutput*>& outputs
 ) {
   (void)gpuHandle;
   (void)inputBuffers;
@@ -135,8 +135,8 @@ bool NeuralNet::testEvaluateConv(
   int nnYLen,
   bool useFP16,
   bool useNHWC,
-  const std::vector<float>& inputBuffer,
-  std::vector<float>& outputBuffer
+  const vector<float>& inputBuffer,
+  vector<float>& outputBuffer
 ) {
   (void)desc;
   (void)batchSize;
@@ -157,9 +157,9 @@ bool NeuralNet::testEvaluateBatchNorm(
   int nnYLen,
   bool useFP16,
   bool useNHWC,
-  const std::vector<float>& inputBuffer,
-  const std::vector<float>& maskBuffer,
-  std::vector<float>& outputBuffer
+  const vector<float>& inputBuffer,
+  const vector<float>& maskBuffer,
+  vector<float>& outputBuffer
 ) {
   (void)desc;
   (void)batchSize;
@@ -180,9 +180,9 @@ bool NeuralNet::testEvaluateResidualBlock(
   int nnYLen,
   bool useFP16,
   bool useNHWC,
-  const std::vector<float>& inputBuffer,
-  const std::vector<float>& maskBuffer,
-  std::vector<float>& outputBuffer
+  const vector<float>& inputBuffer,
+  const vector<float>& maskBuffer,
+  vector<float>& outputBuffer
 ) {
   (void)desc;
   (void)batchSize;
@@ -203,9 +203,9 @@ bool NeuralNet::testEvaluateGlobalPoolingResidualBlock(
   int nnYLen,
   bool useFP16,
   bool useNHWC,
-  const std::vector<float>& inputBuffer,
-  const std::vector<float>& maskBuffer,
-  std::vector<float>& outputBuffer
+  const vector<float>& inputBuffer,
+  const vector<float>& maskBuffer,
+  vector<float>& outputBuffer
 ) {
   (void)desc;
   (void)batchSize;

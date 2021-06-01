@@ -49,7 +49,7 @@ static double logLikelihoodOfWLSecondDerivative(
 //Compute only the part of the log likelihood depending on given player
 static double computeLocalLogLikelihood(
   int player,
-  const std::vector<double>& elos,
+  const vector<double>& elos,
   const ComputeElos::WLRecord* winMatrix,
   int numPlayers,
   double priorWL
@@ -69,7 +69,7 @@ static double computeLocalLogLikelihood(
 //Compute the second derivative of the log likelihood with respect to the current player
 static double computeLocalLogLikelihoodSecondDerivative(
   int player,
-  const std::vector<double>& elos,
+  const vector<double>& elos,
   const ComputeElos::WLRecord* winMatrix,
   int numPlayers,
   double priorWL
@@ -90,22 +90,22 @@ static double computeLocalLogLikelihoodSecondDerivative(
 //Approximately compute the standard deviation of all players' Elos, assuming each time that all other
 //player Elos are completely confident.
 vector<double> ComputeElos::computeApproxEloStdevs(
-  const std::vector<double>& elos,
+  const vector<double>& elos,
   const ComputeElos::WLRecord* winMatrix,
   int numPlayers,
   double priorWL
 ) {
   //Very crude - just discretely model the distribution and look at what its stdev is
-  std::vector<double> eloStdevs(numPlayers,0.0);
+  vector<double> eloStdevs(numPlayers,0.0);
 
   const int radius = 1500;
-  std::vector<double> relProbs(radius*2+1,0.0);
+  vector<double> relProbs(radius*2+1,0.0);
   const double step = 1.0; //one-elo increments
 
   for(int player = 0; player < numPlayers; player++) {
     double logLikelihood = computeLocalLogLikelihood(player,elos,winMatrix,numPlayers,priorWL);
     double sumRelProbs = 0.0;
-    std::vector<double> tempElos = elos;
+    vector<double> tempElos = elos;
     for(int i = 0; i < radius*2+1; i++) {
       double elo = elos[player] + (i - radius) * step;
       tempElos[player] = elo;
@@ -134,9 +134,9 @@ vector<double> ComputeElos::computeElos(
   double tolerance,
   ostream* out
 ) {
-  std::vector<double> logGammas(numPlayers,0.0);
+  vector<double> logGammas(numPlayers,0.0);
 
-  std::vector<double> numWins(numPlayers,0.0);
+  vector<double> numWins(numPlayers,0.0);
   for(int x = 0; x<numPlayers; x++) {
     for(int y = 0; y<numPlayers; y++) {
       if(x == y)
@@ -146,18 +146,18 @@ vector<double> ComputeElos::computeElos(
     }
   }
 
-  std::vector<double> matchLogGammaSums(numPlayers*numPlayers);
-  std::vector<double> priorMatchLogGammaSums(numPlayers);
+  vector<double> matchLogGammaSums(numPlayers*numPlayers);
+  vector<double> priorMatchLogGammaSums(numPlayers);
 
   auto recomputeLogGammaSums = [&]() {
     for(int x = 0; x<numPlayers; x++) {
       for(int y = 0; y<numPlayers; y++) {
         if(x == y)
           continue;
-        double maxLogGamma = std::max(logGammas[x],logGammas[y]);
+        double maxLogGamma = max(logGammas[x],logGammas[y]);
         matchLogGammaSums[x*numPlayers+y] = maxLogGamma + log(exp(logGammas[x] - maxLogGamma) + exp(logGammas[y] - maxLogGamma));
       }
-      double maxLogGamma = std::max(logGammas[x],0.0);
+      double maxLogGamma = max(logGammas[x],0.0);
       priorMatchLogGammaSums[x] = maxLogGamma + log(exp(logGammas[x] - maxLogGamma) + exp(0.0 - maxLogGamma));
     }
   };
@@ -186,7 +186,7 @@ vector<double> ComputeElos::computeElos(
       logGammas[x] = newLogGamma;
 
       double eloDiff = ELO_PER_LOG_GAMMA * abs(logGammaDiff);
-      maxEloDiff = std::max(eloDiff,maxEloDiff);
+      maxEloDiff = max(eloDiff,maxEloDiff);
     }
     return maxEloDiff;
   };
@@ -200,7 +200,7 @@ vector<double> ComputeElos::computeElos(
       break;
   }
 
-  std::vector<double> elos(numPlayers,0.0);
+  vector<double> elos(numPlayers,0.0);
   for(int x = 0; x<numPlayers; x++) {
     elos[x] = ELO_PER_LOG_GAMMA * logGammas[x];
   }
@@ -217,11 +217,11 @@ vector<double> ComputeElos::computeElos(
   double tolerance,
   ostream* out
 ) {
-  std::vector<double> elos(numPlayers,0.0);
+  vector<double> elos(numPlayers,0.0);
 
 
   //General gradient-free algorithm
-  std::vector<double> nextDelta(numPlayers,100.0);
+  vector<double> nextDelta(numPlayers,100.0);
   auto iterate = [&]() {
     double maxEloDiff = 0;
     for(int x = 0; x<numPlayers; x++) {
@@ -249,7 +249,7 @@ vector<double> ComputeElos::computeElos(
       }
 
       double eloDiff = nextDelta[x];
-      maxEloDiff = std::max(eloDiff,maxEloDiff);
+      maxEloDiff = max(eloDiff,maxEloDiff);
     }
     return maxEloDiff;
   };
@@ -268,7 +268,7 @@ vector<double> ComputeElos::computeElos(
 }
 
 static bool approxEqual(double x, double y, double tolerance) {
-  return std::abs(x - y) < tolerance;
+  return abs(x - y) < tolerance;
 }
 
 void ComputeElos::runTests() {
@@ -276,7 +276,7 @@ void ComputeElos::runTests() {
   (void)computeLocalLogLikelihoodSecondDerivative;
 
   // auto printEloStuff = [&](vector<double>& elos, ComputeElos::WLRecord* winMatrix, int numPlayers, double priorWL) {
-  //   std::vector<double> eloStdevs = ComputeElos::computeApproxEloStdevs(elos,winMatrix,numPlayers,priorWL);
+  //   vector<double> eloStdevs = ComputeElos::computeApproxEloStdevs(elos,winMatrix,numPlayers,priorWL);
   //   for(int i = 0; i<numPlayers; i++) {
   //     double local2d = computeLocalLogLikelihoodSecondDerivative(i,elos,winMatrix,numPlayers,priorWL);
 
@@ -304,7 +304,7 @@ void ComputeElos::runTests() {
     double priorWL = 0.1;
     int maxIters = 1000;
 
-    std::vector<double> elos = ComputeElos::computeElos(winMatrix,numPlayers,priorWL,maxIters,optTolerance,&out);
+    vector<double> elos = ComputeElos::computeElos(winMatrix,numPlayers,priorWL,maxIters,optTolerance,&out);
     testAssert(elos.size() == 1);
     testAssert(approxEqual(elos[0], 0.0, testTolerance));
 
@@ -338,7 +338,7 @@ void ComputeElos::runTests() {
     winMatrix[2*numPlayers+1] = ComputeElos::WLRecord(100.0,0.0);
     winMatrix[2*numPlayers+2] = ComputeElos::WLRecord(0.0,0.0);
 
-    std::vector<double> elos = ComputeElos::computeElos(winMatrix,numPlayers,priorWL,maxIters,optTolerance,&out);
+    vector<double> elos = ComputeElos::computeElos(winMatrix,numPlayers,priorWL,maxIters,optTolerance,&out);
     testAssert(elos.size() == 3);
     testAssert(approxEqual(elos[0], 0.0, testTolerance));
     testAssert(approxEqual(elos[1], 59.9833, testTolerance));
@@ -384,7 +384,7 @@ void ComputeElos::runTests() {
     winMatrix[2*numPlayers+1] = ComputeElos::WLRecord(1.0,0.0);
     winMatrix[2*numPlayers+2] = ComputeElos::WLRecord(0.0,0.0);
 
-    std::vector<double> elos = ComputeElos::computeElos(winMatrix,numPlayers,priorWL,maxIters,optTolerance,&out);
+    vector<double> elos = ComputeElos::computeElos(winMatrix,numPlayers,priorWL,maxIters,optTolerance,&out);
     testAssert(elos.size() == 3);
     testAssert(approxEqual(elos[0], 76.5228, testTolerance));
     testAssert(approxEqual(elos[1], 76.5228, testTolerance));
@@ -423,7 +423,7 @@ void ComputeElos::runTests() {
     winMatrix[2*numPlayers+1] = ComputeElos::WLRecord(0.0,5.0);
     winMatrix[2*numPlayers+2] = ComputeElos::WLRecord(0.0,0.0);
 
-    std::vector<double> elos = ComputeElos::computeElos(winMatrix,numPlayers,priorWL,maxIters,optTolerance,&out);
+    vector<double> elos = ComputeElos::computeElos(winMatrix,numPlayers,priorWL,maxIters,optTolerance,&out);
     testAssert(elos.size() == 3);
     testAssert(approxEqual(elos[0], -190.849, testTolerance));
     testAssert(approxEqual(elos[1], 190.849, testTolerance));
@@ -463,7 +463,7 @@ void ComputeElos::runTests() {
     winMatrix[2*numPlayers+1] = ComputeElos::WLRecord(0.0,5.0);
     winMatrix[2*numPlayers+2] = ComputeElos::WLRecord(0.0,0.0);
 
-    std::vector<double> elos = ComputeElos::computeElos(winMatrix,numPlayers,priorWL,maxIters,optTolerance,&out);
+    vector<double> elos = ComputeElos::computeElos(winMatrix,numPlayers,priorWL,maxIters,optTolerance,&out);
     testAssert(elos.size() == 3);
     testAssert(approxEqual(elos[0], -266.471, testTolerance));
     testAssert(approxEqual(elos[1], 266.471, testTolerance));
@@ -503,7 +503,7 @@ void ComputeElos::runTests() {
     winMatrix[2*numPlayers+1] = ComputeElos::WLRecord(0.0,5.0);
     winMatrix[2*numPlayers+2] = ComputeElos::WLRecord(0.0,0.0);
 
-    std::vector<double> elos = ComputeElos::computeElos(winMatrix,numPlayers,priorWL,maxIters,optTolerance,&out);
+    vector<double> elos = ComputeElos::computeElos(winMatrix,numPlayers,priorWL,maxIters,optTolerance,&out);
     testAssert(elos.size() == 3);
     testAssert(approxEqual(elos[0], -322.013, testTolerance));
     testAssert(approxEqual(elos[1], 292.742, testTolerance));

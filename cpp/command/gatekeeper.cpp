@@ -21,8 +21,8 @@
 
 using namespace std;
 
-static std::atomic<bool> sigReceived(false);
-static std::atomic<bool> shouldStop(false);
+static atomic<bool> sigReceived(false);
+static atomic<bool> shouldStop(false);
 static void signalHandler(int signal)
 {
   if(signal == SIGINT || signal == SIGTERM) {
@@ -61,7 +61,7 @@ namespace {
 
     ofstream* sgfOut;
 
-    std::atomic<bool> terminated;
+    atomic<bool> terminated;
 
   public:
     NetAndStuff(ConfigParser& cfg, const string& nameB, const string& nameC, const string& tModelDir, NNEvaluator* nevalB, NNEvaluator* nevalC, ofstream* sOut)
@@ -296,15 +296,15 @@ int MainCmds::gatekeeper(int argc, const char* const* argv) {
   if(!logToStdout)
     cout << "Loaded all config stuff, watching for new neural nets in " + testModelsDir << endl;
 
-  if(!std::atomic_is_lock_free(&shouldStop))
+  if(!atomic_is_lock_free(&shouldStop))
     throw StringError("shouldStop is not lock free, signal-quitting mechanism for terminating matches will NOT work!");
-  std::signal(SIGINT, signalHandler);
-  std::signal(SIGTERM, signalHandler);
+  signal(SIGINT, signalHandler);
+  signal(SIGTERM, signalHandler);
 
-  std::mutex netAndStuffMutex;
+  mutex netAndStuffMutex;
   NetAndStuff* netAndStuff = NULL;
   bool netAndStuffDataIsWritten = false;
-  std::condition_variable waitNetAndStuffDataIsWritten;
+  condition_variable waitNetAndStuffDataIsWritten;
 
   //Looping thread for writing data for a single net
   auto dataWriteLoop = [&netAndStuffMutex,&netAndStuff,&netAndStuffDataIsWritten,&waitNetAndStuffDataIsWritten,&logger]() {
@@ -314,7 +314,7 @@ int MainCmds::gatekeeper(int argc, const char* const* argv) {
     netAndStuff->runWriteDataLoop(logger);
     logger.write("Data write loop finishing for neural net: " + modelNameBaseline + " vs " + modelNameCandidate);
 
-    std::unique_lock<std::mutex> lock(netAndStuffMutex);
+    unique_lock<mutex> lock(netAndStuffMutex);
     netAndStuffDataIsWritten = true;
     waitNetAndStuffDataIsWritten.notify_all();
 
@@ -355,7 +355,7 @@ int MainCmds::gatekeeper(int argc, const char* const* argv) {
       string renameDest = rejectedModelsDir + "/" + testModelName;
       logger.write("Rejecting " + testModelDir + " automatically since older than best accepted model");
       logger.write("Moving " + testModelDir + " to " + renameDest);
-      std::rename(testModelDir.c_str(),renameDest.c_str());
+      rename(testModelDir.c_str(),renameDest.c_str());
       return NULL;
     }
 
@@ -403,7 +403,7 @@ int MainCmds::gatekeeper(int argc, const char* const* argv) {
     &netAndStuff,
     &gameSeedBase
   ](int threadIdx) {
-    std::unique_lock<std::mutex> lock(netAndStuffMutex);
+    unique_lock<mutex> lock(netAndStuffMutex);
     netAndStuff->registerGameThread();
     logger.write("Game loop thread " + Global::intToString(threadIdx) + " starting game testing candidate: " + netAndStuff->modelNameCandidate);
 
@@ -463,7 +463,7 @@ int MainCmds::gatekeeper(int argc, const char* const* argv) {
       }
       else {
         for(int i = 0; i<4; i++) {
-          std::this_thread::sleep_for(std::chrono::seconds(1));
+          this_thread::sleep_for(chrono::seconds(1));
           if(shouldStop.load())
             break;
         }
@@ -482,11 +482,11 @@ int MainCmds::gatekeeper(int argc, const char* const* argv) {
     netAndStuffDataIsWritten = false;
 
     //And spawn off all the threads
-    std::thread newThread(dataWriteLoopProtected);
+    thread newThread(dataWriteLoopProtected);
     newThread.detach();
-    std::vector<std::thread> threads;
+    vector<thread> threads;
     for(int i = 0; i<numGameThreads; i++) {
-      threads.push_back(std::thread(gameLoopProtected,i));
+      threads.push_back(thread(gameLoopProtected,i));
     }
 
     //Wait for all game threads to stop
@@ -495,7 +495,7 @@ int MainCmds::gatekeeper(int argc, const char* const* argv) {
 
     //Wait for the data to all be written
     {
-      std::unique_lock<std::mutex> lock(netAndStuffMutex);
+      unique_lock<mutex> lock(netAndStuffMutex);
 
       //Mark as draining so the data write thread will quit
       netAndStuff->markAsDraining();
@@ -526,7 +526,7 @@ int MainCmds::gatekeeper(int argc, const char* const* argv) {
 
       string renameDest = rejectedModelsDir + "/" + netAndStuff->modelNameCandidate;
       logger.write("Moving " + netAndStuff->testModelDir + " to " + renameDest);
-      std::rename(netAndStuff->testModelDir.c_str(),renameDest.c_str());
+      rename(netAndStuff->testModelDir.c_str(),renameDest.c_str());
     }
     else {
       logger.write(
@@ -544,23 +544,23 @@ int MainCmds::gatekeeper(int argc, const char* const* argv) {
       //a filesystem
       if(selfplayDir != "") {
         MakeDir::make(selfplayDir + "/" + netAndStuff->modelNameCandidate);
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        this_thread::sleep_for(chrono::seconds(1));
         MakeDir::make(selfplayDir + "/" + netAndStuff->modelNameCandidate + "/" + "sgfs");
         MakeDir::make(selfplayDir + "/" + netAndStuff->modelNameCandidate + "/" + "tdata");
         MakeDir::make(selfplayDir + "/" + netAndStuff->modelNameCandidate + "/" + "vadata");
       }
-      std::this_thread::sleep_for(std::chrono::seconds(2));
+      this_thread::sleep_for(chrono::seconds(2));
 
       string renameDest = acceptedModelsDir + "/" + netAndStuff->modelNameCandidate;
       logger.write("Moving " + netAndStuff->testModelDir + " to " + renameDest);
-      std::rename(netAndStuff->testModelDir.c_str(),renameDest.c_str());
+      rename(netAndStuff->testModelDir.c_str(),renameDest.c_str());
     }
 
     //Clean up
     delete netAndStuff;
     netAndStuff = NULL;
     //Loop again after a short while
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    this_thread::sleep_for(chrono::seconds(2));
   }
 
   //Delete and clean up everything else

@@ -237,7 +237,7 @@ double ScoreValue::expectedWhiteScoreValue(
 
 void NNInputs::fillScoring(const Board& board, const Color* area, bool groupTax, float* scoring) {
   if(!groupTax) {
-    std::fill(scoring, scoring + Board::MAX_ARR_SIZE, 0.0f);
+    fill(scoring, scoring + Board::MAX_ARR_SIZE, 0.0f);
     for(int y = 0; y < board.y_size; y++) {
       for(int x = 0; x < board.x_size; x++) {
         Loc loc = Location::getLoc(x, y, board.x_size);
@@ -256,8 +256,8 @@ void NNInputs::fillScoring(const Board& board, const Color* area, bool groupTax,
     bool visited[Board::MAX_ARR_SIZE];
     Loc queue[Board::MAX_ARR_SIZE];
 
-    std::fill(visited, visited + Board::MAX_ARR_SIZE, false);
-    std::fill(scoring, scoring + Board::MAX_ARR_SIZE, 0.0f);
+    fill(visited, visited + Board::MAX_ARR_SIZE, false);
+    fill(scoring, scoring + Board::MAX_ARR_SIZE, 0.0f);
     for(int y = 0; y < board.y_size; y++) {
       for(int x = 0; x < board.x_size; x++) {
         Loc loc = Location::getLoc(x, y, board.x_size);
@@ -328,20 +328,20 @@ NNOutput::NNOutput(const NNOutput& other) {
   nnYLen = other.nnYLen;
   if(other.whiteOwnerMap != NULL) {
     whiteOwnerMap = new float[nnXLen * nnYLen];
-    std::copy(other.whiteOwnerMap, other.whiteOwnerMap + nnXLen * nnYLen, whiteOwnerMap);
+    copy(other.whiteOwnerMap, other.whiteOwnerMap + nnXLen * nnYLen, whiteOwnerMap);
   } else
     whiteOwnerMap = NULL;
 
   if(other.noisedPolicyProbs != NULL) {
     noisedPolicyProbs = new float[NNPos::MAX_NN_POLICY_SIZE];
-    std::copy(other.noisedPolicyProbs, other.noisedPolicyProbs + NNPos::MAX_NN_POLICY_SIZE, noisedPolicyProbs);
+    copy(other.noisedPolicyProbs, other.noisedPolicyProbs + NNPos::MAX_NN_POLICY_SIZE, noisedPolicyProbs);
   } else
     noisedPolicyProbs = NULL;
 
-  std::copy(other.policyProbs, other.policyProbs + NNPos::MAX_NN_POLICY_SIZE, policyProbs);
+  copy(other.policyProbs, other.policyProbs + NNPos::MAX_NN_POLICY_SIZE, policyProbs);
 }
 
-NNOutput::NNOutput(const std::vector<shared_ptr<NNOutput>>& others) {
+NNOutput::NNOutput(const vector<shared_ptr<NNOutput>>& others) {
   assert(others.size() < 1000000);
   int len = (int)others.size();
   float floatLen = (float)len;
@@ -393,7 +393,7 @@ NNOutput::NNOutput(const std::vector<shared_ptr<NNOutput>>& others) {
       if(other.whiteOwnerMap != NULL) {
         if(whiteOwnerMap == NULL) {
           whiteOwnerMap = new float[nnXLen * nnYLen];
-          std::fill(whiteOwnerMap, whiteOwnerMap + nnXLen * nnYLen, 0.0f);
+          fill(whiteOwnerMap, whiteOwnerMap + nnXLen * nnYLen, 0.0f);
         }
         whiteOwnerMapCount += 1.0f;
         for(int pos = 0; pos < nnXLen * nnYLen; pos++)
@@ -413,7 +413,7 @@ NNOutput::NNOutput(const std::vector<shared_ptr<NNOutput>>& others) {
   // Just give up if they don't all match in move legality
   {
     bool mismatch = false;
-    std::fill(policyProbs, policyProbs + NNPos::MAX_NN_POLICY_SIZE, 0.0f);
+    fill(policyProbs, policyProbs + NNPos::MAX_NN_POLICY_SIZE, 0.0f);
     for(int i = 0; i < len; i++) {
       const NNOutput& other = *(others[i]);
       for(int pos = 0; pos < NNPos::MAX_NN_POLICY_SIZE; pos++) {
@@ -426,7 +426,7 @@ NNOutput::NNOutput(const std::vector<shared_ptr<NNOutput>>& others) {
     // This should basically never happen, only on true hash collisions
     if(mismatch) {
       const NNOutput& other = *(others[0]);
-      std::copy(other.policyProbs, other.policyProbs + NNPos::MAX_NN_POLICY_SIZE, policyProbs);
+      copy(other.policyProbs, other.policyProbs + NNPos::MAX_NN_POLICY_SIZE, policyProbs);
     } else {
       for(int pos = 0; pos < NNPos::MAX_NN_POLICY_SIZE; pos++)
         policyProbs[pos] /= floatLen;
@@ -454,18 +454,18 @@ NNOutput& NNOutput::operator=(const NNOutput& other) {
     delete[] whiteOwnerMap;
   if(other.whiteOwnerMap != NULL) {
     whiteOwnerMap = new float[nnXLen * nnYLen];
-    std::copy(other.whiteOwnerMap, other.whiteOwnerMap + nnXLen * nnYLen, whiteOwnerMap);
+    copy(other.whiteOwnerMap, other.whiteOwnerMap + nnXLen * nnYLen, whiteOwnerMap);
   } else
     whiteOwnerMap = NULL;
   if(noisedPolicyProbs != NULL)
     delete[] noisedPolicyProbs;
   if(other.noisedPolicyProbs != NULL) {
     noisedPolicyProbs = new float[NNPos::MAX_NN_POLICY_SIZE];
-    std::copy(other.noisedPolicyProbs, other.noisedPolicyProbs + NNPos::MAX_NN_POLICY_SIZE, noisedPolicyProbs);
+    copy(other.noisedPolicyProbs, other.noisedPolicyProbs + NNPos::MAX_NN_POLICY_SIZE, noisedPolicyProbs);
   } else
     noisedPolicyProbs = NULL;
 
-  std::copy(other.policyProbs, other.policyProbs + NNPos::MAX_NN_POLICY_SIZE, policyProbs);
+  copy(other.policyProbs, other.policyProbs + NNPos::MAX_NN_POLICY_SIZE, policyProbs);
 
   return *this;
 }
@@ -546,7 +546,7 @@ static void copyWithSymmetry(
   bool flipX = (symmetry & 0x2) != 0;
   bool flipY = (symmetry & 0x1) != 0;
   if(transpose && !reverse)
-    std::swap(flipX, flipY);
+    swap(flipX, flipY);
   if(useNHWC) {
     int nStride = hSize * wSize * cSize;
     int hStride = wSize * cSize;
@@ -566,7 +566,7 @@ static void copyWithSymmetry(
     }
 
     if(transpose)
-      std::swap(hStrideNew, wStrideNew);
+      swap(hStrideNew, wStrideNew);
 
     for(int n = 0; n < nSize; n++) {
       for(int h = 0; h < hSize; h++) {
@@ -601,7 +601,7 @@ static void copyWithSymmetry(
     }
 
     if(transpose)
-      std::swap(hStrideNew, wStrideNew);
+      swap(hStrideNew, wStrideNew);
 
     for(int nc = 0; nc < ncSize; nc++) {
       for(int h = 0; h < hSize; h++) {
@@ -651,7 +651,7 @@ Loc SymmetryHelpers::getSymLoc(int x, int y, const Board& board, int symmetry) {
   }
 
   if(transpose)
-    std::swap(x, y);
+    swap(x, y);
   return Location::getLoc(x, y, transpose ? board.y_size : board.x_size);
 }
 
@@ -667,7 +667,7 @@ Board SymmetryHelpers::getSymBoard(const Board& board, int symmetry) {
       int symX = flipX ? board.x_size - x - 1 : x;
       int symY = flipY ? board.y_size - y - 1 : y;
       if(transpose)
-        std::swap(symX, symY);
+        swap(symX, symY);
       Loc symLoc = Location::getLoc(symX, symY, symBoard.x_size);
       symBoard.colors[symLoc] = board.colors[loc];
     }
@@ -745,8 +745,8 @@ void NNInputs::fillRowV3(
   assert(nnYLen <= NNPos::MAX_BOARD_LEN);
   assert(board.x_size <= nnXLen);
   assert(board.y_size <= nnYLen);
-  std::fill(rowBin, rowBin + NUM_FEATURES_SPATIAL_V3 * nnXLen * nnYLen, false);
-  std::fill(rowGlobal, rowGlobal + NUM_FEATURES_GLOBAL_V3, 0.0f);
+  fill(rowBin, rowBin + NUM_FEATURES_SPATIAL_V3 * nnXLen * nnYLen, false);
+  fill(rowGlobal, rowGlobal + NUM_FEATURES_GLOBAL_V3, 0.0f);
 
   Player pla = nextPlayer;
   Player opp = getOpp(pla);
@@ -811,8 +811,8 @@ void NNInputs::fillRowV4(
   assert(nnYLen <= NNPos::MAX_BOARD_LEN);
   assert(board.x_size <= nnXLen);
   assert(board.y_size <= nnYLen);
-  std::fill(rowBin, rowBin + NUM_FEATURES_SPATIAL_V3 * nnXLen * nnYLen, false);
-  std::fill(rowGlobal, rowGlobal + NUM_FEATURES_GLOBAL_V3, 0.0f);
+  fill(rowBin, rowBin + NUM_FEATURES_SPATIAL_V3 * nnXLen * nnYLen, false);
+  fill(rowGlobal, rowGlobal + NUM_FEATURES_GLOBAL_V3, 0.0f);
 
   Player pla = nextPlayer;
   Player opp = getOpp(pla);
@@ -877,8 +877,8 @@ void NNInputs::fillRowV5(
   assert(nnYLen <= NNPos::MAX_BOARD_LEN);
   assert(board.x_size <= nnXLen);
   assert(board.y_size <= nnYLen);
-  std::fill(rowBin, rowBin + NUM_FEATURES_SPATIAL_V3 * nnXLen * nnYLen, false);
-  std::fill(rowGlobal, rowGlobal + NUM_FEATURES_GLOBAL_V3, 0.0f);
+  fill(rowBin, rowBin + NUM_FEATURES_SPATIAL_V3 * nnXLen * nnYLen, false);
+  fill(rowGlobal, rowGlobal + NUM_FEATURES_GLOBAL_V3, 0.0f);
 
   Player pla = nextPlayer;
   Player opp = getOpp(pla);
@@ -943,8 +943,8 @@ void NNInputs::fillRowV6(
   assert(nnYLen <= NNPos::MAX_BOARD_LEN);
   assert(board.x_size <= nnXLen);
   assert(board.y_size <= nnYLen);
-  std::fill(rowBin, rowBin + NUM_FEATURES_SPATIAL_V3 * nnXLen * nnYLen, false);
-  std::fill(rowGlobal, rowGlobal + NUM_FEATURES_GLOBAL_V3, 0.0f);
+  fill(rowBin, rowBin + NUM_FEATURES_SPATIAL_V3 * nnXLen * nnYLen, false);
+  fill(rowGlobal, rowGlobal + NUM_FEATURES_GLOBAL_V3, 0.0f);
 
   Player pla = nextPlayer;
   Player opp = getOpp(pla);
@@ -1009,8 +1009,8 @@ void NNInputs::fillRowV7(
   assert(nnYLen <= NNPos::MAX_BOARD_LEN);
   assert(board.x_size <= nnXLen);
   assert(board.y_size <= nnYLen);
-  std::fill(rowBin, rowBin + NUM_FEATURES_SPATIAL_V3 * nnXLen * nnYLen, false);
-  std::fill(rowGlobal, rowGlobal + NUM_FEATURES_GLOBAL_V3, 0.0f);
+  fill(rowBin, rowBin + NUM_FEATURES_SPATIAL_V3 * nnXLen * nnYLen, false);
+  fill(rowGlobal, rowGlobal + NUM_FEATURES_GLOBAL_V3, 0.0f);
 
   Player pla = nextPlayer;
   Player opp = getOpp(pla);

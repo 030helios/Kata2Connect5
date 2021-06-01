@@ -24,7 +24,7 @@ void Tests::runOwnershipTests(const string& configFile, const string& modelFile)
     Setup::initializeSession(cfg);
     int maxConcurrentEvals = params.numThreads * 2 + 16; // * 2 + 16 just to give plenty of headroom
     int expectedConcurrentEvals = params.numThreads;
-    int defaultMaxBatchSize = std::max(8,((params.numThreads+3)/4)*4);
+    int defaultMaxBatchSize = max(8,((params.numThreads+3)/4)*4);
     string expectedSha256 = "";
     nnEval = Setup::initializeNNEvaluator(
       modelFile,modelFile,expectedSha256,cfg,logger,seedRand,maxConcurrentEvals,expectedConcurrentEvals,
@@ -39,7 +39,7 @@ void Tests::runOwnershipTests(const string& configFile, const string& modelFile)
     Player nextPla = P_BLACK;
     BoardHistory hist(board,nextPla,rules,0);
     int64_t numVisits = 100;
-    std::vector<double> ownership = PlayUtils::computeOwnership(bot,board,hist,nextPla,numVisits,logger);
+    vector<double> ownership = PlayUtils::computeOwnership(bot,board,hist,nextPla,numVisits,logger);
     cout << "=================================================================================" << endl;
     cout << rules << endl;
     cout << board << endl;

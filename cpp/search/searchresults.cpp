@@ -16,8 +16,8 @@ using nlohmann::json;
 static const int64_t MIN_VISITS_FOR_LCB = 3;
 
 bool Search::getPlaySelectionValues(
-    std::vector<Loc> &fromLocs,
-    std::vector<Loc> &toLocs, std::vector<double> &playSelectionValues, double scaleMaxToAtLeast)
+    vector<Loc> &fromLocs,
+    vector<Loc> &toLocs, vector<double> &playSelectionValues, double scaleMaxToAtLeast)
     const
 {
   if (rootNode == NULL)
@@ -32,10 +32,10 @@ bool Search::getPlaySelectionValues(
 }
 
 bool Search::getPlaySelectionValues(
-    std::vector<Loc> &fromLocs,
-    std::vector<Loc> &toLocs,
-    std::vector<double> &playSelectionValues,
-    std::vector<double> *retVisitCounts,
+    vector<Loc> &fromLocs,
+    vector<Loc> &toLocs,
+    vector<double> &playSelectionValues,
+    vector<double> *retVisitCounts,
     double scaleMaxToAtLeast) const
 {
   if (rootNode == NULL)
@@ -54,15 +54,15 @@ bool Search::getPlaySelectionValues(
 
 bool Search::getPlaySelectionValues(
     const SearchNode &node,
-    std::vector<Loc> &fromLocs,
-    std::vector<Loc> &toLocs,
-    std::vector<double> &playSelectionValues,
-    std::vector<double> *retVisitCounts,
+    vector<Loc> &fromLocs,
+    vector<Loc> &toLocs,
+    vector<double> &playSelectionValues,
+    vector<double> *retVisitCounts,
     double scaleMaxToAtLeast,
     bool allowDirectPolicyMoves) const
 {
-  std::mutex &mutex = mutexPool->getMutex(node.lockIdx);
-  lock_guard<std::mutex> lock(mutex);
+  mutex &mutex = mutexPool->getMutex(node.lockIdx);
+  lock_guard<mutex> lock(mutex);
   double lcbBuf[NNPos::MAX_NN_POLICY_SIZE];
   double radiusBuf[NNPos::MAX_NN_POLICY_SIZE];
   assert(node.numChildren <= NNPos::MAX_NN_POLICY_SIZE);
@@ -82,10 +82,10 @@ bool Search::getPlaySelectionValues(
 
 bool Search::getPlaySelectionValuesAlreadyLocked(
     const SearchNode &node,
-    std::vector<Loc> &fromLocs,
-    std::vector<Loc> &toLocs,
-    std::vector<double> &playSelectionValues,
-    std::vector<double> *retVisitCounts,
+    vector<Loc> &fromLocs,
+    vector<Loc> &toLocs,
+    vector<double> &playSelectionValues,
+    vector<double> *retVisitCounts,
     double scaleMaxToAtLeast,
     bool allowDirectPolicyMoves,
     bool alwaysComputeLcb,
@@ -108,10 +108,10 @@ bool Search::getPlaySelectionValuesAlreadyLocked(
   {
     SearchNode *child = node.children[i];
 
-    while (child->statsLock.test_and_set(std::memory_order_acquire))
+    while (child->statsLock.test_and_set(memory_order_acquire))
       ;
     int64_t childVisits = child->stats.visits;
-    child->statsLock.clear(std::memory_order_release);
+    child->statsLock.clear(memory_order_release);
 
     fromLocs.push_back(child->prevFromLoc);
     toLocs.push_back(child->prevToLoc);
@@ -146,11 +146,11 @@ bool Search::getPlaySelectionValuesAlreadyLocked(
     double fpuValue = -10.0; // dummy, not actually used since these childs all should actually have visits
     double parentUtility;
     {
-      while (node.statsLock.test_and_set(std::memory_order_acquire))
+      while (node.statsLock.test_and_set(memory_order_acquire))
         ;
       double utilitySum = node.stats.utilitySum;
       double weightSum = node.stats.weightSum;
-      node.statsLock.clear(std::memory_order_release);
+      node.statsLock.clear(memory_order_release);
       assert(weightSum > 0.0);
       parentUtility = utilitySum / weightSum;
     }
@@ -265,8 +265,8 @@ bool Search::getPlaySelectionValuesAlreadyLocked(
   // Sanity check - if somehow we had more than this, something must have overflowed or gone wrong
   assert(maxValue < 1e40);
 
-  double amountToSubtract = std::min(searchParams.chosenMoveSubtract, maxValue / 64.0);
-  double amountToPrune = std::min(searchParams.chosenMovePrune, maxValue / 64.0);
+  double amountToSubtract = min(searchParams.chosenMoveSubtract, maxValue / 64.0);
+  double amountToPrune = min(searchParams.chosenMovePrune, maxValue / 64.0);
   double newMaxValue = maxValue - amountToSubtract;
   for (int i = 0; i < numChildren; i++)
   {
@@ -320,7 +320,7 @@ void Search::getSelfUtilityLCBAndRadius(
     double &lcbBuf,
     double &radiusBuf) const
 {
-  while (child->statsLock.test_and_set(std::memory_order_acquire))
+  while (child->statsLock.test_and_set(memory_order_acquire))
     ;
   double utilitySum = child->stats.utilitySum;
   double utilitySqSum = child->stats.utilitySqSum;
@@ -328,7 +328,7 @@ void Search::getSelfUtilityLCBAndRadius(
   double scoreMeanSqSum = child->stats.scoreMeanSqSum;
   double weightSum = child->stats.weightSum;
   double weightSqSum = child->stats.weightSqSum;
-  child->statsLock.clear(std::memory_order_release);
+  child->statsLock.clear(memory_order_release);
 
   radiusBuf = 2.0 * (searchParams.winLossUtilityFactor + searchParams.staticScoreUtilityFactor +
                      searchParams.dynamicScoreUtilityFactor);
@@ -345,7 +345,7 @@ void Search::getSelfUtilityLCBAndRadius(
   double utilityNoBonus = utilitySum / weightSum;
   double selfUtility = parent.nextPla == P_WHITE ? utilityNoBonus : -utilityNoBonus;
 
-  double utilityVariance = std::max(1e-8, utilitySqSum / weightSum - utilityNoBonus * utilityNoBonus);
+  double utilityVariance = max(1e-8, utilitySqSum / weightSum - utilityNoBonus * utilityNoBonus);
   double estimateStdev = sqrt(utilityVariance / ess);
   double radius = estimateStdev * getNormToTApproxForLCB(essInt);
 
@@ -391,8 +391,8 @@ ReportedSearchValues Search::getRootRawNNValuesRequireSuccess() const
 
 bool Search::getNodeRawNNValues(const SearchNode &node, ReportedSearchValues &values) const
 {
-  std::mutex &mutex = mutexPool->getMutex(node.lockIdx);
-  unique_lock<std::mutex> lock(mutex);
+  mutex &mutex = mutexPool->getMutex(node.lockIdx);
+  unique_lock<mutex> lock(mutex);
   shared_ptr<NNOutput> nnOutput = node.nnOutput;
   lock.unlock();
   if (nnOutput == nullptr)
@@ -432,14 +432,14 @@ bool Search::getNodeRawNNValues(const SearchNode &node, ReportedSearchValues &va
 
 bool Search::getNodeValues(const SearchNode &node, ReportedSearchValues &values) const
 {
-  std::mutex &mutex = mutexPool->getMutex(node.lockIdx);
-  unique_lock<std::mutex> lock(mutex);
+  mutex &mutex = mutexPool->getMutex(node.lockIdx);
+  unique_lock<mutex> lock(mutex);
   shared_ptr<NNOutput> nnOutput = node.nnOutput;
   lock.unlock();
   if (nnOutput == nullptr)
     return false;
 
-  while (node.statsLock.test_and_set(std::memory_order_acquire))
+  while (node.statsLock.test_and_set(memory_order_acquire))
     ;
   double winValueSum = node.stats.winValueSum;
   double noResultValueSum = node.stats.noResultValueSum;
@@ -450,7 +450,7 @@ bool Search::getNodeValues(const SearchNode &node, ReportedSearchValues &values)
   double utilitySum = node.stats.utilitySum;
   int64_t visits = node.stats.visits;
 
-  node.statsLock.clear(std::memory_order_release);
+  node.statsLock.clear(memory_order_release);
 
   if (weightSum <= 0.0)
     return false;
@@ -500,9 +500,9 @@ Move Search::getChosenMoveLoc()
   if (rootNode == NULL)
     return Move(0, 0, 0);
 
-  std::vector<Loc> fromLocs;
-  std::vector<Loc> toLocs;
-  std::vector<double> playSelectionValues;
+  vector<Loc> fromLocs;
+  vector<Loc> toLocs;
+  vector<double> playSelectionValues;
   bool suc = getPlaySelectionValues(fromLocs, toLocs, playSelectionValues, 0.0);
   if (!suc)
     return Move(0, 0, 0);
@@ -523,13 +523,13 @@ bool Search::getPolicy(float policyProbs[NNPos::MAX_NN_POLICY_SIZE]) const
 {
   if (rootNode == NULL)
     return false;
-  std::mutex &mutex = mutexPool->getMutex(rootNode->lockIdx);
-  lock_guard<std::mutex> lock(mutex);
+  mutex &mutex = mutexPool->getMutex(rootNode->lockIdx);
+  lock_guard<mutex> lock(mutex);
   if (rootNode->nnOutput == nullptr)
     return false;
 
   NNOutput &nnOutput = *(rootNode->nnOutput);
-  std::copy(nnOutput.policyProbs, nnOutput.policyProbs + NNPos::MAX_NN_POLICY_SIZE, policyProbs);
+  copy(nnOutput.policyProbs, nnOutput.policyProbs + NNPos::MAX_NN_POLICY_SIZE, policyProbs);
   return true;
 }
 
@@ -550,16 +550,16 @@ bool Search::getPolicySurpriseAndEntropy(double &surpriseRet, double &searchEntr
 {
   if (rootNode == NULL)
     return false;
-  std::mutex &mutex = mutexPool->getMutex(rootNode->lockIdx);
-  unique_lock<std::mutex> lock(mutex);
+  mutex &mutex = mutexPool->getMutex(rootNode->lockIdx);
+  unique_lock<mutex> lock(mutex);
   if (rootNode->nnOutput == nullptr)
     return false;
 
   NNOutput &nnOutput = *(rootNode->nnOutput);
 
-  std::vector<Loc> fromLocs;
-  std::vector<Loc> toLocs;
-  std::vector<double> playSelectionValues;
+  vector<Loc> fromLocs;
+  vector<Loc> toLocs;
+  vector<double> playSelectionValues;
   bool allowDirectPolicyMoves = true;
   bool alwaysComputeLcb = false;
   double lcbBuf[NNPos::MAX_NN_POLICY_SIZE];
@@ -572,7 +572,7 @@ bool Search::getPolicySurpriseAndEntropy(double &surpriseRet, double &searchEntr
   float policyProbsFromNNBuf[NNPos::MAX_NN_POLICY_SIZE];
   {
     float *policyProbsFromNN = nnOutput.getPolicyProbsMaybeNoised();
-    std::copy(policyProbsFromNN, policyProbsFromNN + NNPos::MAX_NN_POLICY_SIZE, policyProbsFromNNBuf);
+    copy(policyProbsFromNN, policyProbsFromNN + NNPos::MAX_NN_POLICY_SIZE, policyProbsFromNNBuf);
   }
   // Okay we have all the data we need!
   lock.unlock();
@@ -586,7 +586,7 @@ bool Search::getPolicySurpriseAndEntropy(double &surpriseRet, double &searchEntr
   for (int i = 0; i < playSelectionValues.size(); i++)
   {
     int pos = getDouplePos(fromLocs[i], toLocs[i]);
-    double policy = std::max((double)policyProbsFromNNBuf[pos], 1e-100);
+    double policy = max((double)policyProbsFromNNBuf[pos], 1e-100);
     double target = playSelectionValues[i] / sumPlaySelectionValues;
     if (target > 1e-100)
     {
@@ -626,8 +626,8 @@ void Search::printRootOwnershipMap(ostream &out, Player perspective) const
 {
   if (rootNode == NULL)
     return;
-  std::mutex &mutex = mutexPool->getMutex(rootNode->lockIdx);
-  lock_guard<std::mutex> lock(mutex);
+  mutex &mutex = mutexPool->getMutex(rootNode->lockIdx);
+  lock_guard<mutex> lock(mutex);
   if (rootNode->nnOutput == nullptr)
     return;
 
@@ -652,8 +652,8 @@ void Search::printRootPolicyMap(ostream &out) const
 {
   if (rootNode == NULL)
     return;
-  std::mutex &mutex = mutexPool->getMutex(rootNode->lockIdx);
-  lock_guard<std::mutex> lock(mutex);
+  mutex &mutex = mutexPool->getMutex(rootNode->lockIdx);
+  lock_guard<mutex> lock(mutex);
   if (rootNode->nnOutput == nullptr)
     return;
 
@@ -686,8 +686,8 @@ void Search::printRootEndingScoreValueBonus(ostream &out) const
 {
   if (rootNode == NULL)
     return;
-  std::mutex &mutex = mutexPool->getMutex(rootNode->lockIdx);
-  unique_lock<std::mutex> lock(mutex);
+  mutex &mutex = mutexPool->getMutex(rootNode->lockIdx);
+  unique_lock<mutex> lock(mutex);
   if (rootNode->nnOutput == nullptr)
     return;
 
@@ -699,14 +699,14 @@ void Search::printRootEndingScoreValueBonus(ostream &out) const
   {
     const SearchNode *child = rootNode->children[i];
 
-    while (child->statsLock.test_and_set(std::memory_order_acquire))
+    while (child->statsLock.test_and_set(memory_order_acquire))
       ;
     int64_t childVisits = child->stats.visits;
     double utilitySum = child->stats.utilitySum;
     double scoreMeanSum = child->stats.scoreMeanSum;
     double scoreMeanSqSum = child->stats.scoreMeanSqSum;
     double weightSum = child->stats.weightSum;
-    child->statsLock.clear(std::memory_order_release);
+    child->statsLock.clear(memory_order_release);
 
     double utilityNoBonus = utilitySum / weightSum;
 
@@ -717,12 +717,12 @@ void Search::printRootEndingScoreValueBonus(ostream &out) const
 }
 
 void Search::appendPV(
-    std::vector<Loc> &FromBuf,
-    std::vector<Loc> &ToBuf,
-    std::vector<int64_t> &visitsBuf,
-    std::vector<Loc> &fromLocs,
-    std::vector<Loc> &toLocs,
-    std::vector<double> &scratchValues,
+    vector<Loc> &FromBuf,
+    vector<Loc> &ToBuf,
+    vector<int64_t> &visitsBuf,
+    vector<Loc> &fromLocs,
+    vector<Loc> &toLocs,
+    vector<double> &scratchValues,
     const SearchNode *n,
     int maxDepth) const
 {
@@ -730,12 +730,12 @@ void Search::appendPV(
 }
 
 void Search::appendPVForMove(
-    std::vector<Loc> &FromBuf,
-    std::vector<Loc> &ToBuf,
-    std::vector<int64_t> &visitsBuf,
-    std::vector<Loc> &fromLocs,
-    std::vector<Loc> &toLocs,
-    std::vector<double> &scratchValues,
+    vector<Loc> &FromBuf,
+    vector<Loc> &ToBuf,
+    vector<int64_t> &visitsBuf,
+    vector<Loc> &fromLocs,
+    vector<Loc> &toLocs,
+    vector<double> &scratchValues,
     const SearchNode *n,
     Loc fromMove,
     Loc toMove,
@@ -782,18 +782,18 @@ void Search::appendPVForMove(
       return;
 
     const SearchNode &node = *n;
-    std::mutex &mutex = mutexPool->getMutex(node.lockIdx);
-    unique_lock<std::mutex> lock(mutex);
+    mutex &mutex = mutexPool->getMutex(node.lockIdx);
+    unique_lock<mutex> lock(mutex);
     assert(node.numChildren >= scratchValues.size());
     // We rely on the fact that children are never reordered - we can access this safely
     // despite dropping the lock in between computing play selection values and now
     n = node.children[bestChildIdx];
     lock.unlock();
 
-    while (n->statsLock.test_and_set(std::memory_order_acquire))
+    while (n->statsLock.test_and_set(memory_order_acquire))
       ;
     int64_t visits = n->stats.visits;
-    n->statsLock.clear(std::memory_order_release);
+    n->statsLock.clear(memory_order_release);
 
     FromBuf.push_back(bestFrom);
     ToBuf.push_back(bestTo);
@@ -803,17 +803,17 @@ void Search::appendPVForMove(
 
 void Search::printPV(ostream &out, const SearchNode *n, int maxDepth) const
 {
-  std::vector<Loc> FromBuf;
-  std::vector<Loc> ToBuf;
-  std::vector<Loc> fromLocs;
-  std::vector<Loc> toLocs;
-  std::vector<int64_t> visitsBuf;
-  std::vector<double> scratchValues;
+  vector<Loc> FromBuf;
+  vector<Loc> ToBuf;
+  vector<Loc> fromLocs;
+  vector<Loc> toLocs;
+  vector<int64_t> visitsBuf;
+  vector<double> scratchValues;
   appendPV(FromBuf, ToBuf, visitsBuf, fromLocs, toLocs, scratchValues, n, maxDepth);
   printPV(out, FromBuf, ToBuf);
 }
 
-void Search::printPV(ostream &out, const std::vector<Loc> &FromBuf, const std::vector<Loc> &ToBuf) const
+void Search::printPV(ostream &out, const vector<Loc> &FromBuf, const vector<Loc> &ToBuf) const
 {
   bool printedAnything = false;
   for (int i = 0; i < FromBuf.size(); i++)
@@ -831,9 +831,9 @@ void Search::printPV(ostream &out, const std::vector<Loc> &FromBuf, const std::v
 // Child should NOT be locked.
 AnalysisData Search::getAnalysisDataOfSingleChild(
     const SearchNode *child,
-    std::vector<Loc> &fromLocs,
-    std::vector<Loc> &toLocs,
-    std::vector<double> &scratchValues,
+    vector<Loc> &fromLocs,
+    vector<Loc> &toLocs,
+    vector<double> &scratchValues,
     Loc fromLoc,
     Loc toLoc,
     double policyProb,
@@ -857,7 +857,7 @@ AnalysisData Search::getAnalysisDataOfSingleChild(
 
   if (child != NULL)
   {
-    while (child->statsLock.test_and_set(std::memory_order_acquire))
+    while (child->statsLock.test_and_set(memory_order_acquire))
       ;
     numVisits = child->stats.visits;
     winValueSum = child->stats.winValueSum;
@@ -868,7 +868,7 @@ AnalysisData Search::getAnalysisDataOfSingleChild(
     weightSum = child->stats.weightSum;
     weightSqSum = child->stats.weightSqSum;
     utilitySum = child->stats.utilitySum;
-    child->statsLock.clear(std::memory_order_release);
+    child->statsLock.clear(memory_order_release);
   }
 
   AnalysisData data;
@@ -924,7 +924,7 @@ AnalysisData Search::getAnalysisDataOfSingleChild(
 }
 
 void Search::getAnalysisData(
-    std::vector<AnalysisData> &buf,
+    vector<AnalysisData> &buf,
     int minMovesToTryToGet,
     bool includeWeightFactors,
     int maxPVDepth) const
@@ -937,25 +937,25 @@ void Search::getAnalysisData(
 
 void Search::getAnalysisData(
     const SearchNode &node,
-    std::vector<AnalysisData> &buf,
+    vector<AnalysisData> &buf,
     int minMovesToTryToGet,
     bool includeWeightFactors,
     int maxPVDepth) const
 {
   buf.clear();
-  std::vector<SearchNode *> children;
+  vector<SearchNode *> children;
   children.reserve(rootBoard.x_size * rootBoard.y_size + 1);
 
   int numChildren;
-  std::vector<Loc> fromLocs;
-  std::vector<Loc> toLocs;
-  std::vector<double> scratchValues;
+  vector<Loc> fromLocs;
+  vector<Loc> toLocs;
+  vector<double> scratchValues;
   double lcbBuf[NNPos::MAX_NN_POLICY_SIZE];
   double radiusBuf[NNPos::MAX_NN_POLICY_SIZE];
   float policyProbs[NNPos::MAX_NN_POLICY_SIZE];
   {
-    std::mutex &mutex = mutexPool->getMutex(node.lockIdx);
-    lock_guard<std::mutex> lock(mutex);
+    mutex &mutex = mutexPool->getMutex(node.lockIdx);
+    lock_guard<mutex> lock(mutex);
     numChildren = node.numChildren;
     for (int i = 0; i < numChildren; i++)
       children.push_back(node.children[i]);
@@ -977,7 +977,7 @@ void Search::getAnalysisData(
   }
 
   // Copy to make sure we keep these values so we can reuse scratch later for PV
-  std::vector<double> playSelectionValues = scratchValues;
+  vector<double> playSelectionValues = scratchValues;
 
   double policyProbMassVisited = 0.0;
   {
@@ -996,7 +996,7 @@ void Search::getAnalysisData(
   double parentScoreStdev;
   double parentLead;
   {
-    while (node.statsLock.test_and_set(std::memory_order_acquire))
+    while (node.statsLock.test_and_set(memory_order_acquire))
       ;
     double winValueSum = node.stats.winValueSum;
     double noResultValueSum = node.stats.noResultValueSum;
@@ -1004,7 +1004,7 @@ void Search::getAnalysisData(
     double scoreMeanSqSum = node.stats.scoreMeanSqSum;
     double leadSum = node.stats.leadSum;
     double weightSum = node.stats.weightSum;
-    node.statsLock.clear(std::memory_order_release);
+    node.statsLock.clear(memory_order_release);
     assert(weightSum > 0.0);
 
     double winValue = winValueSum / weightSum;
@@ -1050,8 +1050,8 @@ void Search::getAnalysisData(
   // Find all children and compute weighting of the children based on their values
   if (includeWeightFactors)
   {
-    std::vector<double> selfUtilityBuf;
-    std::vector<int64_t> visitsBuf;
+    vector<double> selfUtilityBuf;
+    vector<int64_t> visitsBuf;
     int64_t visitsSum = 0;
     for (int i = 0; i < numChildren; i++)
     {
@@ -1122,7 +1122,7 @@ void Search::getAnalysisData(
       buf.push_back(data);
     }
   }
-  std::stable_sort(buf.begin(), buf.end());
+  stable_sort(buf.begin(), buf.end());
 
   for (int i = 0; i < buf.size(); i++)
     buf[i].order = i;
@@ -1130,12 +1130,12 @@ void Search::getAnalysisData(
 
 void Search::printPVForMove(ostream &out, const SearchNode *n, Loc fromMove, Loc toMove, int maxDepth) const
 {
-  std::vector<Loc> fromLocs;
-  std::vector<Loc> toLocs;
-  std::vector<int64_t> visitsBuf;
-  std::vector<Loc> scratchLocsfrom;
-  std::vector<Loc> scratchLocsto;
-  std::vector<double> scratchValues;
+  vector<Loc> fromLocs;
+  vector<Loc> toLocs;
+  vector<int64_t> visitsBuf;
+  vector<Loc> scratchLocsfrom;
+  vector<Loc> scratchLocsto;
+  vector<double> scratchValues;
   appendPVForMove(fromLocs, toLocs, visitsBuf, scratchLocsfrom, scratchLocsto, scratchValues, n, fromMove, toMove, maxDepth);
   for (int i = 0; i < fromLocs.size(); i++)
   {
@@ -1153,9 +1153,9 @@ void Search::printTree(ostream &out, const SearchNode *node, PrintTreeOptions op
   string prefix;
   AnalysisData data;
   {
-    std::vector<Loc> fromLocs;
-    std::vector<Loc> toLocs;
-    std::vector<double> scratchValues;
+    vector<Loc> fromLocs;
+    vector<Loc> toLocs;
+    vector<double> scratchValues;
     // Use dummy values for parent
     double policyProb = NAN;
     double fpuValue = 0;
@@ -1272,13 +1272,13 @@ void Search::printTreeHelper(
 
     if (options.printSqs_)
     {
-      while (node.statsLock.test_and_set(std::memory_order_acquire))
+      while (node.statsLock.test_and_set(memory_order_acquire))
         ;
       double scoreMeanSqSum = node.stats.scoreMeanSqSum;
       double utilitySqSum = node.stats.utilitySqSum;
       double weightSum = node.stats.weightSum;
       double weightSqSum = node.stats.weightSqSum;
-      node.statsLock.clear(std::memory_order_release);
+      node.statsLock.clear(memory_order_release);
       sprintf(
           buf,
           "SMSQ %5.1f USQ %7.5f W %6.2f WSQ %8.2f ",
@@ -1311,7 +1311,7 @@ void Search::printTreeHelper(
         << ")---" << endl;
   }
 
-  std::vector<AnalysisData> analysisData;
+  vector<AnalysisData> analysisData;
   getAnalysisData(node, analysisData, 0, true, options.maxPVDepth_);
 
   int numChildren = analysisData.size();
@@ -1366,13 +1366,13 @@ vector<double> Search::getAverageTreeOwnership(int64_t minVisits, const SearchNo
     node = rootNode;
   if (!alwaysIncludeOwnerMap)
     throw StringError("Called Search::getAverageTreeOwnership when alwaysIncludeOwnerMap is false");
-  std::vector<double> vec(nnXLen * nnYLen, 0.0);
+  vector<double> vec(nnXLen * nnYLen, 0.0);
   getAverageTreeOwnershipHelper(vec, minVisits, 1.0, node);
   return vec;
 }
 
 double Search::getAverageTreeOwnershipHelper(
-    std::vector<double> &accum,
+    vector<double> &accum,
     int64_t minVisits,
     double desiredWeight,
     const SearchNode *node) const
@@ -1380,29 +1380,29 @@ double Search::getAverageTreeOwnershipHelper(
   if (node == NULL)
     return 0;
 
-  std::mutex &mutex = mutexPool->getMutex(node->lockIdx);
-  unique_lock<std::mutex> lock(mutex);
+  mutex &mutex = mutexPool->getMutex(node->lockIdx);
+  unique_lock<mutex> lock(mutex);
   if (node->nnOutput == nullptr)
     return 0;
 
   shared_ptr<NNOutput> nnOutput = node->nnOutput;
 
   int numChildren = node->numChildren;
-  std::vector<const SearchNode *> children(numChildren);
+  vector<const SearchNode *> children(numChildren);
   for (int i = 0; i < numChildren; i++)
     children[i] = node->children[i];
 
   // We can unlock now - during a search, children are never deallocated
   lock.unlock();
 
-  std::vector<int64_t> visitsBuf(numChildren);
+  vector<int64_t> visitsBuf(numChildren);
   for (int i = 0; i < numChildren; i++)
   {
     const SearchNode *child = children[i];
-    while (child->statsLock.test_and_set(std::memory_order_acquire))
+    while (child->statsLock.test_and_set(memory_order_acquire))
       ;
     int64_t childVisits = child->stats.visits;
-    child->statsLock.clear(std::memory_order_release);
+    child->statsLock.clear(memory_order_release);
     visitsBuf[i] = childVisits;
   }
 
@@ -1446,7 +1446,7 @@ json Search::getJsonOwnershipMap(
     const SearchNode *node,
     int ownershipMinVisits) const
 {
-  std::vector<double> ownership = getAverageTreeOwnership(ownershipMinVisits, node);
+  vector<double> ownership = getAverageTreeOwnership(ownershipMinVisits, node);
   json ownerships = json::array();
   for (int y = 0; y < board.y_size; y++)
   {
@@ -1485,7 +1485,7 @@ bool Search::getAnalysisJson(
     bool includePVVisits,
     json &ret) const
 {
-  std::vector<AnalysisData> buf;
+  vector<AnalysisData> buf;
   static constexpr int minMoves = 0;
 
   getAnalysisData(buf, minMoves, false, analysisPVLen);

@@ -30,7 +30,7 @@ void Tests::runScoreTests()
       double drawEquiv = drawEquivsToTry[i];
       string s = Global::strprintf("%.1f", drawEquiv);
       double scoreAdjusted = ScoreValue::whiteScoreDrawAdjust(score);
-      double stdev = sqrt(std::max(0.0, ScoreValue::whiteScoreMeanSqOfScoreGridded(score, drawEquiv) - scoreAdjusted * scoreAdjusted));
+      double stdev = sqrt(max(0.0, ScoreValue::whiteScoreMeanSqOfScoreGridded(score, drawEquiv) - scoreAdjusted * scoreAdjusted));
       double expectedScoreValue = ScoreValue::expectedWhiteScoreValue(scoreAdjusted, stdev, 0.0, 2.0, board);
       out << "WL Wins wins/draw=" << s << ": " << ScoreValue::whiteWinsOfWinner(hist.winner, drawEquiv) << endl;
       out << "Score wins/draw=" << s << ": " << scoreAdjusted << endl;

@@ -5217,7 +5217,7 @@ Last moves pass pass pass pass H7 G9 F9 H7
 
   {
     const char *name = "Brute force testing of ko hash table";
-    std::vector<Rules> rules = {
+    vector<Rules> rules = {
         Rules(Rules::KO_SIMPLE, Rules::SCORING_AREA, Rules::TAX_NONE, false, false, Rules::WHB_ZERO, false, 1.0f),
         Rules(Rules::KO_POSITIONAL, Rules::SCORING_AREA, Rules::TAX_NONE, false, true, Rules::WHB_ZERO, false, 3.0f),
         Rules(Rules::KO_SITUATIONAL, Rules::SCORING_AREA, Rules::TAX_NONE, true, false, Rules::WHB_N, false, 5.5f),
@@ -5320,7 +5320,7 @@ Last moves pass pass pass pass H7 G9 F9 H7
 
   {
     //const char* name = "Test some roundtripping of rules strings";
-    std::vector<Rules> rules = {
+    vector<Rules> rules = {
         Rules(Rules::KO_SIMPLE, Rules::SCORING_AREA, Rules::TAX_NONE, false, false, Rules::WHB_ZERO, false, 1.0f),
         Rules(Rules::KO_POSITIONAL, Rules::SCORING_AREA, Rules::TAX_NONE, false, true, Rules::WHB_ZERO, true, 3.0f),
         Rules(Rules::KO_SITUATIONAL, Rules::SCORING_AREA, Rules::TAX_NONE, true, false, Rules::WHB_ZERO, false, 5.5f),

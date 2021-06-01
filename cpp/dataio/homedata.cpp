@@ -44,7 +44,7 @@ vector<string> HomeData::getDefaultFilesDirs() {
   wcstombs_s(&ret, buf2, buf2Size, buf, buf2Size-1);
 
   string executableDir(buf2);
-  std::vector<string> dirs;
+  vector<string> dirs;
   dirs.push_back(executableDir);
   return dirs;
 }
@@ -95,7 +95,7 @@ vector<string> HomeData::getDefaultFilesDirs() {
   constexpr int bufSize = 2048;
   char result[bufSize];
   ssize_t count = readlink("/proc/self/exe", result, bufSize);
-  std::vector<string> ret;
+  vector<string> ret;
   if(count >= 0 && count < bufSize-1) {
     string exePath(result,count);
     const gfs::path path(exePath);

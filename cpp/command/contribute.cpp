@@ -22,8 +22,8 @@
 int MainCmds::contribute(int argc, const char* const* argv) {
   (void)argc;
   (void)argv;
-  std::cout << "This version of KataGo was NOT compiled with support for distributed training." << std::endl;
-  std::cout << "Compile with -DBUILD_DISTRIBUTED=1 in CMake, and/or see notes at https://github.com/lightvector/KataGo#compiling-katago" << std::endl;
+  cout << "This version of KataGo was NOT compiled with support for distributed training." << endl;
+  cout << "Compile with -DBUILD_DISTRIBUTED=1 in CMake, and/or see notes at https://github.com/lightvector/KataGo#compiling-katago" << endl;
   return 0;
 }
 
@@ -47,9 +47,9 @@ int MainCmds::contribute(int argc, const char* const* argv) {
 using json = nlohmann::json;
 using namespace std;
 
-static std::atomic<bool> sigReceived(false);
-static std::atomic<bool> shouldStopGracefully(false);
-static std::atomic<bool> shouldStop(false);
+static atomic<bool> sigReceived(false);
+static atomic<bool> shouldStopGracefully(false);
+static atomic<bool> shouldStop(false);
 static void signalHandler(int signal)
 {
   if(signal == SIGINT || signal == SIGTERM) {
@@ -62,13 +62,13 @@ static void signalHandler(int signal)
       shouldStop.store(true);
   }
 }
-static std::atomic<bool> shouldStopGracefullyPrinted(false);
-static std::atomic<bool> shouldStopPrinted(false);
+static atomic<bool> shouldStopGracefullyPrinted(false);
+static atomic<bool> shouldStopPrinted(false);
 
 
 // Some OSes, like windows, don't have SIGPIPE
 #ifdef SIGPIPE
-static std::atomic<int> sigPipeReceivedCount(0);
+static atomic<int> sigPipeReceivedCount(0);
 static void sigPipeHandler(int signal)
 {
   if(signal == SIGPIPE) {
@@ -101,9 +101,9 @@ namespace {
 static void runAndUploadSingleGame(
   Client::Connection* connection, GameTask gameTask, int64_t gameIdx,
   Logger& logger, const string& seed, ForkData* forkData, string sgfsDir, Rand& rand,
-  std::atomic<int64_t>& numMovesPlayed,
-  std::unique_ptr<ostream>& outputEachMove, std::function<void()> flushOutputEachMove,
-  const std::function<bool()>& shouldStopFunc,
+  atomic<int64_t>& numMovesPlayed,
+  unique_ptr<ostream>& outputEachMove, function<void()> flushOutputEachMove,
+  const function<bool()>& shouldStopFunc,
   bool logGamesAsJson, bool alwaysIncludeOwnership
 ) {
   if(gameTask.task.isRatingGame) {
@@ -170,11 +170,11 @@ static void runAndUploadSingleGame(
 
   const string gameIdString = Global::uint64ToHexString(rand.nextUInt64());
 
-  std::function<void(const Board&, const BoardHistory&, Player, Loc, const std::vector<double>&, const std::vector<double>&, const std::vector<double>&, const Search*)>
+  function<void(const Board&, const BoardHistory&, Player, Loc, const vector<double>&, const vector<double>&, const vector<double>&, const Search*)>
     onEachMove = [&numMovesPlayed, &outputEachMove, &flushOutputEachMove, &logGamesAsJson, &alwaysIncludeOwnership, &gameIdString, &botSpecB, &botSpecW](
       const Board& board, const BoardHistory& hist, Player pla, Loc moveLoc,
-      const std::vector<double>& winLossHist, const std::vector<double>& leadHist, const std::vector<double>& scoreStdevHist, const Search* search) {
-    numMovesPlayed.fetch_add(1,std::memory_order_relaxed);
+      const vector<double>& winLossHist, const vector<double>& leadHist, const vector<double>& scoreStdevHist, const Search* search) {
+    numMovesPlayed.fetch_add(1,memory_order_relaxed);
     if(outputEachMove != nullptr) {
       ostringstream out;
       Board::printBoard(out, board, moveLoc, &(hist.moveHistory));
@@ -195,7 +195,7 @@ static void runAndUploadSingleGame(
       (void)scoreStdevHist;
       (void)search;
       out << "\n";
-      (*outputEachMove) << out.str() << std::flush;
+      (*outputEachMove) << out.str() << flush;
       if(flushOutputEachMove)
         flushOutputEachMove();
     }
@@ -242,7 +242,7 @@ static void runAndUploadSingleGame(
       // Usual analysis response fields
       ret["turnNumber"] = hist.moveHistory.size();
       search->getAnalysisJson(perspective,board,hist,analysisPVLen,ownershipMinVisits,preventEncore,true,alwaysIncludeOwnership,false,false,ret);
-      std::cout << ret.dump() + "\n" << std::flush; // no endl due to race conditions
+      cout << ret.dump() + "\n" << flush; // no endl due to race conditions
     }
 
   };
@@ -274,7 +274,7 @@ static void runAndUploadSingleGame(
     if(gameTask.task.doWriteTrainingData) {
       gameTask.blackManager->withDataWriters(
         nnEvalBlack,
-        [gameData,&gameTask,gameIdx,&sgfFile,&connection,&logger,&shouldStopFunc](TrainingDataWriter* tdataWriter, TrainingDataWriter* vdataWriter, std::ofstream* sgfOut) {
+        [gameData,&gameTask,gameIdx,&sgfFile,&connection,&logger,&shouldStopFunc](TrainingDataWriter* tdataWriter, TrainingDataWriter* vdataWriter, ofstream* sgfOut) {
           (void)vdataWriter;
           (void)sgfOut;
           assert(tdataWriter->isEmpty());
@@ -361,7 +361,7 @@ int MainCmds::contribute(int argc, const char* const* argv) {
     overrideUserConfig = overrideUserConfigArg.getValue();
     caCertsFile = caCertsFileArg.getValue();
 
-    if(!std::isfinite(deleteUnusedModelsAfterDays) || deleteUnusedModelsAfterDays < 0 || deleteUnusedModelsAfterDays > 20000)
+    if(!isfinite(deleteUnusedModelsAfterDays) || deleteUnusedModelsAfterDays < 0 || deleteUnusedModelsAfterDays > 20000)
       throw StringError("-delete-unused-models-after: invalid value");
   }
   catch (TCLAP::ArgException &e) {
@@ -380,13 +380,13 @@ int MainCmds::contribute(int argc, const char* const* argv) {
   if(overrideUserConfig != "") {
     map<string,string> newkvs = ConfigParser::parseCommaSeparated(overrideUserConfig);
     //HACK to avoid a common possible conflict - if we specify some of the rules options on one side, the other side should be erased.
-    std::vector<pair<set<string>,set<string>>> mutexKeySets = Setup::getMutexKeySets();
+    vector<pair<set<string>,set<string>>> mutexKeySets = Setup::getMutexKeySets();
     userCfg->overrideKeys(newkvs,mutexKeySets);
   }
 
   if(caCertsFile == "") {
-    std::vector<string> defaultFilesDirs = HomeData::getDefaultFilesDirs();
-    std::vector<string> cacertSearchDirs = defaultFilesDirs;
+    vector<string> defaultFilesDirs = HomeData::getDefaultFilesDirs();
+    vector<string> cacertSearchDirs = defaultFilesDirs;
 
     //Also look for some system locations
 #ifdef OS_IS_UNIX_OR_APPLE
@@ -398,7 +398,7 @@ int MainCmds::contribute(int argc, const char* const* argv) {
     cacertSearchDirs.push_back("/etc/certs");
 #endif
 
-    std::vector<string> possiblePaths;
+    vector<string> possiblePaths;
     for(const string& dir: cacertSearchDirs) {
       possiblePaths.push_back(dir + "/cacert.pem");
       possiblePaths.push_back(dir + "/cacert.crt");
@@ -415,7 +415,7 @@ int MainCmds::contribute(int argc, const char* const* argv) {
 
     bool foundCaCerts = false;
     for(const string& path: possiblePaths) {
-      std::ifstream infile(path);
+      ifstream infile(path);
       bool pathExists = infile.good();
       if(pathExists) {
         foundCaCerts = true;
@@ -434,7 +434,7 @@ int MainCmds::contribute(int argc, const char* const* argv) {
   }
   else {
     if(caCertsFile != "/dev/null") {
-      std::ifstream infile(caCertsFile);
+      ifstream infile(caCertsFile);
       bool pathExists = infile.good();
       if(!pathExists) {
         throw StringError("cacerts file was not found or could not be opened: " + caCertsFile);
@@ -463,12 +463,12 @@ int MainCmds::contribute(int argc, const char* const* argv) {
   else {
     const char* proxy = NULL;
     if(proxy == NULL) {
-      proxy = std::getenv("https_proxy");
+      proxy = getenv("https_proxy");
       if(proxy != NULL)
         logger.write(string("Using proxy from environment variable https_proxy: ") + proxy);
     }
     if(proxy == NULL) {
-      proxy = std::getenv("http_proxy");
+      proxy = getenv("http_proxy");
       if(proxy != NULL)
         logger.write(string("Using proxy from environment variable http_proxy: ") + proxy);
     }
@@ -575,7 +575,7 @@ int MainCmds::contribute(int argc, const char* const* argv) {
     //Before we delete the tinyNNEval, it conveniently has all the info about what gpuidxs the user wants from the config, so
     //use it to tune everything.
 #ifdef USE_OPENCL_BACKEND
-    std::set<int> gpuIdxs = tinyNNEval->getGpuIdxs();
+    set<int> gpuIdxs = tinyNNEval->getGpuIdxs();
     enabled_t usingFP16Mode = tinyNNEval->getUsingFP16Mode();
     delete tinyNNEval;
 
@@ -595,10 +595,10 @@ int MainCmds::contribute(int argc, const char* const* argv) {
   }
 
   //Set up signal handlers
-  if(!std::atomic_is_lock_free(&shouldStop))
+  if(!atomic_is_lock_free(&shouldStop))
     throw StringError("shouldStop is not lock free, signal-quitting mechanism for terminating matches will NOT work!");
-  std::signal(SIGINT, signalHandler);
-  std::signal(SIGTERM, signalHandler);
+  signal(SIGINT, signalHandler);
+  signal(SIGTERM, signalHandler);
 
   auto shouldStopFunc = [&logger]() {
     if(shouldStop.load()) {
@@ -621,16 +621,16 @@ int MainCmds::contribute(int argc, const char* const* argv) {
 
 #ifdef SIGPIPE
   //We want to make sure sigpipe doesn't kill us, since sigpipe is hard to avoid with network connections if internet is flickery
-  if(!std::atomic_is_lock_free(&sigPipeReceivedCount)) {
+  if(!atomic_is_lock_free(&sigPipeReceivedCount)) {
     logger.write("sigPipeReceivedCount is not lock free, we will just ignore sigpipe outright");
-    std::signal(SIGPIPE, sigPipeHandlerDoNothing);
+    signal(SIGPIPE, sigPipeHandlerDoNothing);
   }
   else {
-    std::signal(SIGPIPE, sigPipeHandler);
+    signal(SIGPIPE, sigPipeHandler);
   }
 #endif
 
-  const int maxSimultaneousRatingGamesPossible = std::min(taskRepFactor * maxRatingMatches, maxSimultaneousGames);
+  const int maxSimultaneousRatingGamesPossible = min(taskRepFactor * maxRatingMatches, maxSimultaneousGames);
 
   //Don't write "validation" data for distributed self-play. If the server-side wants to split out some data as "validation" for training
   //then that can be done server-side.
@@ -649,9 +649,9 @@ int MainCmds::contribute(int argc, const char* const* argv) {
   //Shared across all game threads
   ThreadSafeQueue<GameTask> gameTaskQueue(1);
   ForkData* forkData = new ForkData();
-  std::atomic<int64_t> numGamesStarted(0);
-  std::atomic<int64_t> numRatingGamesActive(0);
-  std::atomic<int64_t> numMovesPlayed(0);
+  atomic<int64_t> numGamesStarted(0);
+  atomic<int64_t> numRatingGamesActive(0);
+  atomic<int64_t> numMovesPlayed(0);
 
   auto runGameLoop = [
     &logger,forkData,&gameSeedBase,&gameTaskQueue,&numGamesStarted,&sgfsDir,&connection,
@@ -661,20 +661,20 @@ int MainCmds::contribute(int argc, const char* const* argv) {
   ] (
     int gameLoopThreadIdx
   ) {
-    std::unique_ptr<std::ostream> outputEachMove = nullptr;
-    std::function<void()> flushOutputEachMove = nullptr;
+    unique_ptr<ostream> outputEachMove = nullptr;
+    function<void()> flushOutputEachMove = nullptr;
     if(gameLoopThreadIdx == 0 && watchOngoingGameInFile) {
 #ifdef OS_IS_WINDOWS
       FILE* file = NULL;
       fopen_s(&file, watchOngoingGameInFileName.c_str(), "a");
       if(file == NULL)
         throw StringError("Could not open file: " + watchOngoingGameInFileName);
-      outputEachMove = std::make_unique<std::ofstream>(file);
+      outputEachMove = make_unique<ofstream>(file);
       flushOutputEachMove = [file]() {
         FlushFileBuffers((HANDLE) _get_osfhandle(_fileno(file)));
       };
 #else
-      outputEachMove = std::make_unique<std::ofstream>(watchOngoingGameInFileName.c_str(), ofstream::app);
+      outputEachMove = make_unique<ofstream>(watchOngoingGameInFileName.c_str(), ofstream::app);
 #endif
     }
 
@@ -686,7 +686,7 @@ int MainCmds::contribute(int argc, const char* const* argv) {
         break;
       if(!shouldStopGracefullyFunc()) {
         string seed = gameSeedBase + ":" + Global::uint64ToHexString(thisLoopSeedRand.nextUInt64());
-        int64_t gameIdx = numGamesStarted.fetch_add(1,std::memory_order_acq_rel);
+        int64_t gameIdx = numGamesStarted.fetch_add(1,memory_order_acq_rel);
         runAndUploadSingleGame(
           connection,gameTask,gameIdx,logger,seed,forkData,sgfsDir,thisLoopSeedRand,numMovesPlayed,outputEachMove,flushOutputEachMove,
           shouldStopFunc,logGamesAsJson,alwaysIncludeOwnership
@@ -699,7 +699,7 @@ int MainCmds::contribute(int argc, const char* const* argv) {
         gameTask.whiteManager->clearUnusedModelCaches();
 
       if(gameTask.task.isRatingGame)
-        numRatingGamesActive.fetch_add(-1,std::memory_order_acq_rel);
+        numRatingGamesActive.fetch_add(-1,memory_order_acq_rel);
     }
   };
   auto runGameLoopProtected = [&logger,&runGameLoop](int gameLoopThreadIdx) {
@@ -731,7 +731,7 @@ int MainCmds::contribute(int argc, const char* const* argv) {
       //will do a fresh download.
       string newName = modelFile + ".invalid";
       logger.write("Model file modified or corrupted on disk, sha256 no longer matches? Moving it to " + newName + " and failing.");
-      std::rename(modelFile.c_str(),newName.c_str());
+      rename(modelFile.c_str(),newName.c_str());
       throw;
     }
 
@@ -788,22 +788,22 @@ int MainCmds::contribute(int argc, const char* const* argv) {
 
   //Start game loop threads! Yay!
   //Just start based on selfplay games, rating games will poke in as needed
-  std::vector<std::thread> gameThreads;
+  vector<thread> gameThreads;
   for(int i = 0; i<maxSimultaneousGames; i++) {
-    gameThreads.push_back(std::thread(runGameLoopProtected,i));
+    gameThreads.push_back(thread(runGameLoopProtected,i));
   }
 
   //-----------------------------------------------------------------------------------------------------------------
 
   ClockTimer timer;
   double lastPerformanceTime = timer.getSeconds();
-  int64_t lastPerformanceNumMoves = numMovesPlayed.load(std::memory_order_relaxed);
+  int64_t lastPerformanceNumMoves = numMovesPlayed.load(memory_order_relaxed);
   int64_t lastPerformanceNumNNEvals = (int64_t)(selfplayManager->getTotalNumRowsProcessed() + ratingManager->getTotalNumRowsProcessed());
   auto maybePrintPerformanceUnsynchronized = [&]() {
     double now = timer.getSeconds();
     //At most every minute, report performance
     if(now >= lastPerformanceTime + reportPerformanceEvery) {
-      int64_t newNumMoves = numMovesPlayed.load(std::memory_order_relaxed);
+      int64_t newNumMoves = numMovesPlayed.load(memory_order_relaxed);
       int64_t newNumNNEvals = (int64_t)(selfplayManager->getTotalNumRowsProcessed() + ratingManager->getTotalNumRowsProcessed());
 
       double timeDiff = now - lastPerformanceTime;
@@ -840,10 +840,10 @@ int MainCmds::contribute(int argc, const char* const* argv) {
       double sleepTimeTotal = preDownloadLoopRand.nextDouble(1200,1500);
       constexpr double stopPollFrequency = 5.0;
       while(sleepTimeTotal > 0.0) {
-        double sleepTime = std::min(sleepTimeTotal, stopPollFrequency);
+        double sleepTime = min(sleepTimeTotal, stopPollFrequency);
         if(shouldStopGracefullyFunc())
           return;
-        std::this_thread::sleep_for(std::chrono::duration<double>(sleepTime));
+        this_thread::sleep_for(chrono::duration<double>(sleepTime));
         sleepTimeTotal -= stopPollFrequency;
       }
     }
@@ -851,7 +851,7 @@ int MainCmds::contribute(int argc, const char* const* argv) {
   auto preDownloadLoopProtected = [&logger,&preDownloadLoop]() {
     Logger::logThreadUncaught("pre download loop", &logger, preDownloadLoop);
   };
-  std::thread preDownloadThread(preDownloadLoopProtected);
+  thread preDownloadThread(preDownloadLoopProtected);
 
   //-----------------------------------------------------------------------------------------------------------------
 
@@ -867,7 +867,7 @@ int MainCmds::contribute(int argc, const char* const* argv) {
     while(true) {
       if(shouldStopGracefullyFunc())
         break;
-      std::this_thread::sleep_for(std::chrono::duration<double>(taskRand.nextDouble(taskLoopSleepTime,taskLoopSleepTime*2)));
+      this_thread::sleep_for(chrono::duration<double>(taskRand.nextDouble(taskLoopSleepTime,taskLoopSleepTime*2)));
       PriorityLock taskLock(taskLoopMutex);
       taskLock.lockLowPriority();
 
@@ -896,7 +896,7 @@ int MainCmds::contribute(int argc, const char* const* argv) {
       //Only allow rating tasks when we can handle a whole new chunk of games
       bool allowRatingTask = (
         maxRatingMatches > 0 &&
-        numRatingGamesActive.load(std::memory_order_acquire) <= (maxRatingMatches - 1) * taskRepFactor &&
+        numRatingGamesActive.load(memory_order_acquire) <= (maxRatingMatches - 1) * taskRepFactor &&
         (int64_t)ratingManager->numModels() <= maxRatingMatches * 2 - 2
       );
       bool allowSelfplayTask = !onlyPlayRatingMatches;
@@ -1039,7 +1039,7 @@ int MainCmds::contribute(int argc, const char* const* argv) {
         }
 
         if(task.isRatingGame)
-          numRatingGamesActive.fetch_add(1,std::memory_order_acq_rel);
+          numRatingGamesActive.fetch_add(1,memory_order_acq_rel);
         suc = gameTaskQueue.waitPush(gameTask);
         (void)suc;
         assert(suc);
@@ -1054,9 +1054,9 @@ int MainCmds::contribute(int argc, const char* const* argv) {
   };
 
   int numTaskLoopThreads = 4;
-  std::vector<std::thread> taskLoopThreads;
+  vector<thread> taskLoopThreads;
   for(int i = 0; i<numTaskLoopThreads; i++) {
-    taskLoopThreads.push_back(std::thread(taskLoopProtected));
+    taskLoopThreads.push_back(thread(taskLoopProtected));
   }
   //Wait for all task loop threads to stop
   for(int i = 0; i<taskLoopThreads.size(); i++)

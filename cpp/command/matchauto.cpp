@@ -15,8 +15,8 @@
 
 using namespace std;
 
-static std::atomic<bool> sigReceived(false);
-static std::atomic<bool> shouldStop(false);
+static atomic<bool> sigReceived(false);
+static atomic<bool> shouldStop(false);
 static void signalHandler(int signal)
 {
   if(signal == SIGINT || signal == SIGTERM) {
@@ -72,7 +72,7 @@ namespace {
 
     map<string, NetAndStuff*> loadedNets;
 
-    std::mutex managerLock;
+    mutex managerLock;
 
   public:
     NetManager(
@@ -96,7 +96,7 @@ namespace {
     }
 
     void preregisterGames(const string& nnModelFile, Logger& logger, int n) {
-      std::lock_guard<std::mutex> lock(managerLock);
+      lock_guard<mutex> lock(managerLock);
 
       auto iter = loadedNets.find(nnModelFile);
       NetAndStuff* netAndStuff;
@@ -124,7 +124,7 @@ namespace {
     }
 
     NNEvaluator* registerStarting(const string& nnModelFile) {
-      std::lock_guard<std::mutex> lock(managerLock);
+      lock_guard<mutex> lock(managerLock);
       auto iter = loadedNets.find(nnModelFile);
       assert(iter != loadedNets.end());
       NetAndStuff* netAndStuff = iter->second;
@@ -133,7 +133,7 @@ namespace {
     }
 
     void registerFinishing(const string& nnModelFile) {
-      std::lock_guard<std::mutex> lock(managerLock);
+      lock_guard<mutex> lock(managerLock);
       auto iter = loadedNets.find(nnModelFile);
       assert(iter != loadedNets.end());
       NetAndStuff* netAndStuff = iter->second;
@@ -155,11 +155,11 @@ namespace {
     string resultsDir;
 
     int numBots;
-    std::vector<string> botNames;
-    std::vector<string> nnModelFiles;
-    std::vector<SearchParams> baseParamss;
+    vector<string> botNames;
+    vector<string> nnModelFiles;
+    vector<SearchParams> baseParamss;
 
-    std::vector<NextMatchup> nextMatchups;
+    vector<NextMatchup> nextMatchups;
     Rand rand;
 
     int matchRepFactor;
@@ -168,15 +168,15 @@ namespace {
     int64_t numGamesTotal;
     int64_t logGamesEvery;
 
-    std::mutex getMatchupMutex;
+    mutex getMatchupMutex;
 
     AutoMatchPairer(
       ConfigParser& cfg,
       const string& resDir,
       int nBots,
-      const std::vector<string>& bNames,
-      const std::vector<string>& nFiles,
-      const std::vector<SearchParams>& bParamss
+      const vector<string>& bNames,
+      const vector<string>& nFiles,
+      const vector<SearchParams>& bParamss
     )
       :resultsDir(resDir),
        numBots(nBots),
@@ -208,7 +208,7 @@ namespace {
       NetManager* manager, string& forBot, MatchPairer::BotSpec& botSpecB, MatchPairer::BotSpec& botSpecW, Logger& logger
     )
     {
-      std::lock_guard<std::mutex> lock(getMatchupMutex);
+      lock_guard<mutex> lock(getMatchupMutex);
 
       numGamesStartedSoFar += 1;
       if(numGamesStartedSoFar % logGamesEvery == 0)
@@ -260,12 +260,12 @@ namespace {
           continue;
         string file = dirPath.string();
         if(Global::isSuffix(file,".results.csv")) {
-          std::vector<string> lines = Global::readFileLines(file,'\n');
+          vector<string> lines = Global::readFileLines(file,'\n');
           for(int i = 0; i<lines.size(); i++) {
             string s = Global::trim(lines[i]);
             if(s.length() == 0)
               continue;
-            std::vector<string> pieces = Global::split(s,',');
+            vector<string> pieces = Global::split(s,',');
             if(pieces.size() != 4)
               continue;
 
@@ -296,8 +296,8 @@ namespace {
       int maxIters = 20000;
       double tolerance = 0.000001;
 
-      std::vector<double> elos = ComputeElos::computeElos(winMatrix,numBots,priorWL,maxIters,tolerance,NULL);
-      std::vector<double> eloStdevs = ComputeElos::computeApproxEloStdevs(elos,winMatrix,numBots,priorWL);
+      vector<double> elos = ComputeElos::computeElos(winMatrix,numBots,priorWL,maxIters,tolerance,NULL);
+      vector<double> eloStdevs = ComputeElos::computeApproxEloStdevs(elos,winMatrix,numBots,priorWL);
 
       {
         ostringstream out;
@@ -308,12 +308,12 @@ namespace {
         logger.write(out.str());
       }
 
-      std::vector<int> botIdxsShuffled(numBots);
+      vector<int> botIdxsShuffled(numBots);
       for(int i = 0; i<numBots; i++)
         botIdxsShuffled[i] = i;
       for(int i = numBots-1; i>0; i--) {
         int r = rand.nextUInt(i+1);
-        std::swap(botIdxsShuffled[r],botIdxsShuffled[i]);
+        swap(botIdxsShuffled[r],botIdxsShuffled[i]);
       }
 
       //Several times in a row, find the bot with the least games played, and chooose a random other bot with probability proportional
@@ -332,7 +332,7 @@ namespace {
         }
         assert(bestBot >= 0);
 
-        std::vector<double> relProbs(numBots);
+        vector<double> relProbs(numBots);
         double probSum = 0.0;
         for(int b = 0; b<numBots; b++) {
           if(b == bestBot)
@@ -341,8 +341,8 @@ namespace {
             //Vary elo a bit based on stdev so that bots that are more uncertain get more variety
             //Not as much as the whole stdev though, to make sure matches are still informative.
             double g = rand.nextGaussian();
-            g = std::min(g,10.0);
-            g = std::max(g,-10.0);
+            g = min(g,10.0);
+            g = max(g,-10.0);
             double eloDiff = elos[b] - elos[bestBot] + 0.5 * eloStdevs[bestBot] * g;
             double p = ComputeElos::probWin(eloDiff);
             relProbs[b] = p * (1.0-p) + 1e-30; //Add a tiny bit just in case to avoid zero
@@ -350,7 +350,7 @@ namespace {
           probSum += relProbs[b];
         }
         assert(numBots > 1);
-        assert(!std::isnan(probSum));
+        assert(!isnan(probSum));
         if(probSum <= 0)
           throw StringError("Negative relative probabilities for matchauto");
 
@@ -442,13 +442,13 @@ int MainCmds::matchauto(int argc, const char* const* argv) {
   logger.write(string("Git revision: ") + Version::getGitRevision());
 
   //Load per-bot search config, first, which also tells us how many bots we're running
-  std::vector<SearchParams> paramss = Setup::loadParams(cfg,Setup::SETUP_FOR_MATCH);
+  vector<SearchParams> paramss = Setup::loadParams(cfg,Setup::SETUP_FOR_MATCH);
   assert(paramss.size() > 0);
   int numBots = (int)paramss.size();
 
   //Load the names of the bots and which model each bot is using
-  std::vector<string> nnModelFilesByBot;
-  std::vector<string> botNames;
+  vector<string> nnModelFilesByBot;
+  vector<string> botNames;
   for(int i = 0; i<numBots; i++) {
     string idxStr = Global::intToString(i);
 
@@ -507,12 +507,12 @@ int MainCmds::matchauto(int argc, const char* const* argv) {
     MakeDir::make(sgfOutputDir);
   MakeDir::make(resultsDir);
 
-  if(!std::atomic_is_lock_free(&shouldStop))
+  if(!atomic_is_lock_free(&shouldStop))
     throw StringError("shouldStop is not lock free, signal-quitting mechanism for terminating matches will NOT work!");
-  std::signal(SIGINT, signalHandler);
-  std::signal(SIGTERM, signalHandler);
+  signal(SIGINT, signalHandler);
+  signal(SIGTERM, signalHandler);
 
-  std::mutex resultLock;
+  mutex resultLock;
   ofstream* resultOut = new ofstream(resultsDir + "/" + Global::uint64ToHexString(seedRand.nextUInt64()) + ".results.csv");
 
   auto runMatchLoop = [
@@ -563,7 +563,7 @@ int MainCmds::matchauto(int argc, const char* const* argv) {
           else
             out << "=";
 
-          std::lock_guard<std::mutex> lock(resultLock);
+          lock_guard<mutex> lock(resultLock);
           (*resultOut) << out.str() << endl;
         }
 
@@ -582,9 +582,9 @@ int MainCmds::matchauto(int argc, const char* const* argv) {
   };
 
   Rand hashRand;
-  std::vector<std::thread> threads;
+  vector<thread> threads;
   for(int i = 0; i<numGameThreads; i++) {
-    threads.push_back(std::thread(runMatchLoop, hashRand.nextUInt64()));
+    threads.push_back(thread(runMatchLoop, hashRand.nextUInt64()));
   }
   for(int i = 0; i<numGameThreads; i++)
     threads[i].join();

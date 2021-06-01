@@ -90,7 +90,7 @@ Rules Rules::getSimpleTerritory() {
 }
 
 bool Rules::komiIsIntOrHalfInt(float komi) {
-  return std::isfinite(komi) && komi * 2 == (int)(komi * 2);
+  return isfinite(komi) && komi * 2 == (int)(komi * 2);
 }
 
 set<string> Rules::koRuleStrings() {
@@ -407,7 +407,7 @@ static Rules parseRulesHelper(const string& sOrig, bool allowKomi) {
         bool suc = Global::tryStringToFloat(s.substr(0,endIdx),komi);
         if(!suc)
           throw IOError("Could not parse rules: " + sOrig);
-        if(!std::isfinite(komi) || komi > 1e5 || komi < -1e5)
+        if(!isfinite(komi) || komi > 1e5 || komi < -1e5)
           throw IOError("Could not parse rules: " + sOrig);
         rules.komi = komi;
         komiSpecified = true;

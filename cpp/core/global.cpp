@@ -302,7 +302,7 @@ vector<string> Global::split(const string& s)
 {
   istringstream in(s);
   string token;
-  std::vector<string> tokens;
+  vector<string> tokens;
   while(in >> token)
   {
     token = Global::trim(token);
@@ -332,12 +332,12 @@ string Global::concat(const char* const* strs, size_t len, const char* delim)
   return s;
 }
 
-string Global::concat(const std::vector<string>& strs, const char* delim)
+string Global::concat(const vector<string>& strs, const char* delim)
 {
   return concat(strs,delim,0,strs.size());
 }
 
-string Global::concat(const std::vector<string>& strs, const char* delim, size_t start, size_t end)
+string Global::concat(const vector<string>& strs, const char* delim, size_t start, size_t end)
 {
   size_t totalLen = 0;
   size_t delimLen = strlen(delim);
@@ -360,8 +360,8 @@ string Global::concat(const std::vector<string>& strs, const char* delim, size_t
 
 string Global::concat(const set<string>& strs, const char* delim)
 {
-  std::vector<string> v;
-  std::copy(strs.begin(), strs.end(), std::back_inserter(v));
+  vector<string> v;
+  copy(strs.begin(), strs.end(), back_inserter(v));
   return concat(v,delim,0,v.size());
 }
 
@@ -369,7 +369,7 @@ vector<string> Global::split(const string& s, char delim)
 {
   istringstream in(s);
   string token;
-  std::vector<string> tokens;
+  vector<string> tokens;
   while(getline(in,token,delim))
     tokens.push_back(token);
   return tokens;
@@ -410,7 +410,7 @@ static string vformat (const char *fmt, va_list ap)
   // all the time.  Be prepared to allocate dynamically if it doesn't fit.
   size_t size = 4096;
   char stackbuf[4096];
-  std::vector<char> dynamicbuf;
+  vector<char> dynamicbuf;
   char *buf = &stackbuf[0];
 
   int needed;
@@ -433,14 +433,14 @@ static string vformat (const char *fmt, va_list ap)
     dynamicbuf.resize(size+1);
     buf = &dynamicbuf[0];
   }
-  return std::string(buf, (size_t)needed);
+  return string(buf, (size_t)needed);
 }
 
 string Global::strprintf(const char* fmt, ...)
 {
   va_list ap;
   va_start (ap, fmt);
-  std::string buf = vformat (fmt, ap);
+  string buf = vformat (fmt, ap);
   va_end (ap);
   return buf;
 }
@@ -523,7 +523,7 @@ bool contains(const string& str, char c)
   return strchr(str.c_str(),c) != NULL;
 }
 
-bool contains(const std::vector<string>& vec, const char* elt)
+bool contains(const vector<string>& vec, const char* elt)
 {
   for(const string& x: vec)
     if(x == elt)
@@ -536,7 +536,7 @@ bool contains(const set<string>& set, const char* elt)
   return set.find(elt) != set.end();
 }
 
-size_t indexOf(const std::vector<string>& vec, const char* elt)
+size_t indexOf(const vector<string>& vec, const char* elt)
 {
   size_t size = vec.size();
   for(size_t i = 0; i<size; i++)
@@ -692,7 +692,7 @@ vector<string> Global::readFileLines(const char* filename, char delimiter)
   if(!ifs.good())
     throw IOError(string("File not found: ") + filename);
 
-  std::vector<string> vec;
+  vector<string> vec;
   string line;
   while(getline(ifs,line,delimiter))
     vec.push_back(line);
@@ -704,7 +704,7 @@ vector<string> Global::readFileLines(const string& filename, char delimiter)
   return readFileLines(filename.c_str(), delimiter);
 }
 
-void Global::collectFiles(const string& dirname, std::function<bool(const string&)> fileFilter, std::vector<string>& collected)
+void Global::collectFiles(const string& dirname, function<bool(const string&)> fileFilter, vector<string>& collected)
 {
   namespace gfs = ghc::filesystem;
   try {

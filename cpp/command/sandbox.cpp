@@ -50,7 +50,7 @@ using namespace std;
 //   bool doRandomize = true;
 //   string randSeed = "abc";
 //   int defaultSymmetry = 0;
-//   std::vector<int> gpuIdxByServerThread = {0};
+//   vector<int> gpuIdxByServerThread = {0};
 //   bool useFP16 = false;
 //   bool useNHWC = false;
 //   nnEval->spawnServerThreads(
@@ -165,18 +165,18 @@ using namespace std;
 //   // cout << "sizeof(uint16_t) " << sizeof(uint16_t) << endl;
 //   // cout << "sizeof(uint32_t) " << sizeof(uint32_t) << endl;
 //   // cout << "sizeof(uint64_t) " << sizeof(uint64_t) << endl;
-//   // cout << "sizeof(std::atomic_flag) " << sizeof(std::atomic_flag) << endl;;
-//   // cout << "sizeof(std::mutex) " << sizeof(std::mutex) << endl;;
-//   // cout << "sizeof(std::shared_ptr<NNOutput>) " << sizeof(std::shared_ptr<NNOutput>) << endl;;
+//   // cout << "sizeof(atomic_flag) " << sizeof(atomic_flag) << endl;;
+//   // cout << "sizeof(mutex) " << sizeof(mutex) << endl;;
+//   // cout << "sizeof(shared_ptr<NNOutput>) " << sizeof(shared_ptr<NNOutput>) << endl;;
 
 //   // {
 //   //   atomic<bool>* b = new atomic<bool>(false);
-//   //   cout << "atomic<bool> lock free " << std::atomic_is_lock_free(b) << endl;
+//   //   cout << "atomic<bool> lock free " << atomic_is_lock_free(b) << endl;
 //   //   delete b;
 //   // }
 //   // {
 //   //   atomic<uint64_t>* b = new atomic<uint64_t>(0);
-//   //   cout << "atomic<uint64_t> lock free " << std::atomic_is_lock_free(b) << endl;
+//   //   cout << "atomic<uint64_t> lock free " << atomic_is_lock_free(b) << endl;
 //   //   delete b;
 //   // }
 
@@ -199,7 +199,7 @@ int MainCmds::sandbox() {
   //   uint32_t x[16];
   //   for(int i = 0; i<16; i++)
   //     x[i] = rand.nextUInt();
-  //   std::cout.write(reinterpret_cast<const char*>(&x),sizeof(x));
+  //   cout.write(reinterpret_cast<const char*>(&x),sizeof(x));
   // }
 
   // int64_t sum = 0;
@@ -284,7 +284,7 @@ int MainCmds::sandbox() {
 //     //   NNInputs::fillRowV1(board3, hist3, pla, row);
 //   }
 
-//   std::vector<NNOutput*> outputs;
+//   vector<NNOutput*> outputs;
 //   for(int row = 0; row<batchSize; row++) {
 //     NNOutput* emptyOutput = new NNOutput();
 //     emptyOutput->nnXLen = nnXLen;
@@ -1432,18 +1432,18 @@ int MainCmds::sandbox() {
 //   cout << "sizeof(uint16_t) " << sizeof(uint16_t) << endl;
 //   cout << "sizeof(uint32_t) " << sizeof(uint32_t) << endl;
 //   cout << "sizeof(uint64_t) " << sizeof(uint64_t) << endl;
-//   cout << "sizeof(std::atomic_flag) " << sizeof(std::atomic_flag) << endl;;
-//   cout << "sizeof(std::mutex) " << sizeof(std::mutex) << endl;;
-//   cout << "sizeof(std::shared_ptr<NNOutput>) " << sizeof(std::shared_ptr<NNOutput>) << endl;;
+//   cout << "sizeof(atomic_flag) " << sizeof(atomic_flag) << endl;;
+//   cout << "sizeof(mutex) " << sizeof(mutex) << endl;;
+//   cout << "sizeof(shared_ptr<NNOutput>) " << sizeof(shared_ptr<NNOutput>) << endl;;
 
 //   {
 //     atomic<bool>* b = new atomic<bool>(false);
-//     cout << "atomic<bool> lock free " << std::atomic_is_lock_free(b) << endl;
+//     cout << "atomic<bool> lock free " << atomic_is_lock_free(b) << endl;
 //     delete b;
 //   }
 //   {
 //     atomic<uint64_t>* b = new atomic<uint64_t>(0);
-//     cout << "atomic<uint64_t> lock free " << std::atomic_is_lock_free(b) << endl;
+//     cout << "atomic<uint64_t> lock free " << atomic_is_lock_free(b) << endl;
 //     delete b;
 //   }
 
@@ -1473,7 +1473,7 @@ int MainCmds::sandbox() {
 //   bool doRandomize = true;
 //   string randSeed = "abc";
 //   int defaultSymmetry = 0;
-//   std::vector<std::thread*> nnServerThreads = nnEval->spawnServerThreads(numNNServerThreads,doRandomize,randSeed,defaultSymmetry,logger);
+//   vector<thread*> nnServerThreads = nnEval->spawnServerThreads(numNNServerThreads,doRandomize,randSeed,defaultSymmetry,logger);
 
 //   Rules rules;
 //   rules.koRule = Rules::KO_POSITIONAL;
@@ -1527,18 +1527,18 @@ int MainCmds::sandbox() {
 //   cout << "sizeof(uint16_t) " << sizeof(uint16_t) << endl;
 //   cout << "sizeof(uint32_t) " << sizeof(uint32_t) << endl;
 //   cout << "sizeof(uint64_t) " << sizeof(uint64_t) << endl;
-//   cout << "sizeof(std::atomic_flag) " << sizeof(std::atomic_flag) << endl;;
-//   cout << "sizeof(std::mutex) " << sizeof(std::mutex) << endl;;
-//   cout << "sizeof(std::shared_ptr<NNOutput>) " << sizeof(std::shared_ptr<NNOutput>) << endl;;
+//   cout << "sizeof(atomic_flag) " << sizeof(atomic_flag) << endl;;
+//   cout << "sizeof(mutex) " << sizeof(mutex) << endl;;
+//   cout << "sizeof(shared_ptr<NNOutput>) " << sizeof(shared_ptr<NNOutput>) << endl;;
 
 //   {
 //     atomic<bool>* b = new atomic<bool>(false);
-//     cout << "atomic<bool> lock free " << std::atomic_is_lock_free(b) << endl;
+//     cout << "atomic<bool> lock free " << atomic_is_lock_free(b) << endl;
 //     delete b;
 //   }
 //   {
 //     atomic<uint64_t>* b = new atomic<uint64_t>(0);
-//     cout << "atomic<uint64_t> lock free " << std::atomic_is_lock_free(b) << endl;
+//     cout << "atomic<uint64_t> lock free " << atomic_is_lock_free(b) << endl;
 //     delete b;
 //   }
 
@@ -1603,7 +1603,7 @@ int MainCmds::sandbox() {
 //   for(int i = 0; i<10; i++) {
 //     nnEval->evaluate(board,boardHistory,nextPlayer,resultBuf);
 
-//     shared_ptr<NNOutput> output = std::move(resultBuf.result);
+//     shared_ptr<NNOutput> output = move(resultBuf.result);
 
 //     for(int y = 0; y<NNPos::MAX_BOARD_LEN; y++) {
 //       for(int x = 0; x<NNPos::MAX_BOARD_LEN; x++) {
@@ -1752,7 +1752,7 @@ int MainCmds::sandbox() {
 //   BoardHistory hist2(board2,nextPlayer,rules);
 
 //   auto runInputsInLoop = [&](vector<float>* res, int which) {
-//     std::vector<float>& results = *res;
+//     vector<float>& results = *res;
 
 //     Tensor inputs(DT_FLOAT,inputsShape);
 //     Tensor symmetries(DT_BOOL,symmetriesShape);
@@ -1768,12 +1768,12 @@ int MainCmds::sandbox() {
 
 //     // Tensor sliced = inputs.Slice(0,1);
 
-//     std::vector<pair<string,Tensor>> inputsList1 = {
+//     vector<pair<string,Tensor>> inputsList1 = {
 //       {"g1/inputs",inputs},
 //       {"g1/symmetries",symmetries},
 //       {"g1/is_training",isTraining},
 //     };
-//     std::vector<pair<string,Tensor>> inputsList2 = {
+//     vector<pair<string,Tensor>> inputsList2 = {
 //       {"g2/inputs",inputs},
 //       {"g2/symmetries",symmetries},
 //       {"g2/is_training",isTraining},
@@ -1789,7 +1789,7 @@ int MainCmds::sandbox() {
 //       NNInputs::fillRowV1(board1, hist1, nextPlayer, row + NNInputs::ROW_SIZE_V1*2);
 //       NNInputs::fillRowV1(board2, hist2, nextPlayer, row + NNInputs::ROW_SIZE_V1*3);
 
-//       std::vector<Tensor> outputs;
+//       vector<Tensor> outputs;
 //       // cout << "Running" << endl;
 //       if(which == 1)
 //         status = session->Run(inputsList1, {"g1/policy_output","g1/value_output"}, {}, &outputs);
@@ -1843,16 +1843,16 @@ int MainCmds::sandbox() {
 
 //   int numThreads = 4;
 
-//   std::vector<std::thread> threads;
-//   std::vector<float> results[numThreads];
+//   vector<thread> threads;
+//   vector<float> results[numThreads];
 //   for(int i = 0; i<numThreads; i++)
-//     results[i] = std::vector<float>();
+//     results[i] = vector<float>();
 
 //   for(int i = 0; i<numThreads; i++) {
 //     if(i % 2 == 0)
-//       threads.push_back(std::thread(runInputsInLoop,&(results[i]),1));
+//       threads.push_back(thread(runInputsInLoop,&(results[i]),1));
 //     else
-//       threads.push_back(std::thread(runInputsInLoop,&(results[i]),2));
+//       threads.push_back(thread(runInputsInLoop,&(results[i]),2));
 //   }
 //   for(int i = 0; i<numThreads; i++) {
 //     threads[i].join();
@@ -1991,13 +1991,13 @@ int MainCmds::sandbox() {
 //   cout << "ISALIGNED " << sliced.IsAligned() << endl;
 //   int outputBatchSize = 1;
 
-//   std::vector<pair<string,Tensor>> inputsList = {
+//   vector<pair<string,Tensor>> inputsList = {
 //     {"inputs",sliced},
 //     {"symmetries",symmetries},
 //     {"is_training",isTraining},
 //   };
 
-//   std::vector<Tensor> outputs;
+//   vector<Tensor> outputs;
 
 //   status = session->Run(inputsList, {"policy_output","value_output"}, {}, &outputs);
 //   checkStatus(status,"running inference");

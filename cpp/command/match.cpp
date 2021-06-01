@@ -14,8 +14,8 @@
 using namespace std;
 
 
-static std::atomic<bool> sigReceived(false);
-static std::atomic<bool> shouldStop(false);
+static atomic<bool> sigReceived(false);
+static atomic<bool> shouldStop(false);
 static void signalHandler(int signal)
 {
   if(signal == SIGINT || signal == SIGTERM) {
@@ -66,14 +66,14 @@ int MainCmds::match(int argc, const char* const* argv) {
   logger.write(string("Git revision: ") + Version::getGitRevision());
 
   //Load per-bot search config, first, which also tells us how many bots we're running
-  std::vector<SearchParams> paramss = Setup::loadParams(cfg,Setup::SETUP_FOR_MATCH);
+  vector<SearchParams> paramss = Setup::loadParams(cfg,Setup::SETUP_FOR_MATCH);
   assert(paramss.size() > 0);
   int numBots = (int)paramss.size();
 
   //Load a filter on what bots we actually want to run
-  std::vector<bool> excludeBot(numBots);
+  vector<bool> excludeBot(numBots);
   if(cfg.contains("includeBots")) {
-    std::vector<int> includeBots = cfg.getInts("includeBots",0,Setup::MAX_BOT_PARAMS_FROM_CFG);
+    vector<int> includeBots = cfg.getInts("includeBots",0,Setup::MAX_BOT_PARAMS_FROM_CFG);
     for(int i = 0; i<numBots; i++) {
       if(!contains(includeBots,i))
         excludeBot[i] = true;
@@ -81,8 +81,8 @@ int MainCmds::match(int argc, const char* const* argv) {
   }
 
   //Load the names of the bots and which model each bot is using
-  std::vector<string> nnModelFilesByBot(numBots);
-  std::vector<string> botNames(numBots);
+  vector<string> nnModelFilesByBot(numBots);
+  vector<string> botNames(numBots);
   for(int i = 0; i<numBots; i++) {
     string idxStr = Global::intToString(i);
 
@@ -100,8 +100,8 @@ int MainCmds::match(int argc, const char* const* argv) {
   }
 
   //Dedup and load each necessary model exactly once
-  std::vector<string> nnModelFiles;
-  std::vector<int> whichNNModel(numBots);
+  vector<string> nnModelFiles;
+  vector<int> whichNNModel(numBots);
   for(int i = 0; i<numBots; i++) {
     if(excludeBot[i])
       continue;
@@ -146,7 +146,7 @@ int MainCmds::match(int argc, const char* const* argv) {
   GameRunner* gameRunner = new GameRunner(cfg, playSettings, logger);
   int maxBoardSizeUsed = 0;
   {
-    std::vector<int> allowedBSizes = gameRunner->getGameInitializer()->getAllowedBSizes();
+    vector<int> allowedBSizes = gameRunner->getGameInitializer()->getAllowedBSizes();
     for(size_t i = 0; i<allowedBSizes.size(); i++) {
       if(maxBoardSizeUsed < allowedBSizes[i])
         maxBoardSizeUsed = allowedBSizes[i];
@@ -163,17 +163,17 @@ int MainCmds::match(int argc, const char* const* argv) {
 
   //Initialize neural net inference engine globals, and load models
   Setup::initializeSession(cfg);
-  const std::vector<string>& nnModelNames = nnModelFiles;
+  const vector<string>& nnModelNames = nnModelFiles;
   int defaultMaxBatchSize = -1;
-  const std::vector<string> expectedSha256s;
-  std::vector<NNEvaluator*> nnEvals = Setup::initializeNNEvaluators(
+  const vector<string> expectedSha256s;
+  vector<NNEvaluator*> nnEvals = Setup::initializeNNEvaluators(
     nnModelNames,nnModelFiles,expectedSha256s,cfg,logger,seedRand,maxConcurrentEvals,expectedConcurrentEvals,
     maxBoardSizeUsed,maxBoardSizeUsed,defaultMaxBatchSize,
     Setup::SETUP_FOR_MATCH
   );
   logger.write("Loaded neural net");
 
-  std::vector<NNEvaluator*> nnEvalsByBot(numBots);
+  vector<NNEvaluator*> nnEvalsByBot(numBots);
   for(int i = 0; i<numBots; i++) {
     if(excludeBot[i])
       continue;
@@ -197,10 +197,10 @@ int MainCmds::match(int argc, const char* const* argv) {
   if(sgfOutputDir != string())
     MakeDir::make(sgfOutputDir);
 
-  if(!std::atomic_is_lock_free(&shouldStop))
+  if(!atomic_is_lock_free(&shouldStop))
     throw StringError("shouldStop is not lock free, signal-quitting mechanism for terminating matches will NOT work!");
-  std::signal(SIGINT, signalHandler);
-  std::signal(SIGTERM, signalHandler);
+  signal(SIGINT, signalHandler);
+  signal(SIGTERM, signalHandler);
 
   auto runMatchLoop = [
     &gameRunner,&matchPairer,&sgfOutputDir,&logger,&gameSeedBase
@@ -255,9 +255,9 @@ int MainCmds::match(int argc, const char* const* argv) {
 
 
   Rand hashRand;
-  std::vector<std::thread> threads;
+  vector<thread> threads;
   for(int i = 0; i<numGameThreads; i++) {
-    threads.push_back(std::thread(runMatchLoopProtected, hashRand.nextUInt64()));
+    threads.push_back(thread(runMatchLoopProtected, hashRand.nextUInt64()));
   }
   for(int i = 0; i<threads.size(); i++)
     threads[i].join();
