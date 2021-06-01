@@ -249,21 +249,21 @@ namespace Play {
     const PlaySettings& playSettings, const OtherGameProperties& otherGameProps,
     Rand& gameRand,
     std::function<NNEvaluator*()> checkForNewNNEval,
-    std::function<void(const Board&, const BoardHistory&, Player, Loc, const std::vector<double>&, const std::vector<double>&, const std::vector<double>&, const Search*)> onEachMove
+    std::function<void(const Board&, const BoardHistory&, Player, Move, const std::vector<double>&, const std::vector<double>&, const std::vector<double>&, const Search*)> onEachMove
   );
 
   //In the case where checkForNewNNEval is provided, will MODIFY the provided botSpecs with any new nneval!
   FinishedGameData* runGame(
-    const Board& startBoard, Player pla, const BoardHistory& startHist, ExtraBlackAndKomi extraBlackAndKomi,
-    MatchPairer::BotSpec& botSpecB, MatchPairer::BotSpec& botSpecW,
-    Search* botB, Search* botW,
+    const Board &startBoard, Player startPla, const BoardHistory &startHist, ExtraBlackAndKomi extraBlackAndKomi,
+    MatchPairer::BotSpec &botSpecB, MatchPairer::BotSpec &botSpecW,
+    Search *botB, Search *botW,
     bool doEndGameIfAllPassAlive, bool clearBotBeforeSearch,
-    Logger& logger, bool logSearchInfo, bool logMoves,
-    int maxMovesPerGame, const std::function<bool()>& shouldStop,
-    const PlaySettings& playSettings, const OtherGameProperties& otherGameProps,
-    Rand& gameRand,
-    std::function<NNEvaluator*()> checkForNewNNEval,
-    std::function<void(const Board&, const BoardHistory&, Player, Loc, const std::vector<double>&, const std::vector<double>&, const std::vector<double>&, const Search*)> onEachMove
+    Logger &logger, bool logSearchInfo, bool logMoves,
+    int maxMovesPerGame, const std::function<bool()> &shouldStop,
+    const PlaySettings &playSettings, const OtherGameProperties &otherGameProps,
+    Rand &gameRand,
+    std::function<NNEvaluator *()> checkForNewNNEval,
+    std::function<void(const Board &, const BoardHistory &, Player, Move, const std::vector<double> &, const std::vector<double> &, const std::vector<double> &, const Search *)> onEachMove
   );
 
   void maybeForkGame(
@@ -317,7 +317,7 @@ public:
     Logger& logger,
     const std::function<bool()>& shouldStop,
     std::function<NNEvaluator*()> checkForNewNNEval,
-    std::function<void(const Board&, const BoardHistory&, Player, Loc, const std::vector<double>&, const std::vector<double>&, const std::vector<double>&, const Search*)> onEachMove,
+    std::function<void(const Board&, const BoardHistory&, Player, Move, const std::vector<double>&, const std::vector<double>&, const std::vector<double>&, const Search*)> onEachMove,
     bool alwaysIncludeOwnership
   );
 

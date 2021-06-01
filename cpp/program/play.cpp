@@ -1295,7 +1295,7 @@ FinishedGameData *Play::runGame(
     const PlaySettings &playSettings, const OtherGameProperties &otherGameProps,
     Rand &gameRand,
     std::function<NNEvaluator *()> checkForNewNNEval,
-    std::function<void(const Board &, const BoardHistory &, Player, Loc, const std::vector<double> &, const std::vector<double> &, const std::vector<double> &, const Search *)> onEachMove)
+    std::function<void(const Board &, const BoardHistory &, Player, Move, const std::vector<double> &, const std::vector<double> &, const std::vector<double> &, const Search *)> onEachMove)
 {
   Search *botB;
   Search *botW;
@@ -2319,7 +2319,7 @@ FinishedGameData *GameRunner::runGame(
     Logger &logger,
     const std::function<bool()> &shouldStop,
     std::function<NNEvaluator *()> checkForNewNNEval,
-    std::function<void(const Board &, const BoardHistory &, Player, Loc, const std::vector<double> &, const std::vector<double> &, const std::vector<double> &, const Search *)> onEachMove,
+    std::function<void(const Board &, const BoardHistory &, Player, Move, const std::vector<double> &, const std::vector<double> &, const std::vector<double> &, const Search *)> onEachMove,
     bool alwaysIncludeOwnership)
 {
   MatchPairer::BotSpec botSpecB = bSpecB;
