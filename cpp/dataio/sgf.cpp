@@ -345,7 +345,7 @@ XYSize Sgf::getXYSize() const {
     propertyFail("Board size in sgf is <= 0: " + s);
   if(xSize > Board::MAX_LEN || ySize > Board::MAX_LEN)
     propertyFail(
-      "Board size in sgf is > Board::MAX_LEN = " + Global::intToString((int)Board::MAX_LEN) +
+      "Board size in sgf is" + Global::intToString(xSize)+" > Board::MAX_LEN = " + Global::intToString((int)Board::MAX_LEN) +
       ", if larger sizes are desired, consider increasing and recompiling: " + s
     );
   return XYSize(xSize,ySize);
