@@ -1036,7 +1036,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
         std::make_pair("drawRandRadius","0.5"),
         std::make_pair("noResultStdev","0.16"),
 
-        std::make_pair("bSizes","19"),
+        std::make_pair("bSizes","6"),
         std::make_pair("bSizeRelProbs","1"),
         std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
         std::make_pair("scoringRules","AREA"),
@@ -1079,7 +1079,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
         std::make_pair("drawRandRadius","0.5"),
         std::make_pair("noResultStdev","0.16"),
 
-        std::make_pair("bSizes","19"),
+        std::make_pair("bSizes","6"),
         std::make_pair("bSizeRelProbs","1"),
         std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
         std::make_pair("scoringRules","AREA,TERRITORY"),
@@ -1122,7 +1122,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
         std::make_pair("drawRandRadius","0.5"),
         std::make_pair("noResultStdev","0.16"),
 
-        std::make_pair("bSizes","19"),
+        std::make_pair("bSizes","6"),
         std::make_pair("bSizeRelProbs","1"),
         std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
         std::make_pair("scoringRules","AREA"),
@@ -1165,7 +1165,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
         std::make_pair("drawRandRadius","0.5"),
         std::make_pair("noResultStdev","0.16"),
 
-        std::make_pair("bSizes","9"),
+        std::make_pair("bSizes","6"),
         std::make_pair("bSizeRelProbs","1"),
         std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
         std::make_pair("scoringRules","AREA"),
@@ -1209,7 +1209,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
         std::make_pair("drawRandRadius","0.5"),
         std::make_pair("noResultStdev","0.16"),
 
-        std::make_pair("bSizes","19"),
+        std::make_pair("bSizes","6"),
         std::make_pair("bSizeRelProbs","1"),
         std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
         std::make_pair("scoringRules","AREA"),
@@ -1252,7 +1252,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
         std::make_pair("drawRandRadius","0.5"),
         std::make_pair("noResultStdev","0.16"),
 
-        std::make_pair("bSizes","19"),
+        std::make_pair("bSizes","6"),
         std::make_pair("bSizeRelProbs","1"),
         std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
         std::make_pair("scoringRules","AREA"),
@@ -1295,7 +1295,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
         std::make_pair("drawRandRadius","0.5"),
         std::make_pair("noResultStdev","0.16"),
 
-        std::make_pair("bSizes","19"),
+        std::make_pair("bSizes","6"),
         std::make_pair("bSizeRelProbs","1"),
         std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
         std::make_pair("scoringRules","AREA"),
@@ -1339,7 +1339,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
         std::make_pair("drawRandRadius","0.5"),
         std::make_pair("noResultStdev","0.16"),
 
-        std::make_pair("bSizes","19"),
+        std::make_pair("bSizes","6"),
         std::make_pair("bSizeRelProbs","1"),
         std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
         std::make_pair("scoringRules","AREA"),
@@ -1383,7 +1383,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
         std::make_pair("drawRandRadius","0.5"),
         std::make_pair("noResultStdev","0.16"),
 
-        std::make_pair("bSizes","19"),
+        std::make_pair("bSizes","6"),
         std::make_pair("bSizeRelProbs","1"),
         std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
         std::make_pair("scoringRules","AREA"),
@@ -1427,7 +1427,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
         std::make_pair("drawRandRadius","0.5"),
         std::make_pair("noResultStdev","0.16"),
 
-        std::make_pair("bSizes","19"),
+        std::make_pair("bSizes","6"),
         std::make_pair("bSizeRelProbs","1"),
         std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
         std::make_pair("scoringRules","AREA"),
@@ -1471,7 +1471,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
         std::make_pair("drawRandRadius","0.5"),
         std::make_pair("noResultStdev","0.16"),
 
-        std::make_pair("bSizes","19"),
+        std::make_pair("bSizes","6"),
         std::make_pair("bSizeRelProbs","1"),
         std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
         std::make_pair("scoringRules","AREA"),
@@ -1514,7 +1514,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
         std::make_pair("drawRandRadius","0.5"),
         std::make_pair("noResultStdev","0.16"),
 
-        std::make_pair("bSizes","19"),
+        std::make_pair("bSizes","6"),
         std::make_pair("bSizeRelProbs","1"),
         std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
         std::make_pair("scoringRules","AREA"),
@@ -1558,7 +1558,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
         std::make_pair("drawRandRadius","0.5"),
         std::make_pair("noResultStdev","0.16"),
 
-        std::make_pair("bSizes","19"),
+        std::make_pair("bSizes","6"),
         std::make_pair("bSizeRelProbs","1"),
         std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
         std::make_pair("scoringRules","AREA"),
@@ -1602,7 +1602,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
         std::make_pair("drawRandRadius","0.5"),
         std::make_pair("noResultStdev","0.16"),
 
-        std::make_pair("bSizes","19"),
+        std::make_pair("bSizes","6"),
         std::make_pair("bSizeRelProbs","1"),
         std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
         std::make_pair("scoringRules","AREA"),
@@ -1632,7 +1632,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     playSettings.forSelfPlay = true;
 
     Sgf::PositionSample startPosSample;
-    startPosSample.board = Board(19,19);
+    startPosSample.board = Board(6,6);
     startPosSample.nextPla = P_BLACK;
     startPosSample.moves = std::vector<Move>();
     startPosSample.initialTurnNumber = 0;
@@ -1655,7 +1655,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
         std::make_pair("drawRandRadius","0.5"),
         std::make_pair("noResultStdev","0.16"),
 
-        std::make_pair("bSizes","19"),
+        std::make_pair("bSizes","6"),
         std::make_pair("bSizeRelProbs","1"),
         std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
         std::make_pair("scoringRules","AREA"),
@@ -1686,7 +1686,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
     playSettings.forSelfPlay = true;
 
     Sgf::PositionSample startPosSample;
-    startPosSample.board = Board(19,19);
+    startPosSample.board = Board(6,6);
     startPosSample.nextPla = P_BLACK;
     startPosSample.moves = std::vector<Move>();
     startPosSample.initialTurnNumber = 0;
@@ -1709,7 +1709,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
         std::make_pair("drawRandRadius","0.5"),
         std::make_pair("noResultStdev","0.16"),
 
-        std::make_pair("bSizes","19"),
+        std::make_pair("bSizes","6"),
         std::make_pair("bSizeRelProbs","1"),
         std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
         std::make_pair("scoringRules","AREA"),
@@ -1752,7 +1752,7 @@ void Tests::runSelfplayStatTestsWithNN(const string& modelFile) {
         std::make_pair("drawRandRadius","0.5"),
         std::make_pair("noResultStdev","0.16"),
 
-        std::make_pair("bSizes","9,13,19"),
+        std::make_pair("bSizes","6,6,6"),
         std::make_pair("bSizeRelProbs","1,1,1"),
         std::make_pair("koRules","SIMPLE,POSITIONAL,SITUATIONAL"),
         std::make_pair("scoringRules","AREA"),

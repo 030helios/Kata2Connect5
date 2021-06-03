@@ -200,9 +200,9 @@ with tf.Session(config=tfconfig) as session:
     pla,opp = (("X","O") if pla == 1 else ("0","X"))
     print("----------------------------------------------------------------------")
     print("TO MOVE: " + pla)
-    for y in range(19):
-      for x in range(19):
-        loc = y*19+x
+    for y in range(6):
+      for x in range(6):
+        loc = y*6+x
         if inputs[loc,18] == 1.0:
           print("3",end="")
         elif inputs[loc,19] == 1.0:
@@ -249,7 +249,7 @@ with tf.Session(config=tfconfig) as session:
     return False
 
   def is_pass(move):
-    return (move < 0 or move >= 19*19)
+    return (move < 0 or move >= 6*6)
 
   strong_ranks = [0,8,9,35,62,63] #GoGoD, KGS 8d-9d, OGS Fox 9d, OGS 8d-9d
   def strong_game_filter(rank_one_hot_idx,pro_probs,real_move):
@@ -298,13 +298,13 @@ with tf.Session(config=tfconfig) as session:
     return batch_probs
 
   def is_on_board(x,y):
-    return (x >= 0 and x < 19 and y >= 0 and y < 19)
+    return (x >= 0 and x < 6 and y >= 0 and y < 6)
 
   def is_maybe_ko_recapture(pla,position,last_moves,real_move):
-    real_move_x = int(real_move) % 19
-    real_move_y = int(real_move) // 19
-    last_move3_x = int(last_moves[2]) % 19
-    last_move3_y = int(last_moves[2]) // 19
+    real_move_x = int(real_move) % 6
+    real_move_y = int(real_move) // 6
+    last_move3_x = int(last_moves[2]) % 6
+    last_move3_y = int(last_moves[2]) // 6
     real_move_adjs = []
     if is_on_board(real_move_x,real_move_y-1):
       real_move_adjs.append((real_move_x,real_move_y-1))
@@ -318,7 +318,7 @@ with tf.Session(config=tfconfig) as session:
     if (last_move3_x,last_move3_y) not in real_move_adjs:
       return False
     for (x,y) in real_move_adjs:
-      if position[x+y*19] != 3-pla:
+      if position[x+y*6] != 3-pla:
         return False
     return True
 
@@ -328,7 +328,7 @@ with tf.Session(config=tfconfig) as session:
     recent_captures = row[recent_captures_start:recent_captures_start+recent_captures_len]
     max_pro_prob = np.max(pro_probs)
 
-    position = np.zeros([19*19],dtype=np.int8)
+    position = np.zeros([6*6],dtype=np.int8)
     recent_capture_locs = []
     last_moves = np.zeros([5],dtype=np.int16)
     correct_net_moves = []
@@ -340,12 +340,12 @@ with tf.Session(config=tfconfig) as session:
 
     #By default, set the last moves all to an offboard number if there was no such move (or it was a pass)
     for i in range(len(last_moves)):
-      last_moves[i] = 19*19
+      last_moves[i] = 6*6
 
     correct_net_moves.append(real_move)
-    for y in range(19):
-      for x in range(19):
-        loc = y*19+x
+    for y in range(6):
+      for x in range(6):
+        loc = y*6+x
         if inputs[loc,1] == 1.0:
           position[loc] = pla
         elif inputs[loc,2] == 1.0:

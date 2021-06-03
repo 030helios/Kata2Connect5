@@ -461,7 +461,7 @@ Search::chooseIndexWithTemperature(Rand &rand, const double *relativeProbs, int 
 double Search::interpolateEarly(double halflife, double earlyValue, double value) const
 {
   double rawHalflives = (rootHistory.initialTurnNumber + rootHistory.moveHistory.size()) / halflife;
-  double halflives = rawHalflives * 19.0 / sqrt(rootBoard.x_size * rootBoard.y_size);
+  double halflives = rawHalflives * 6.0 / sqrt(rootBoard.x_size * rootBoard.y_size);
   return value + (earlyValue - value) * pow(0.5, halflives);
 }
 

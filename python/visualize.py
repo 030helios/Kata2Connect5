@@ -44,7 +44,7 @@ print("Building model", flush=True)
 with open(model_config_json) as f:
   model_config = json.load(f)
 
-pos_len = 19 # shouldn't matter, all we're doing is exporting weights that don't depend on this
+pos_len = 6 # shouldn't matter, all we're doing is exporting weights that don't depend on this
 if name_scope is not None:
   with tf.name_scope(name_scope):
     model = Model(model_config,pos_len,{})

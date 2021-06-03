@@ -33,7 +33,7 @@ oox.ox...
   BoardHistory hist9Late(board9Late,P_BLACK,Rules(),0);
 
 
-  Board board19Early = Board::parseBoard(19,19,R"%%(
+  Board board19Early = Board::parseBoard(6,6,R"%%(
 ...................
 ...................
 ...................
@@ -56,7 +56,7 @@ oox.ox...
 )%%");
   BoardHistory hist19Early(board19Early,P_BLACK,Rules(),0);
 
-  Board board19Late = Board::parseBoard(19,19,R"%%(
+  Board board19Late = Board::parseBoard(6,6,R"%%(
    A B C D E F G H J K L M N O P Q R S T
 19 . . . . . . . . . . . . . . . . . . .
 18 . . O . O . . X X . . . . . . . X O .

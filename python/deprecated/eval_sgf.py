@@ -91,7 +91,7 @@ def str_coord(loc,board):
   y = board.loc_y(loc)
   return '%c%d' % (colstr[x], board.size - y)
 
-board_size = 19
+board_size = 6
 board = Board(size=board_size)
 moves = []
 boards = [board.copy()]
@@ -107,7 +107,7 @@ def play(pla,loc):
   boards.append(board.copy())
 
 (metadata,setups,moves) = data.load_sgf_moves_exn(sgf_file)
-assert(metadata.size == 19) #Neural net only works with 19x19 right now
+assert(metadata.size == 6) #Neural net only works with 19x19 right now
 
 for (pla,loc) in setups:
   setstone(pla,loc)

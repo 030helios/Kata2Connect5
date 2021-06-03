@@ -119,7 +119,7 @@ static void writeLine(
 static void initializeDemoGame(Board &board, BoardHistory &hist, Player &pla, Rand &rand, AsyncBot *bot, Logger &logger)
 {
   static const int numSizes = 9;
-  int sizes[numSizes] = {19, 13, 9, 15, 11, 10, 12, 14, 16};
+  int sizes[numSizes] = {6,6,6,6,6,6,6,6,6};
   int sizeFreqs[numSizes] = {240, 18, 12, 6, 2, 1, 1, 1, 1};
 
   const int size = sizes[rand.nextUInt(sizeFreqs, numSizes)];

@@ -32,7 +32,7 @@ SearchParams::SearchParams()
    rootDesiredPerChildVisitsCoeff(0.0),
    chosenMoveTemperature(0.0),
    chosenMoveTemperatureEarly(0.0),
-   chosenMoveTemperatureHalflife(19),
+   chosenMoveTemperatureHalflife(6),
    chosenMoveSubtract(0.0),
    chosenMovePrune(1.0),
    useLcbForSelection(false),

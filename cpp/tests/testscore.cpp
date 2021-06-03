@@ -153,8 +153,8 @@ xxxxx
       {
         for (int b = 0; b < 5; b++)
         {
-          int xSizes[5] = {9, 13, 13, 13, 19};
-          int ySizes[5] = {9, 9, 13, 19, 19};
+          int xSizes[5] = {6,6,6,6,6};
+          int ySizes[5] = {6,6,6,6,6};
           Board board(xSizes[b], ySizes[b]);
           cout << "center " << center << " scale " << scale << " x " << xSizes[b] << " y " << ySizes[b] << endl;
           for (int stdev = 0; stdev <= 5; stdev++)

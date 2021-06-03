@@ -31,7 +31,7 @@ args = vars(parser.parse_args())
 name_scope = args["name_scope"]
 
 #Hardcoded max board size
-pos_len = 19
+pos_len = 6
 
 # Model ----------------------------------------------------------------
 
@@ -599,7 +599,7 @@ def run_gtp(session):
     'gfx/PassAlive/passalive',
   ]
 
-  board_size = 19
+  board_size = 6
   gs = GameState(board_size)
 
   rules = {
@@ -672,7 +672,7 @@ def run_gtp(session):
     add_input_feature_visualizations("input-" + str(i),i, normalization_div=1)
 
 
-  linear = tf.cumsum(tf.ones([19],dtype=tf.float32),axis=0,exclusive=True) / 18.0
+  linear = tf.cumsum(tf.ones([6],dtype=tf.float32),axis=0,exclusive=True) / 18.0
   color_calibration = tf.stack(axis=0,values=[
     linear,
     linear*0.5,
@@ -689,12 +689,12 @@ def run_gtp(session):
     -linear*0.02,
     -linear*0.01,
     linear*2-1,
-    tf.zeros([19],dtype=tf.float32),
+    tf.zeros([6],dtype=tf.float32),
     linear,
     -linear,
-    tf.zeros([19],dtype=tf.float32)
+    tf.zeros([6],dtype=tf.float32)
   ])
-  add_extra_board_size_visualizations("colorcalibration", tf.reshape(color_calibration,[1,19,19,1]),normalization_div=None)
+  add_extra_board_size_visualizations("colorcalibration", tf.reshape(color_calibration,[1,6,6,1]),normalization_div=None)
 
   while True:
     try:

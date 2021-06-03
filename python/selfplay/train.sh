@@ -70,7 +70,7 @@ time python3 "$GITROOTDIR"/python/train.py \
      -datadir "$BASEDIR"/shuffleddata/current/ \
      -exportdir "$BASEDIR"/"$EXPORT_SUBDIR" \
      -exportprefix "$TRAININGNAME" \
-     -pos-len 19 \
+     -pos-len 6 \
      -batch-size "$BATCHSIZE" \
      -gpu-memory-frac 0.6 \
      -model-kind "$MODELKIND" \

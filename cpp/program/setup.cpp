@@ -486,7 +486,7 @@ vector<SearchParams> Setup::loadParams(
     else if(cfg.contains("chosenMoveTemperatureHalflife"))
       params.chosenMoveTemperatureHalflife = cfg.getDouble("chosenMoveTemperatureHalflife",        0.1, 100000.0);
     else
-      params.chosenMoveTemperatureHalflife = 19;
+      params.chosenMoveTemperatureHalflife = 6;
     if(cfg.contains("chosenMoveSubtract"+idxStr)) params.chosenMoveSubtract = cfg.getDouble("chosenMoveSubtract"+idxStr, 0.0, 1.0e10);
     else if(cfg.contains("chosenMoveSubtract"))   params.chosenMoveSubtract = cfg.getDouble("chosenMoveSubtract",        0.0, 1.0e10);
     else                                          params.chosenMoveSubtract = 0.0;

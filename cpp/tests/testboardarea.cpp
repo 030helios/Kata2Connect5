@@ -365,7 +365,7 @@ OOOOOOOOO
   {
     const char* name = "Area 3";
     Color result[Board::MAX_ARR_SIZE];
-    Board board = Board::parseBoard(19,19,R"%%(
+    Board board = Board::parseBoard(6,6,R"%%(
 o.o....xx......o..o
 .oo.xxx.x......ooo.
 xo..x..xx........oo
@@ -566,7 +566,7 @@ OOOOOOOOO.OOOOOOOOO
   {
     const char* name = "Area 4";
     Color result[Board::MAX_ARR_SIZE];
-    Board board = Board::parseBoard(19,19,R"%%(
+    Board board = Board::parseBoard(6,6,R"%%(
 .x.x.xxxx.xxxx.x.x.
 x.xxxx..x.x..xxxx.x
 xx.x..x.x.x.x..x.x.
@@ -767,7 +767,7 @@ OOO.XO...OOOOOOOOOO
   {
     const char* name = "Area 5";
     Color result[Board::MAX_ARR_SIZE];
-    Board board = Board::parseBoard(19,13,R"%%(
+    Board board = Board::parseBoard(6,6,R"%%(
 ...................
 ...................
 ...............xx..
@@ -1285,7 +1285,7 @@ OOOOOOOOO
   {
     const char* name = "More tests for recursive safe";
     Color result[Board::MAX_ARR_SIZE];
-    Board board = Board::parseBoard(19,19,R"%%(
+    Board board = Board::parseBoard(6,6,R"%%(
 .xx.....o.o.o...xx.
 x.x.x...ooooo.x.x.x
 xx.x..oo...o...x.xx
@@ -1855,7 +1855,7 @@ Group tax
   {
     const char* name = "IndependentLife 1";
     Color result[Board::MAX_ARR_SIZE];
-    Board board = Board::parseBoard(19,19,R"%%(
+    Board board = Board::parseBoard(6,6,R"%%(
 .oooxooo.ox..xo.o..
 o.xoxo.xoox..xoooxx
 oooxxxooxxx..xxxxoo
@@ -2064,7 +2064,7 @@ XXXOOOXXXXXXOOOOXXX
   {
     const char* name = "IndependentLife 2";
     Color result[Board::MAX_ARR_SIZE];
-    Board board = Board::parseBoard(19,19,R"%%(
+    Board board = Board::parseBoard(6,6,R"%%(
 x.o.ox.......xo.ox.
 xo..ox.......xo..ox
 o..ox.........xo..o

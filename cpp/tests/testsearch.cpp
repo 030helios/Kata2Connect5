@@ -2230,9 +2230,9 @@ void Tests::runSearchTestsV8(const string& modelFile, bool inputsNHWC, bool useN
   logger.setLogTime(false);
 
   NNEvaluator* nnEval = startNNEval(
-    modelFile,logger,"v8seed",19,19,-1,inputsNHWC,useNHWC,useFP16,false,false);
+    modelFile,logger,"v8seed",6,6,-1,inputsNHWC,useNHWC,useFP16,false,false);
   NNEvaluator* nnEval19Exact = startNNEval(
-    modelFile,logger,"v8seed",19,19,-1,inputsNHWC,useNHWC,useFP16,false,true);
+    modelFile,logger,"v8seed",6,6,-1,inputsNHWC,useNHWC,useFP16,false,true);
   runV8Tests(nnEval,nnEval19Exact,logger);
   delete nnEval;
   delete nnEval19Exact;
