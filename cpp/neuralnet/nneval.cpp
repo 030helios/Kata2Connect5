@@ -76,10 +76,10 @@ NNEvaluator::NNEvaluator(
   int defaultSymmetry)
   : modelName(mName),
     modelFileName(mFileName),
-    nnXLen(xLen),
-    nnYLen(yLen),
+    nnXLen(6),
+    nnYLen(6),
     requireExactNNLen(rExactNNLen),
-    policySize(NNPos::getPolicySize(xLen, yLen)),
+    policySize(NNPos::getPolicySize(6, 6)),
     inputsUseNHWC(iUseNHWC),
     usingFP16Mode(useFP16Mode),
     usingNHWCMode(useNHWCMode),
