@@ -121,7 +121,7 @@ class SgfDataset(torch.utils.data.IterableDataset):
             error_count += 1
             continue
           # Only even 19x19 games!
-          if metadata.size != 19 or len(setup) != 0 or (metadata.handicap is not None and metadata.handicap != 0):
+          if metadata.size != 6 or len(setup) != 0 or (metadata.handicap is not None and metadata.handicap != 0):
             continue
           board = Board(size=metadata.size)
           turn_number = 0

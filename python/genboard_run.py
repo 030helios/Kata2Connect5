@@ -65,7 +65,7 @@ if __name__ == '__main__':
     gpudevice = cpudevice
   model = Model.load_from_file(modelfile).to(gpudevice)
 
-  size = 19
+  size = 6
   boardbase = [["." for x in range(size)] for y in range(size)]
   boardbase[3][3] = ","
   boardbase[9][3] = ","
@@ -94,8 +94,8 @@ if __name__ == '__main__':
 
   idx = 0
   for c in boardstr:
-    y = idx // 19
-    x = idx % 19
+    y = idx // 6
+    x = idx % 6
     if c == "." or c == "*" or c == ",":
       fail_if_idx_too_large(idx)
     elif c == "X" or c == "x" or c == "B" or c == "b":
