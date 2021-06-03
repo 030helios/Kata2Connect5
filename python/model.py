@@ -26,13 +26,13 @@ class Model:
   def get_num_bin_input_features(config):
     version = Model.get_version(config)
     if version == 4:
-      return 22
+      return 7
     elif version == 5:
-      return 22
+      return 7
     elif version == 6:
-      return 13
+      return 7
     elif version <= 10:
-      return 22
+      return 7
     else:
       assert(False)
 
@@ -40,15 +40,15 @@ class Model:
   def get_num_global_input_features(config):
     version = Model.get_version(config)
     if version == 4:
-      return 14
+      return 0
     elif version == 5:
-      return 14
+      return 0
     elif version == 6:
-      return 12
+      return 0
     elif version == 7:
-      return 16
+      return 0
     elif version <= 10:
-      return 19
+      return 0
     else:
       assert(False)
 
