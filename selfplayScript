@@ -1,0 +1,1 @@
+cpp/katago selfplay -output-dir selfplay -config cpp/configs/training/selfplay1.cfg >> log.txt 2>&1 & disown
