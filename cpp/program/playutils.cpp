@@ -26,32 +26,13 @@ ExtraBlackAndKomi PlayUtils::chooseExtraBlackAndKomi(
     double bigStdevProb, float bigStdev, double sqrtBoardArea, Rand &rand)
 {
   int extraBlack = 0;
-  float komi = base;
-
-  float stdevToUse = 0.0f;
-  if (stdev > 0.0f)
-    stdevToUse = stdev;
-  if (bigStdev > 0.0f && rand.nextBool(bigStdevProb))
-    stdevToUse = bigStdev;
-  //Adjust for board size, so that we don't give the same massive komis on smaller boards
-  stdevToUse = stdevToUse * (float)(sqrtBoardArea / 6.0);
-
-  //Add handicap stones
-  int defaultMaxExtraBlack = getDefaultMaxExtraBlack(sqrtBoardArea);
-  if ((numExtraBlackFixed > 0 || defaultMaxExtraBlack > 0) && rand.nextBool(handicapProb))
-  {
-    if (numExtraBlackFixed > 0)
-      extraBlack = numExtraBlackFixed;
-    else
-      extraBlack += 1 + rand.nextUInt(defaultMaxExtraBlack);
-  }
-
+  float komi = 0;
   bool allowInteger = rand.nextBool(allowIntegerProb);
 
   ExtraBlackAndKomi ret;
   ret.extraBlack = extraBlack;
   ret.komiMean = komi;
-  ret.komiStdev = stdevToUse;
+  ret.komiStdev = 0;
   //These two are set later
   ret.makeGameFair = false;
   ret.makeGameFairForEmptyBoard = false;

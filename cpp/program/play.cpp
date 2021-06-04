@@ -435,34 +435,6 @@ void GameInitializer::createGameSharedUnsynchronized(
     OtherGameProperties &otherGameProps,
     const Sgf::PositionSample *startPosSample)
 {
-  if (initialPosition != NULL)
-  {
-    board = initialPosition->board;
-    hist = initialPosition->hist;
-    pla = initialPosition->pla;
-
-    //No handicap when starting from an initial position.
-    double thisHandicapProb = 0.0;
-    extraBlackAndKomi = PlayUtils::chooseExtraBlackAndKomi(
-        hist.rules.komi, komiStdev, komiAllowIntegerProb,
-        thisHandicapProb, numExtraBlackFixed,
-        komiBigStdevProb, komiBigStdev, sqrt(board.x_size * board.y_size), rand);
-    assert(extraBlackAndKomi.extraBlack == 0);
-    PlayUtils::setKomiWithNoise(extraBlackAndKomi, hist, rand);
-    otherGameProps.isSgfPos = false;
-    otherGameProps.isHintPos = false;
-    otherGameProps.allowPolicyInit = false; //On initial positions, don't play extra moves at start
-    otherGameProps.isFork = true;
-    otherGameProps.isHintFork = initialPosition->isHintFork;
-    otherGameProps.hintMove = Move(0, 0, 0);
-    otherGameProps.hintTurn = initialPosition->isHintFork ? (int)hist.moveHistory.size() : -1;
-    extraBlackAndKomi.makeGameFair = rand.nextBool(forkCompensateKomiProb);
-    extraBlackAndKomi.makeGameFairForEmptyBoard = false;
-    return;
-  }
-
-  double makeGameFairProb = 0.0;
-
   int xSizeIdx = rand.nextUInt(allowedBSizeRelProbs.data(), allowedBSizeRelProbs.size());
   int ySizeIdx = xSizeIdx;
   if (allowRectangleProb > 0 && rand.nextBool(allowRectangleProb))
@@ -470,122 +442,24 @@ void GameInitializer::createGameSharedUnsynchronized(
 
   Rules rules = createRulesUnsynchronized();
 
-  const Sgf::PositionSample *posSample = NULL;
-  if (startPosSample != NULL)
-    posSample = startPosSample;
+  int xSize = allowedBSizes[xSizeIdx];
+  int ySize = allowedBSizes[ySizeIdx];
+  board = Board(xSize, ySize);
+  pla = P_BLACK;
+  hist.clear(board, pla, rules);
 
-  if (posSample == NULL)
-  {
-    if (startPosesProb > 0 && rand.nextBool(startPosesProb))
-    {
-      assert(startPoses.size() > 0);
-      size_t r = rand.nextIndexCumulative(startPosCumProbs.data(), startPosCumProbs.size());
-      assert(r < startPosCumProbs.size());
-      posSample = &(startPoses[r]);
-    }
-    else if (hintPosesProb > 0 && rand.nextBool(hintPosesProb))
-    {
-      assert(hintPoses.size() > 0);
-      size_t r = rand.nextIndexCumulative(hintPosCumProbs.data(), hintPosCumProbs.size());
-      assert(r < hintPosCumProbs.size());
-      posSample = &(hintPoses[r]);
-    }
-  }
+  extraBlackAndKomi = PlayUtils::chooseExtraBlackAndKomi(
+      komiMean, komiStdev, komiAllowIntegerProb,
+      handicapProb, numExtraBlackFixed,
+      komiBigStdevProb, komiBigStdev, sqrt(board.x_size * board.y_size), rand);
 
-  if (posSample != NULL)
-  {
-    const Sgf::PositionSample &startPos = *posSample;
-    board = startPos.board;
-    pla = startPos.nextPla;
-    hist.clear(board, pla, rules);
-    hist.setInitialTurnNumber(startPos.initialTurnNumber);
-    Move hintMove = startPos.hintMove;
-    for (size_t i = 0; i < startPos.moves.size(); i++)
-    {
-      bool isLegal = hist.isLegal(board, startPos.moves[i].fromLoc, startPos.moves[i].toLoc, startPos.moves[i].pla);
-      if (!isLegal)
-      {
-        //If we stop due to illegality, it doesn't make sense to still use the hintMove
-        hintMove = Move(0, 0, 0);
-        break;
-      }
-      hist.makeBoardMoveAssumeLegal(board, startPos.moves[i].fromLoc, startPos.moves[i].toLoc, startPos.moves[i].pla, NULL);
-      pla = getOpp(startPos.moves[i].pla);
-    }
-
-    //No handicap when starting from a sampled position.
-    double thisHandicapProb = 0.0;
-    extraBlackAndKomi = PlayUtils::chooseExtraBlackAndKomi(
-        komiMean, komiStdev, komiAllowIntegerProb,
-        thisHandicapProb, numExtraBlackFixed,
-        komiBigStdevProb, komiBigStdev, sqrt(board.x_size * board.y_size), rand);
-    PlayUtils::setKomiWithNoise(extraBlackAndKomi, hist, rand);
-
-    otherGameProps.isSgfPos = (hintMove.fromLoc == Board::NULL_LOC || hintMove.toLoc == Board::NULL_LOC);
-    otherGameProps.isHintPos = !(hintMove.fromLoc == Board::NULL_LOC || hintMove.toLoc == Board::NULL_LOC);
-    otherGameProps.allowPolicyInit = (hintMove.fromLoc == Board::NULL_LOC || hintMove.toLoc == Board::NULL_LOC); //On sgf positions, do allow extra moves at start
-    otherGameProps.isFork = false;
-    otherGameProps.isHintFork = false;
-    otherGameProps.hintMove = hintMove;
-    otherGameProps.hintTurn = hist.moveHistory.size();
-    otherGameProps.hintPosHash = board.pos_hash;
-    makeGameFairProb = sgfCompensateKomiProb;
-  }
-  else
-  {
-    int xSize = allowedBSizes[xSizeIdx];
-    int ySize = allowedBSizes[ySizeIdx];
-    board = Board(xSize, ySize);
-    pla = P_BLACK;
-    hist.clear(board, pla, rules);
-
-    extraBlackAndKomi = PlayUtils::chooseExtraBlackAndKomi(
-        komiMean, komiStdev, komiAllowIntegerProb,
-        handicapProb, numExtraBlackFixed,
-        komiBigStdevProb, komiBigStdev, sqrt(board.x_size * board.y_size), rand);
-    PlayUtils::setKomiWithNoise(extraBlackAndKomi, hist, rand);
-
-    otherGameProps.isSgfPos = false;
-    otherGameProps.isHintPos = false;
-    otherGameProps.allowPolicyInit = true; //Handicap and regular games do allow policy init
-    otherGameProps.isFork = false;
-    otherGameProps.isHintFork = false;
-    otherGameProps.hintMove = Move(0, 0, 0);
-    otherGameProps.hintTurn = -1;
-    makeGameFairProb = extraBlackAndKomi.extraBlack > 0 ? handicapCompensateKomiProb : 0.0;
-  }
-
-  double asymmetricProb = (extraBlackAndKomi.extraBlack > 0) ? playSettings.handicapAsymmetricPlayoutProb : playSettings.normalAsymmetricPlayoutProb;
-  if (asymmetricProb > 0 && rand.nextBool(asymmetricProb))
-  {
-    assert(playSettings.maxAsymmetricRatio >= 1.0);
-    double maxNumDoublings = log(playSettings.maxAsymmetricRatio) / log(2.0);
-    double numDoublings = rand.nextDouble(maxNumDoublings);
-    if (extraBlackAndKomi.extraBlack > 0 || rand.nextBool(0.5))
-    {
-      otherGameProps.playoutDoublingAdvantagePla = C_WHITE;
-      otherGameProps.playoutDoublingAdvantage = numDoublings;
-    }
-    else
-    {
-      otherGameProps.playoutDoublingAdvantagePla = C_BLACK;
-      otherGameProps.playoutDoublingAdvantage = numDoublings;
-    }
-    makeGameFairProb = std::max(makeGameFairProb, playSettings.minAsymmetricCompensateKomiProb);
-  }
-
-  if (komiAuto)
-  {
-    if (makeGameFairProb > 0.0)
-      extraBlackAndKomi.makeGameFair = rand.nextBool(makeGameFairProb);
-    extraBlackAndKomi.makeGameFairForEmptyBoard = !extraBlackAndKomi.makeGameFair;
-  }
-  else
-  {
-    if (makeGameFairProb > 0.0)
-      extraBlackAndKomi.makeGameFair = rand.nextBool(makeGameFairProb);
-    extraBlackAndKomi.makeGameFairForEmptyBoard = false;
-  }
+  otherGameProps.isSgfPos = false;
+  otherGameProps.isHintPos = false;
+  otherGameProps.allowPolicyInit = true; //Handicap and regular games do allow policy init
+  otherGameProps.isFork = false;
+  otherGameProps.isHintFork = false;
+  otherGameProps.hintMove = Move(0, 0, 0);
+  otherGameProps.hintTurn = -1;
 }
 
 //----------------------------------------------------------------------------------------------------------
