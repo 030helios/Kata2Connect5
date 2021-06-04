@@ -340,7 +340,7 @@ void BoardHistory::makeBoardMoveAssumeLegal(Board& board,Loc fromLoc, Loc toLoc,
   //Handicap bonus score
   if(movePla == P_WHITE)
     whiteHasMoved = true;
-  if(board.numPlaStonesOnBoard(1-movePla)==0 || koHashOccursInHistory(board.pos_hash,rootKoHashTable))
+  if(board.numPlaStonesOnBoard(presumedNextMovePla)==0 || koHashOccursInHistory(board.pos_hash,rootKoHashTable))
     endAndScoreGameNow(board);
 }
 
