@@ -1,0 +1,1 @@
+cd python; ./selfplay/shuffle_and_export_loop.sh $NAMEOFRUN $/workspace/ $SCRATCH_DIRECTORY $NUM_THREADS $BATCH_SIZE $USE_GATING
