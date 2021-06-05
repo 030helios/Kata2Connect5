@@ -247,7 +247,6 @@ void NNInputs::fillScoring(const Board& board, const Color* area, bool groupTax,
         else if(areaColor == P_WHITE)
           scoring[loc] = 1.0f;
         else {
-          assert(areaColor == C_EMPTY);
           scoring[loc] = 0;
         }
       }
