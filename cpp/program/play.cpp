@@ -1551,7 +1551,7 @@ FinishedGameData *Play::runGame(
 
     pla = getOpp(pla);
   }
-
+  throw StringError("reach end of game\n");
   gameData->endHist = hist;
   if (hist.isGameFinished)
     gameData->hitTurnLimit = false;
