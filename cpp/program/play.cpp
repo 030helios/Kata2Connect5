@@ -1412,16 +1412,17 @@ FinishedGameData *Play::runGame(
   //Main play loop
   for (int i = 0; i < maxMovesPerGame; i++)
   {
+    throw StringError("reached here"));
     if (hist.isGameFinished)
       break;
     if (shouldStop != nullptr && shouldStop())
       break;
+    throw StringError("reached here2"));
 
     Search *toMoveBot = pla == P_BLACK ? botB : botW;
 
     SearchLimitsThisMove limits = getSearchLimitsThisMove(
         toMoveBot, pla, playSettings, gameRand, historicalMctsWinLossValues, clearBotBeforeSearch, otherGameProps);
-    throw StringError("reached here");
     Move mov = runBotWithLimits(toMoveBot, pla, playSettings, limits, logger);
 
     if (mov.fromLoc == Board::NULL_LOC || mov.toLoc == Board::NULL_LOC || !toMoveBot->rootHistory.isLegal(board, mov.fromLoc, mov.toLoc, pla))
