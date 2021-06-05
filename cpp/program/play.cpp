@@ -1412,9 +1412,9 @@ FinishedGameData *Play::runGame(
   //Main play loop
   for (int i = 0; i < maxMovesPerGame; i++)
   {
-    throw StringError("reached here");
     if (hist.isGameFinished)
       break;
+    throw StringError("reached here");
     if (shouldStop != nullptr && shouldStop())
       break;
     throw StringError("reached here2");
