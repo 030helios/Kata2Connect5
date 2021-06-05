@@ -1409,6 +1409,7 @@ FinishedGameData *Play::runGame(
   std::vector<double> policySurpriseByTurn;
   std::vector<ReportedSearchValues> rawNNValues;
 
+  throw StringError(to_string(maxMovesPerGame));
   //Main play loop
   for (int i = 0; i < maxMovesPerGame; i++)
   {
@@ -1551,7 +1552,6 @@ FinishedGameData *Play::runGame(
 
     pla = getOpp(pla);
   }
-  throw StringError("reach end of game\n");
   gameData->endHist = hist;
   if (hist.isGameFinished)
     gameData->hitTurnLimit = false;
