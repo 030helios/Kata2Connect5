@@ -1553,6 +1553,7 @@ FinishedGameData *Play::runGame(
 
     pla = getOpp(pla);
   }
+  throw StringError("Ended?");
   gameData->endHist = hist;
   if (hist.isGameFinished)
     gameData->hitTurnLimit = false;
