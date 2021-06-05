@@ -1412,12 +1412,12 @@ FinishedGameData *Play::runGame(
   //Main play loop
   for (int i = 0; i < maxMovesPerGame; i++)
   {
-    throw StringError("reached here"));
+    throw StringError("reached here");
     if (hist.isGameFinished)
       break;
     if (shouldStop != nullptr && shouldStop())
       break;
-    throw StringError("reached here2"));
+    throw StringError("reached here2");
 
     Search *toMoveBot = pla == P_BLACK ? botB : botW;
 
