@@ -1409,7 +1409,6 @@ FinishedGameData *Play::runGame(
   std::vector<double> policySurpriseByTurn;
   std::vector<ReportedSearchValues> rawNNValues;
 
-  throw StringError(to_string(maxMovesPerGame));
   //Main play loop
   for (int i = 0; i < maxMovesPerGame; i++)
   {
@@ -1422,6 +1421,7 @@ FinishedGameData *Play::runGame(
 
     SearchLimitsThisMove limits = getSearchLimitsThisMove(
         toMoveBot, pla, playSettings, gameRand, historicalMctsWinLossValues, clearBotBeforeSearch, otherGameProps);
+    throw StringError("reached here");
     Move mov = runBotWithLimits(toMoveBot, pla, playSettings, limits, logger);
 
     if (mov.fromLoc == Board::NULL_LOC || mov.toLoc == Board::NULL_LOC || !toMoveBot->rootHistory.isLegal(board, mov.fromLoc, mov.toLoc, pla))
