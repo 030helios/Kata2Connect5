@@ -1,4 +1,4 @@
-# KataGo
+# KataGo (modified to run surakarta but not working)
 
 * [Overview](#overview)
 * [Training History and Research](#training-history-and-research)
