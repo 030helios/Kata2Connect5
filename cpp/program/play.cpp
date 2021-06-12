@@ -1412,8 +1412,10 @@ FinishedGameData *Play::runGame(
   //Main play loop
   for (int i = 0; i < maxMovesPerGame; i++)
   {
+    logger.write("reached loop");
     if (hist.isGameFinished)
       break;
+    logger.write("reached loop1");
     if (shouldStop != nullptr && shouldStop())
       break;
     throw StringError("reached here2");
