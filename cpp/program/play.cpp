@@ -1414,7 +1414,6 @@ FinishedGameData *Play::runGame(
   {
     if (hist.isGameFinished)
       break;
-    throw StringError("reached here");
     if (shouldStop != nullptr && shouldStop())
       break;
     throw StringError("reached here2");
